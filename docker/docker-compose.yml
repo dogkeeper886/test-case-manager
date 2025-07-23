@@ -53,7 +53,7 @@ services:
       dockerfile: ../docker/Dockerfile.frontend
     container_name: testcase-frontend
     environment:
-      REACT_APP_API_URL: http://localhost:3001
+      # Remove hardcoded localhost - let the frontend detect the correct URL
       CHOKIDAR_USEPOLLING: true
     ports:
       - "3000:3000"

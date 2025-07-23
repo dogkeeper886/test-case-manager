@@ -1,8 +1,35 @@
 import axios from 'axios';
 
+// Dynamic API URL detection for remote access
+const getApiBaseURL = () => {
+  // If environment variable is set, use it
+  if (process.env.REACT_APP_API_URL) {
+    console.log('🔧 Using environment API URL:', process.env.REACT_APP_API_URL);
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // If accessing from remote PC, use server IP instead of localhost
+  const currentHost = window.location.hostname;
+  const currentPort = window.location.port;
+  
+  console.log('🌐 Current hostname:', currentHost);
+  console.log('🔌 Current port:', currentPort);
+  
+  // If accessing via IP address (remote access), use the same IP for backend
+  if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
+    const apiURL = `http://${currentHost}:3001`;
+    console.log('🚀 Using remote API URL:', apiURL);
+    return apiURL;
+  }
+  
+  // Default to localhost for local development
+  console.log('🏠 Using localhost API URL: http://localhost:3001');
+  return 'http://localhost:3001';
+};
+
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3001',
+  baseURL: getApiBaseURL(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
