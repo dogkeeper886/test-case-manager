@@ -19,7 +19,7 @@ async function testDashboardAPI() {
 
     // Test test cases endpoint
     console.log('\n3. Testing test cases endpoint...');
-    const testCasesRes = await axios.get(`${API_BASE}/testcases`);
+    const testCasesRes = await axios.get(`${API_BASE}/testcases?limit=1000`);
     console.log('✅ Test cases count:', testCasesRes.data.data.length);
     
     // Calculate statistics

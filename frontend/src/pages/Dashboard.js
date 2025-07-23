@@ -37,7 +37,7 @@ const Dashboard = () => {
       setLoading(true);
       // Fetch data from API
       const [testCasesRes, projectsRes] = await Promise.all([
-        testCasesAPI.getAll(),
+        testCasesAPI.getAll({ limit: 1000 }), // Get all test cases for accurate statistics
         projectsAPI.getAll()
       ]);
 
