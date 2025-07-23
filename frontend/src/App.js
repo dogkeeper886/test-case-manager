@@ -11,6 +11,7 @@ import Projects from './pages/Projects';
 import TestCases from './pages/TestCases';
 import Documents from './pages/Documents';
 import Reports from './pages/Reports';
+import ComponentTest from './pages/ComponentTest';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ function App() {
               <Route path="/testcases" element={<TestCases />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/test" element={<ComponentTest />} />
             </Routes>
           </Layout>
           <ToastContainer position="top-right" />
