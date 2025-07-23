@@ -14,6 +14,7 @@ import {
   Activity
 } from 'lucide-react';
 import { Button, Card } from '../components/ui';
+import Layout from '../components/layout/Layout';
 import { testCasesAPI, projectsAPI } from '../services/api';
 
 const Dashboard = () => {
@@ -27,6 +28,9 @@ const Dashboard = () => {
     successRate: 0
   });
   const [loading, setLoading] = useState(true);
+  const [testSuites, setTestSuites] = useState([]);
+  const [selectedSuiteId, setSelectedSuiteId] = useState(null);
+  const [selectedTestCaseId, setSelectedTestCaseId] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -36,9 +40,10 @@ const Dashboard = () => {
     try {
       setLoading(true);
       // Fetch data from API
-      const [testCasesRes, projectsRes] = await Promise.all([
+      const [testCasesRes, projectsRes, testSuitesRes] = await Promise.all([
         testCasesAPI.getAll({ limit: 1000 }), // Get all test cases for accurate statistics
-        projectsAPI.getAll()
+        projectsAPI.getAll(),
+        testCasesAPI.getAll({ limit: 1000 }) // We'll use this for test suites data
       ]);
 
       const testCases = testCasesRes.data.data || testCasesRes.data || [];
@@ -58,6 +63,9 @@ const Dashboard = () => {
         pendingTests,
         successRate
       });
+
+      // Set test suites for sidebar (we'll use test cases data for now)
+      setTestSuites([]);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       // Use fallback data
@@ -159,58 +167,105 @@ const Dashboard = () => {
   const recentActivity = [
     {
       id: 1,
-      action: 'Test case TC-001 executed',
-      time: '2 minutes ago',
-      type: 'test-execution',
-      link: '/testcases/1'
+      type: 'test-case',
+      action: 'Test case "Network Configuration" was updated',
+      time: '2 hours ago',
+      link: '/testcases'
     },
     {
       id: 2,
-      action: 'Document uploaded: requirements.pdf',
-      time: '1 hour ago',
-      type: 'document',
-      link: '/documents'
-    },
-    {
-      id: 3,
-      action: 'New project created: Mobile App',
-      time: '3 hours ago',
       type: 'project',
+      action: 'New project "Mobile Banking App" was created',
+      time: '4 hours ago',
       link: '/projects'
     },
     {
-      id: 4,
-      action: 'Test suite "Login Flow" updated',
-      time: '5 hours ago',
+      id: 3,
       type: 'test-suite',
+      action: 'Test suite "Authentication" was imported',
+      time: '1 day ago',
       link: '/test-suites'
+    },
+    {
+      id: 4,
+      type: 'report',
+      action: 'Monthly test report was generated',
+      time: '2 days ago',
+      link: '/reports'
     }
   ];
 
   const getActivityIcon = (type) => {
     switch (type) {
-      case 'test-execution': return <CheckCircle className="w-4 h-4 text-success" />;
-      case 'document': return <FileText className="w-4 h-4 text-apple-blue" />;
-      case 'project': return <FolderOpen className="w-4 h-4 text-warning" />;
-      case 'test-suite': return <FolderOpen className="w-4 h-4 text-info" />;
-      default: return <Activity className="w-4 h-4 text-apple-gray-4" />;
+      case 'test-case':
+        return <FileText className="w-4 h-4 text-apple-blue" />;
+      case 'project':
+        return <FolderOpen className="w-4 h-4 text-success" />;
+      case 'test-suite':
+        return <FolderOpen className="w-4 h-4 text-warning" />;
+      case 'report':
+        return <BarChart3 className="w-4 h-4 text-apple-gray-5" />;
+      default:
+        return <Activity className="w-4 h-4 text-apple-gray-4" />;
     }
   };
 
+  // Handle suite selection from sidebar
+  const handleSuiteSelect = (suite) => {
+    console.log('Selected suite:', suite);
+    setSelectedSuiteId(suite.id);
+  };
+
+  // Handle test case selection from sidebar
+  const handleTestCaseSelect = (testCase) => {
+    console.log('Selected test case from tree:', testCase);
+    setSelectedTestCaseId(testCase.id);
+  };
+
+  // Handle search from layout
+  const handleLayoutSearch = (query) => {
+    console.log('Search query:', query);
+    // Navigate to test cases with search
+    navigate(`/testcases?search=${encodeURIComponent(query)}`);
+  };
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-sf-display font-semibold text-apple-gray-7">
-          Dashboard
-        </h1>
-        <p className="mt-2 text-apple-gray-5 font-sf">
-          Overview of your test case management system
-        </p>
+    <Layout
+      testSuites={testSuites}
+      onSuiteSelect={handleSuiteSelect}
+      onTestCaseSelect={handleTestCaseSelect}
+      selectedSuiteId={selectedSuiteId}
+      selectedTestCaseId={selectedTestCaseId}
+      onSearch={handleLayoutSearch}
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/' }
+      ]}
+      actions={[
+        {
+          label: 'Add Test Case',
+          variant: 'primary',
+          icon: <Plus className="w-4 h-4" />,
+          onClick: () => navigate('/testcases')
+        }
+      ]}
+      showSearch={false}
+    >
+      {/* Page Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7">
+              Dashboard
+            </h1>
+            <p className="text-apple-gray-5 mt-1">
+              Overview of your test case management system
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {metricCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -218,7 +273,7 @@ const Dashboard = () => {
               key={stat.name} 
               elevation="sm" 
               hover={true}
-              className="cursor-pointer transition-all duration-200 hover:shadow-apple-md"
+              className="cursor-pointer transition-all duration-200 hover:shadow-apple-md group"
               onClick={stat.onClick}
             >
               <Card.Body className="p-6">
@@ -308,7 +363,7 @@ const Dashboard = () => {
           </Card.Body>
         </Card>
       </div>
-    </div>
+    </Layout>
   );
 };
 
