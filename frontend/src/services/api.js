@@ -39,65 +39,65 @@ api.interceptors.response.use(
 // API endpoints
 export const testCasesAPI = {
   // Get all test cases with optional filters
-  getAll: (params = {}) => api.get('/testcases', { params }),
+  getAll: (params = {}) => api.get('/api/testcases', { params }),
   
   // Get test case by ID
-  getById: (id) => api.get(`/testcases/${id}`),
+  getById: (id) => api.get(`/api/testcases/${id}`),
   
   // Create new test case
-  create: (data) => api.post('/testcases', data),
+  create: (data) => api.post('/api/testcases', data),
   
   // Update test case
-  update: (id, data) => api.put(`/testcases/${id}`, data),
+  update: (id, data) => api.put(`/api/testcases/${id}`, data),
   
   // Delete test case
-  delete: (id) => api.delete(`/testcases/${id}`),
+  delete: (id) => api.delete(`/api/testcases/${id}`),
   
   // Get test cases by project
-  getByProject: (projectId) => api.get(`/testcases/project/${projectId}`),
+  getByProject: (projectId) => api.get(`/api/testcases/project/${projectId}`),
   
   // Get test cases by test suite
-  getByTestSuite: (suiteId) => api.get(`/testcases/suite/${suiteId}`),
+  getByTestSuite: (suiteId) => api.get(`/api/testcases/suite/${suiteId}`),
   
   // Search test cases
-  search: (query) => api.get('/testcases/search', { params: { q: query } }),
+  search: (query) => api.get('/api/testcases/search', { params: { q: query } }),
 };
 
 export const testSuitesAPI = {
   // Get all test suites
-  getAll: () => api.get('/testsuites'),
+  getAll: () => api.get('/api/testsuites'),
   
   // Get test suite by ID
-  getById: (id) => api.get(`/testsuites/${id}`),
+  getById: (id) => api.get(`/api/testsuites/${id}`),
   
   // Create new test suite
-  create: (data) => api.post('/testsuites', data),
+  create: (data) => api.post('/api/testsuites', data),
   
   // Update test suite
-  update: (id, data) => api.put(`/testsuites/${id}`, data),
+  update: (id, data) => api.put(`/api/testsuites/${id}`, data),
   
   // Delete test suite
-  delete: (id) => api.delete(`/testsuites/${id}`),
+  delete: (id) => api.delete(`/api/testsuites/${id}`),
   
   // Get test suites by project
-  getByProject: (projectId) => api.get(`/testsuites/project/${projectId}`),
+  getByProject: (projectId) => api.get(`/api/testsuites/project/${projectId}`),
 };
 
 export const projectsAPI = {
   // Get all projects
-  getAll: () => api.get('/projects'),
+  getAll: () => api.get('/api/projects'),
   
   // Get project by ID
-  getById: (id) => api.get(`/projects/${id}`),
+  getById: (id) => api.get(`/api/projects/${id}`),
   
   // Create new project
-  create: (data) => api.post('/projects', data),
+  create: (data) => api.post('/api/projects', data),
   
   // Update project
-  update: (id, data) => api.put(`/projects/${id}`, data),
+  update: (id, data) => api.put(`/api/projects/${id}`, data),
   
   // Delete project
-  delete: (id) => api.delete(`/projects/${id}`),
+  delete: (id) => api.delete(`/api/projects/${id}`),
 };
 
 export const documentsAPI = {
