@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Plus, Eye, Edit, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
+import Layout from '../components/layout/Layout';
 import { testCasesAPI, testSuitesAPI, projectsAPI } from '../services/api';
 import useTestCaseStore from '../stores/testCaseStore';
 
@@ -16,6 +17,8 @@ const TestCases = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedSuiteId, setSelectedSuiteId] = useState(null);
+  const [selectedTestCaseId, setSelectedTestCaseId] = useState(null);
 
   const { setTestCases: setStoreTestCases, setTestSuites: setStoreTestSuites } = useTestCaseStore();
 
@@ -172,6 +175,26 @@ const TestCases = () => {
     }
   };
 
+  // Handle suite selection
+  const handleSuiteSelect = (suite) => {
+    console.log('Selected suite:', suite);
+    setSelectedSuiteId(suite.id);
+    // TODO: Filter test cases by suite
+  };
+
+  // Handle test case selection from tree
+  const handleTestCaseSelect = (testCase) => {
+    console.log('Selected test case from tree:', testCase);
+    setSelectedTestCaseId(testCase.id);
+    // TODO: Navigate to test case detail view
+  };
+
+  // Handle search from layout
+  const handleLayoutSearch = (query) => {
+    setSearchQuery(query);
+    // TODO: Implement global search
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-apple-gray-1 flex items-center justify-center">
@@ -197,9 +220,28 @@ const TestCases = () => {
   }
 
   return (
-    <div className="min-h-screen bg-apple-gray-1 font-sf">
-      {/* Header */}
-      <div className="bg-white border-b border-apple-gray-2 px-6 py-4">
+    <Layout
+      testSuites={testSuites}
+      onSuiteSelect={handleSuiteSelect}
+      onTestCaseSelect={handleTestCaseSelect}
+      selectedSuiteId={selectedSuiteId}
+      selectedTestCaseId={selectedTestCaseId}
+      onSearch={handleLayoutSearch}
+      breadcrumbs={[
+        { label: 'Test Cases', href: '/testcases' }
+      ]}
+      actions={[
+        {
+          label: 'Add Test Case',
+          variant: 'primary',
+          icon: <Plus className="w-4 h-4" />,
+          onClick: () => console.log('Add test case')
+        }
+      ]}
+      showSearch={false}
+    >
+      {/* Page Header */}
+      <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7">
@@ -209,35 +251,31 @@ const TestCases = () => {
               {filteredTestCases.length} of {testCases.length} test cases
             </p>
           </div>
-          <Button variant="primary" icon={<Plus className="w-4 h-4" />}>
-            Add Test Case
-          </Button>
         </div>
       </div>
 
       {/* Filters and Search */}
-      <div className="p-6">
-        <Card elevation="sm" padding="lg">
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
-            {/* Search */}
-            <div className="flex-1 min-w-0">
-              <Input
-                placeholder="Search test cases..."
-                icon={<Search className="w-4 h-4" />}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            {/* Filter Toggle */}
-            <Button
-              variant="secondary"
-              icon={showFilters ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              Filters
-            </Button>
+      <Card elevation="sm" padding="lg" className="mb-6">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+          {/* Search */}
+          <div className="flex-1 min-w-0">
+            <Input
+              placeholder="Search test cases..."
+              icon={<Search className="w-4 h-4" />}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
+
+          {/* Filter Toggle */}
+          <Button
+            variant="secondary"
+            icon={showFilters ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            Filters
+          </Button>
+        </div>
 
           {/* Filter Options */}
           {showFilters && (
@@ -412,8 +450,7 @@ const TestCases = () => {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Layout>
   );
 };
 
