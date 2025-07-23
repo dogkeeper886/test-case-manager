@@ -231,15 +231,14 @@ class TestLinkImportService {
     // Create new test case
     const query = `
       INSERT INTO test_cases (
-        project_id, test_suite_id, title, description, preconditions,
+        test_suite_id, title, description, prerequisites,
         external_id, internal_id, version, node_order, execution_type,
         importance, is_open, active, import_source, imported_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
       RETURNING id
     `;
 
     const values = [
-      projectId,
       suiteId,
       testCaseData.name,
       testCaseData.summary || '',
@@ -283,7 +282,7 @@ class TestLinkImportService {
       UPDATE test_cases SET
         title = $1,
         description = $2,
-        preconditions = $3,
+        prerequisites = $3,
         version = $4,
         execution_type = $5,
         importance = $6,
@@ -332,7 +331,7 @@ class TestLinkImportService {
     for (const step of steps) {
       const query = `
         INSERT INTO test_steps (
-          test_case_id, step_number, actions, expected_results, execution_type
+          test_case_id, step_number, action, expected_result, execution_type
         ) VALUES ($1, $2, $3, $4, $5)
       `;
 

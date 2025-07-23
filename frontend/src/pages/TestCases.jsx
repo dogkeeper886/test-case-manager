@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Plus, Eye, Edit, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
@@ -8,6 +8,7 @@ import useTestCaseStore from '../stores/testCaseStore';
 
 const TestCases = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [testCases, setTestCases] = useState([]);
   const [testSuites, setTestSuites] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -16,9 +17,9 @@ const TestCases = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState('');
   const [selectedSuite, setSelectedSuite] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
   const [priorityFilter, setPriorityFilter] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(!!searchParams.get('status'));
   const [selectedSuiteId, setSelectedSuiteId] = useState(null);
   const [selectedTestCaseId, setSelectedTestCaseId] = useState(null);
 
