@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus, Eye, Edit, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
@@ -6,6 +7,7 @@ import { testCasesAPI, testSuitesAPI, projectsAPI } from '../services/api';
 import useTestCaseStore from '../stores/testCaseStore';
 
 const TestCases = () => {
+  const navigate = useNavigate();
   const [testCases, setTestCases] = useState([]);
   const [testSuites, setTestSuites] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -154,8 +156,7 @@ const TestCases = () => {
 
   // Handle test case actions
   const handleViewTestCase = (testCase) => {
-    console.log('View test case:', testCase);
-    // TODO: Navigate to test case detail view
+    navigate(`/testcases/${testCase.id}`);
   };
 
   const handleEditTestCase = (testCase) => {
@@ -376,7 +377,13 @@ const TestCases = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTestCases.map(testCase => (
-                <Card key={testCase.id} elevation="md" hover={true}>
+                <Card 
+                  key={testCase.id} 
+                  elevation="md" 
+                  hover={true}
+                  className="cursor-pointer transition-all duration-200 hover:shadow-apple-md"
+                  onClick={() => handleViewTestCase(testCase)}
+                >
                   <Card.Header>
                     <div className="flex items-start justify-between">
                       <h3 className="text-lg font-sf font-semibold text-apple-gray-7 line-clamp-2">

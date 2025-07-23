@@ -9,6 +9,7 @@ import './styles/index.css';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import TestCases from './pages/TestCases';
+import TestCaseDetail from './pages/TestCaseDetail';
 import TestSuiteBrowser from './pages/TestSuiteBrowser';
 import Documents from './pages/Documents';
 import Reports from './pages/Reports';
@@ -19,12 +20,13 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="App">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/testcases" element={<TestCases />} />
+            <Route path="/testcases/:id" element={<TestCaseDetail />} />
             <Route path="/test-suites" element={<TestSuiteBrowser />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/reports" element={<Reports />} />
