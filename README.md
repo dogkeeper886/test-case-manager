@@ -1,28 +1,53 @@
 # Test Case Management System
 
-A comprehensive test case management system that can generate test cases from design documents using AI-powered document parsing and analysis.
+A comprehensive test case management system that can generate test cases from design documents using AI-powered document parsing and analysis, with full TestLink XML format compatibility for industry-standard test case management workflows.
 
 ## Features
 
 - **Document Upload & Processing**: Upload design documents (PDF, Word, Markdown) and automatically extract requirements
 - **AI-Powered Test Case Generation**: Generate test cases from parsed requirements using LLM integration
 - **Test Case Management**: Create, edit, organize, and execute test cases
+- **TestLink Integration**: Import from and export to TestLink XML format for seamless integration with existing test management systems
 - **Project Organization**: Organize test cases by projects and test suites
 - **Test Execution Tracking**: Track test execution results and history
 - **Comprehensive Reporting**: Generate test coverage reports, execution summaries, and performance metrics
-- **Multiple Export Formats**: Export reports in PDF, CSV, JSON, and Excel formats
+- **Multiple Export Formats**: Export reports in PDF, CSV, JSON, Excel, and TestLink XML formats
+- **Docker Support**: Containerized deployment with persistent database storage
+
+## TestLink Integration
+
+### Import/Export Capabilities
+- **XML Import**: Import test cases from TestLink XML files
+- **XML Export**: Export test cases to TestLink XML format
+- **Format Validation**: Validate XML structure and content
+- **Bidirectional Sync**: Seamless data exchange with TestLink systems
+- **Custom Fields Support**: Handle extensible metadata fields
+- **Hierarchical Structure**: Support nested test suites and complex organization
+
+### Supported TestLink Features
+- Test suites with nested hierarchy
+- Test cases with detailed metadata
+- Step-by-step execution instructions
+- HTML content in descriptions and steps
+- Custom fields for additional metadata
+- Execution type (Manual/Automated)
+- Priority levels and status tracking
+- Version control and external IDs
 
 ## Tech Stack
 
 ### Backend
 - **Node.js** with Express.js
-- **PostgreSQL** database
+- **PostgreSQL** database (Docker container with persistent volume)
 - **Sequelize** ORM
 - **Multer** for file uploads
 - **Document Processing Libraries**:
   - mammoth (Word documents)
   - pdf-parse (PDF documents)
   - marked (Markdown documents)
+- **XML Processing**:
+  - xml2js or fast-xml-parser (TestLink XML)
+  - html-entities (HTML content handling)
 - **JWT** for authentication
 - **OpenAI API** for test case generation
 
@@ -36,6 +61,12 @@ A comprehensive test case management system that can generate test cases from de
 - **React Dropzone** for file uploads
 - **React Toastify** for notifications
 
+### Infrastructure
+- **Docker** for containerization
+- **Docker Compose** for multi-container orchestration
+- **Persistent Volumes** for database data storage
+- **Environment-based Configuration** for different deployment scenarios
+
 ## Project Structure
 
 ```
@@ -45,6 +76,9 @@ test-case-manager/
 │   │   ├── routes/           # API routes
 │   │   ├── models/           # Database models
 │   │   ├── services/         # Business logic
+│   │   │   ├── xmlParser.js      # TestLink XML parsing
+│   │   │   ├── testlinkImporter.js # XML import service
+│   │   │   └── testlinkExporter.js # XML export service
 │   │   ├── utils/            # Utility functions
 │   │   ├── middleware/       # Express middleware
 │   │   └── index.js          # Main entry point
@@ -63,37 +97,66 @@ test-case-manager/
 │   └── tests/                # Frontend tests
 ├── database/
 │   └── schema.sql            # Database schema
-├── docs/                     # Documentation
+├── docker/
+│   ├── docker-compose.yml    # Multi-container setup
+│   ├── Dockerfile.backend    # Backend container
+│   ├── Dockerfile.frontend   # Frontend container
+│   └── init.sql              # Database initialization
+├── testlink-samples/         # TestLink XML sample files
+│   ├── README.md             # Sample files documentation
+│   └── Network Control Profile.testsuite-deep.xml
+├── docs/
+│   ├── testlink-xml-analysis.md    # TestLink format analysis
+│   └── testlink-integration-todo.md # Implementation roadmap
 └── scripts/                  # Utility scripts
 ```
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v16 or later)
-- PostgreSQL (v12 or later)
+- Docker and Docker Compose
+- Node.js (v16 or later) - for local development
 - npm or yarn
 
-### Installation
+### Quick Start with Docker
 
-1. Clone the repository:
+1. **Clone the repository**:
 ```bash
 git clone <repository-url>
 cd test-case-manager
 ```
 
-2. Install dependencies:
+2. **Start with Docker Compose**:
+```bash
+# Start all services (database, backend, frontend)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+3. **Access the application**:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
+- Database: localhost:5432 (PostgreSQL)
+
+### Local Development Setup
+
+1. **Install dependencies**:
 ```bash
 npm run install:all
 ```
 
-3. Set up the database:
+2. **Set up the database** (if not using Docker):
 ```bash
 createdb testcasemanager
 psql testcasemanager < database/schema.sql
 ```
 
-4. Configure environment variables:
+3. **Configure environment variables**:
 ```bash
 # Copy the example environment file
 cp backend/.env.example backend/.env
@@ -101,12 +164,29 @@ cp backend/.env.example backend/.env
 # Edit the .env file with your configuration
 ```
 
-5. Start the development servers:
+4. **Start the development servers**:
 ```bash
 npm run dev
 ```
 
-This will start both the backend server (port 3001) and frontend development server (port 3000).
+### Docker Configuration
+
+The Docker setup includes:
+
+- **PostgreSQL Database**: Persistent volume for data storage
+- **Backend API**: Node.js/Express application
+- **Frontend**: React development server
+- **Volume Mapping**: Database data persists between container restarts
+
+#### Database Persistence
+
+Database data is stored in a Docker volume:
+```yaml
+volumes:
+  - postgres_data:/var/lib/postgresql/data
+```
+
+This ensures your data persists even when containers are recreated.
 
 ### Environment Variables
 
@@ -117,7 +197,7 @@ PORT=3001
 NODE_ENV=development
 
 # Database configuration
-DB_HOST=localhost
+DB_HOST=localhost  # Use 'postgres' for Docker
 DB_PORT=5432
 DB_NAME=testcasemanager
 DB_USER=postgres
@@ -152,6 +232,11 @@ MAX_FILE_SIZE=10485760
 - `DELETE /api/testcases/:id` - Delete test case
 - `POST /api/testcases/:id/execute` - Execute test case
 
+### TestLink Integration
+- `POST /api/testlink/import` - Import TestLink XML file
+- `GET /api/testlink/export` - Export to TestLink XML format
+- `POST /api/testlink/validate` - Validate TestLink XML format
+
 ### Documents
 - `POST /api/documents/upload` - Upload and parse document
 - `GET /api/documents/:id` - Get document details
@@ -170,11 +255,15 @@ MAX_FILE_SIZE=10485760
 
 3. **Generate Test Cases**: Use the AI-powered generation feature to automatically create test cases from your uploaded documents.
 
-4. **Organize Test Cases**: Group related test cases into test suites and assign priorities.
+4. **Import TestLink Files**: Import existing test cases from TestLink XML files for seamless integration.
 
-5. **Execute Tests**: Mark test cases as passed, failed, or blocked, and track execution history.
+5. **Organize Test Cases**: Group related test cases into test suites and assign priorities.
 
-6. **Generate Reports**: Create comprehensive reports to analyze test coverage and execution metrics.
+6. **Execute Tests**: Mark test cases as passed, failed, or blocked, and track execution history.
+
+7. **Export to TestLink**: Export your test cases to TestLink XML format for use in other systems.
+
+8. **Generate Reports**: Create comprehensive reports to analyze test coverage and execution metrics.
 
 ## Development
 
@@ -197,6 +286,16 @@ npm run build
 
 # Start production server
 npm start
+```
+
+### Docker Development
+```bash
+# Build and start development environment
+docker-compose -f docker-compose.dev.yml up --build
+
+# Run tests in containers
+docker-compose exec backend npm test
+docker-compose exec frontend npm test
 ```
 
 ## Contributing
