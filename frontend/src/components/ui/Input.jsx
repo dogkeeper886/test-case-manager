@@ -25,7 +25,7 @@ const Input = forwardRef(({
 
   // Size classes
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm rounded-apple',
+    sm: 'px-3 py-2 text-sm rounded-apple',
     md: 'px-4 py-2 text-base rounded-apple',
     lg: 'px-6 py-3 text-lg rounded-apple-lg',
   };

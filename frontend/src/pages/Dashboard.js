@@ -84,7 +84,7 @@ const Dashboard = () => {
 
   const metricCards = [
     {
-      name: 'Total Projects',
+      name: 'Projects',
       value: stats.projects,
       icon: FolderOpen,
       color: 'bg-apple-blue',
@@ -100,30 +100,6 @@ const Dashboard = () => {
       onClick: () => navigate('/testcases')
     },
     {
-      name: 'Passed Tests',
-      value: stats.passedTests,
-      icon: CheckCircle,
-      color: 'bg-success',
-      hoverColor: 'hover:bg-green-600',
-      onClick: () => navigate('/testcases?status=2')
-    },
-    {
-      name: 'Failed Tests',
-      value: stats.failedTests,
-      icon: XCircle,
-      color: 'bg-error',
-      hoverColor: 'hover:bg-red-600',
-      onClick: () => navigate('/testcases?status=3')
-    },
-    {
-      name: 'Pending Tests',
-      value: stats.pendingTests,
-      icon: Clock,
-      color: 'bg-warning',
-      hoverColor: 'hover:bg-orange-600',
-      onClick: () => navigate('/testcases?status=1')
-    },
-    {
       name: 'Success Rate',
       value: `${stats.successRate}%`,
       icon: TrendingUp,
@@ -131,33 +107,41 @@ const Dashboard = () => {
       hoverColor: 'hover:bg-blue-600',
       onClick: () => navigate('/reports')
     },
+    {
+      name: 'Pending',
+      value: stats.pendingTests,
+      icon: Clock,
+      color: 'bg-warning',
+      hoverColor: 'hover:bg-orange-600',
+      onClick: () => navigate('/testcases?status=1')
+    },
   ];
 
   const quickActions = [
     {
-      label: 'View All Test Cases',
-      description: 'Browse and manage all test cases',
+      label: 'Test Cases',
+      description: 'Browse all test cases',
       icon: <FileText className="w-5 h-5" />,
       variant: 'primary',
       onClick: () => navigate('/testcases')
     },
     {
-      label: 'Browse Test Suites',
-      description: 'Explore test suite hierarchy',
+      label: 'Test Suites',
+      description: 'Explore hierarchy',
       icon: <FolderOpen className="w-5 h-5" />,
       variant: 'secondary',
       onClick: () => navigate('/test-suites')
     },
     {
-      label: 'Upload Document',
-      description: 'Import new test cases from documents',
+      label: 'Import',
+      description: 'Upload documents',
       icon: <Upload className="w-5 h-5" />,
       variant: 'secondary',
       onClick: () => navigate('/documents')
     },
     {
-      label: 'Generate Report',
-      description: 'Create detailed test reports',
+      label: 'Reports',
+      description: 'Generate reports',
       icon: <BarChart3 className="w-5 h-5" />,
       variant: 'secondary',
       onClick: () => navigate('/reports')
@@ -265,7 +249,7 @@ const Dashboard = () => {
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {metricCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -284,7 +268,11 @@ const Dashboard = () => {
                   <div className="ml-4 flex-1">
                     <p className="text-sm font-sf font-medium text-apple-gray-5">{stat.name}</p>
                     <p className="text-2xl font-sf-display font-semibold text-apple-gray-7">
-                      {loading ? '...' : stat.value}
+                      {loading ? (
+                        <span className="inline-block w-8 h-8 bg-apple-gray-2 rounded animate-pulse"></span>
+                      ) : (
+                        stat.value
+                      )}
                     </p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-apple-gray-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
@@ -342,7 +330,7 @@ const Dashboard = () => {
             </h3>
           </Card.Header>
           <Card.Body>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {quickActions.map((action, index) => (
                 <Button
                   key={index}

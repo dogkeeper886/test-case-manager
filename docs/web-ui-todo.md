@@ -336,6 +336,9 @@ font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
 5. **Basic search functionality** ✅
 6. **Backend integration** 🔄 **NEEDS REAL DATA**
 7. **Real database integration** 🔄 **NEW PRIORITY**
+8. **Dashboard design cleanup** 🔄 **NEW PRIORITY**
+9. **Apple design guidelines compliance** 🔄 **NEW PRIORITY**
+10. **Visual consistency and style tuning** 🔄 **NEW PRIORITY**
 
 ### **Medium Priority (Should Have)** 🔄
 1. **Advanced filtering** ✅
@@ -415,6 +418,90 @@ font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
 - **Clickable cards**: Test case cards now navigate to detail view
 - **Breadcrumbs**: Proper navigation breadcrumbs throughout the app
 - **Back navigation**: Seamless navigation between list and detail views
+
+## 🎨 **NEW PRIORITIES: Design & Consistency Improvements**
+
+### **Priority 1: Dashboard Design Cleanup** 🔄 **HIGH PRIORITY**
+**Goal**: Ensure dashboard design does not contain useless elements or duplicates
+
+**Tasks**:
+- [ ] **Audit Dashboard Elements**
+  - [ ] Review all dashboard cards and components for duplicates
+  - [ ] Remove any redundant or unnecessary elements
+  - [ ] Ensure each element serves a clear purpose
+  - [ ] Verify no duplicate navigation links or buttons
+  - [ ] Check for unused or placeholder elements
+
+- [ ] **Streamline Dashboard Layout**
+  - [ ] Optimize card layout and spacing
+  - [ ] Remove any visual clutter
+  - [ ] Ensure logical information hierarchy
+  - [ ] Verify all elements are functional and meaningful
+  - [ ] Test dashboard performance and loading
+
+### **Priority 2: Apple Design Guidelines Compliance** 🔄 **HIGH PRIORITY**
+**Goal**: Ensure layout follows Apple design guidelines perfectly
+
+**Tasks**:
+- [ ] **Typography Compliance**
+  - [ ] Verify SF Pro font usage throughout the app
+  - [ ] Check font weights and sizes match Apple guidelines
+  - [ ] Ensure proper line heights and letter spacing
+  - [ ] Verify text contrast ratios meet accessibility standards
+  - [ ] Test typography on different screen sizes
+
+- [ ] **Spacing & Layout**
+  - [ ] Implement 8px grid system consistently
+  - [ ] Verify proper margins and padding throughout
+  - [ ] Check component spacing follows Apple patterns
+  - [ ] Ensure consistent border radius values
+  - [ ] Verify proper use of white space
+
+- [ ] **Color System**
+  - [ ] Audit all colors against Apple's official palette
+  - [ ] Ensure semantic color usage (success, warning, error)
+  - [ ] Verify proper use of gray scale
+  - [ ] Check color accessibility and contrast
+  - [ ] Test color consistency across all components
+
+- [ ] **Component Design**
+  - [ ] Verify buttons follow Apple button guidelines
+  - [ ] Check card designs match Apple card patterns
+  - [ ] Ensure form elements follow Apple input guidelines
+  - [ ] Verify navigation patterns match Apple conventions
+  - [ ] Test hover and focus states
+
+### **Priority 3: Visual Consistency & Style Tuning** 🔄 **HIGH PRIORITY**
+**Goal**: Ensure all elements look consistent in style and color tone
+
+**Tasks**:
+- [ ] **Component Style Audit**
+  - [ ] Review all UI components for visual consistency
+  - [ ] Ensure consistent shadow and elevation usage
+  - [ ] Verify border styles are uniform across components
+  - [ ] Check for consistent corner radius values
+  - [ ] Audit button styles and variants
+
+- [ ] **Color Tone Consistency**
+  - [ ] Ensure consistent use of Apple color palette
+  - [ ] Verify proper color hierarchy (primary, secondary, tertiary)
+  - [ ] Check for consistent use of gray tones
+  - [ ] Ensure accent colors are used appropriately
+  - [ ] Test color consistency across different pages
+
+- [ ] **Visual Hierarchy**
+  - [ ] Verify proper use of typography scale
+  - [ ] Ensure consistent spacing between elements
+  - [ ] Check for proper visual grouping of related elements
+  - [ ] Verify consistent use of dividers and borders
+  - [ ] Test visual hierarchy on different screen sizes
+
+- [ ] **Interactive States**
+  - [ ] Ensure consistent hover states across all interactive elements
+  - [ ] Verify focus states follow accessibility guidelines
+  - [ ] Check for consistent loading states
+  - [ ] Ensure error states are visually consistent
+  - [ ] Test all interactive states across components
 
 ## 🚨 **Current Issues & Solutions**
 
