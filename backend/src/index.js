@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const { pool, testConnection } = require('./services/database');
 require('dotenv').config();
 
 const app = express();
@@ -13,6 +14,9 @@ app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Set up database connection in app locals
+app.locals.db = pool;
 
 // Routes
 app.use('/api/projects', require('./routes/projects'));
@@ -38,8 +42,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
+  
+  // Test database connection on startup
+  try {
+    await testConnection();
+  } catch (error) {
+    console.error('Failed to connect to database on startup:', error);
+  }
 });
 
 module.exports = app;

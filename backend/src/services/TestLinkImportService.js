@@ -7,13 +7,283 @@ class TestLinkImportService {
   }
 
   /**
-   * Import TestLink XML from file
+   * Import strategies for handling duplicates
+   */
+  static get IMPORT_STRATEGIES() {
+    return {
+      SKIP_DUPLICATES: 'skip_duplicates',
+      UPDATE_EXISTING: 'update_existing', 
+      CREATE_NEW: 'create_new',
+      MERGE_DATA: 'merge_data'
+    };
+  }
+
+  /**
+   * Preview import without actually importing data
+   * @param {string} filePath - Path to XML file
+   * @param {number} projectId - Project ID
+   * @returns {Promise<Object>} Preview data
+   */
+  async previewImport(filePath, projectId) {
+    try {
+      // Parse XML file
+      const parsedData = await this.parser.parseFile(filePath);
+      
+      // Validate parsed data
+      const validation = this.parser.validateParsedData(parsedData);
+      if (!validation.isValid) {
+        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      }
+
+      // Get statistics
+      const stats = this.parser.getStatistics(parsedData);
+      
+      // Analyze for duplicates
+      const duplicateAnalysis = await this.analyzeDuplicates(parsedData, projectId);
+      
+      return {
+        success: true,
+        statistics: stats,
+        duplicates: duplicateAnalysis,
+        recommendations: this.generateImportRecommendations(stats, duplicateAnalysis)
+      };
+    } catch (error) {
+      throw new Error(`Preview failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Preview import from content
+   * @param {string} xmlContent - XML content
+   * @param {number} projectId - Project ID
+   * @returns {Promise<Object>} Preview data
+   */
+  async previewImportFromContent(xmlContent, projectId) {
+    try {
+      // Parse XML content
+      const parsedData = await this.parser.parseContent(xmlContent);
+      
+      // Validate parsed data
+      const validation = this.parser.validateParsedData(parsedData);
+      if (!validation.isValid) {
+        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      }
+
+      // Get statistics
+      const stats = this.parser.getStatistics(parsedData);
+      
+      // Analyze for duplicates
+      const duplicateAnalysis = await this.analyzeDuplicates(parsedData, projectId);
+      
+      return {
+        success: true,
+        statistics: stats,
+        duplicates: duplicateAnalysis,
+        recommendations: this.generateImportRecommendations(stats, duplicateAnalysis)
+      };
+    } catch (error) {
+      throw new Error(`Preview failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Analyze duplicates in the data to be imported
+   * @param {Object} parsedData - Parsed XML data
+   * @param {number} projectId - Project ID
+   * @returns {Promise<Object>} Duplicate analysis
+   */
+  async analyzeDuplicates(parsedData, projectId) {
+    const duplicates = {
+      testSuites: [],
+      testCases: [],
+      summary: {
+        totalTestSuites: 0,
+        totalTestCases: 0,
+        duplicateTestSuites: 0,
+        duplicateTestCases: 0
+      }
+    };
+
+    // Analyze test suites for duplicates
+    const suiteDuplicates = await this.findDuplicateTestSuites(parsedData, projectId);
+    duplicates.testSuites = suiteDuplicates;
+    duplicates.summary.duplicateTestSuites = suiteDuplicates.length;
+
+    // Analyze test cases for duplicates
+    const caseDuplicates = await this.findDuplicateTestCases(parsedData, projectId);
+    duplicates.testCases = caseDuplicates;
+    duplicates.summary.duplicateTestCases = caseDuplicates.length;
+
+    // Get total counts
+    const stats = this.parser.getStatistics(parsedData);
+    duplicates.summary.totalTestSuites = stats.totalTestSuites;
+    duplicates.summary.totalTestCases = stats.totalTestCases;
+
+    return duplicates;
+  }
+
+  /**
+   * Find duplicate test suites
+   * @param {Object} parsedData - Parsed XML data
+   * @param {number} projectId - Project ID
+   * @returns {Promise<Array>} Duplicate test suites
+   */
+  async findDuplicateTestSuites(parsedData, projectId) {
+    const duplicates = [];
+    
+    const findDuplicatesRecursive = async (suiteData, parentPath = '') => {
+      const currentPath = parentPath ? `${parentPath} > ${suiteData.name}` : suiteData.name;
+      
+      // Check if test suite exists by name and project
+      const query = `
+        SELECT id, name, external_id, parent_suite_id 
+        FROM test_suites 
+        WHERE name = $1 AND project_id = $2 AND import_source = 'testlink'
+      `;
+      const result = await this.db.query(query, [suiteData.name, projectId]);
+      
+      if (result.rows.length > 0) {
+        duplicates.push({
+          name: suiteData.name,
+          path: currentPath,
+          externalId: suiteData.id,
+          existingIds: result.rows.map(row => row.id),
+          existingExternalIds: result.rows.map(row => row.external_id).filter(id => id)
+        });
+      }
+
+      // Check nested suites
+      if (suiteData.test_suites && suiteData.test_suites.length > 0) {
+        for (const childSuite of suiteData.test_suites) {
+          await findDuplicatesRecursive(childSuite, currentPath);
+        }
+      }
+    };
+
+    await findDuplicatesRecursive(parsedData);
+    return duplicates;
+  }
+
+  /**
+   * Find duplicate test cases
+   * @param {Object} parsedData - Parsed XML data
+   * @param {number} projectId - Project ID
+   * @returns {Promise<Array>} Duplicate test cases
+   */
+  async findDuplicateTestCases(parsedData, projectId) {
+    const duplicates = [];
+    
+    const findDuplicatesRecursive = async (suiteData, parentPath = '') => {
+      const currentPath = parentPath ? `${parentPath} > ${suiteData.name}` : suiteData.name;
+      
+      // Check test cases in current suite
+      if (suiteData.test_cases && suiteData.test_cases.length > 0) {
+        for (const testCase of suiteData.test_cases) {
+          // Check by internal_id first (most reliable)
+          const internalIdQuery = `
+            SELECT id, title, internal_id, external_id, test_suite_id
+            FROM test_cases 
+            WHERE internal_id = $1 AND import_source = 'testlink'
+          `;
+          const internalIdResult = await this.db.query(internalIdQuery, [testCase.internal_id]);
+          
+          if (internalIdResult.rows.length > 0) {
+            duplicates.push({
+              name: testCase.name,
+              path: `${currentPath} > ${testCase.name}`,
+              internalId: testCase.internal_id,
+              externalId: testCase.external_id,
+              existingIds: internalIdResult.rows.map(row => row.id),
+              matchType: 'internal_id'
+            });
+            continue;
+          }
+
+          // Check by title and suite (less reliable but catches some cases)
+          const titleQuery = `
+            SELECT tc.id, tc.title, tc.internal_id, tc.external_id, tc.test_suite_id, ts.name as suite_name
+            FROM test_cases tc
+            JOIN test_suites ts ON tc.test_suite_id = ts.id
+            WHERE tc.title = $1 AND ts.name = $2 AND tc.import_source = 'testlink'
+          `;
+          const titleResult = await this.db.query(titleQuery, [testCase.name, suiteData.name]);
+          
+          if (titleResult.rows.length > 0) {
+            duplicates.push({
+              name: testCase.name,
+              path: `${currentPath} > ${testCase.name}`,
+              internalId: testCase.internal_id,
+              externalId: testCase.external_id,
+              existingIds: titleResult.rows.map(row => row.id),
+              matchType: 'title_and_suite'
+            });
+          }
+        }
+      }
+
+      // Check nested suites
+      if (suiteData.test_suites && suiteData.test_suites.length > 0) {
+        for (const childSuite of suiteData.test_suites) {
+          await findDuplicatesRecursive(childSuite, currentPath);
+        }
+      }
+    };
+
+    await findDuplicatesRecursive(parsedData);
+    return duplicates;
+  }
+
+  /**
+   * Generate import recommendations based on analysis
+   * @param {Object} stats - Import statistics
+   * @param {Object} duplicates - Duplicate analysis
+   * @returns {Object} Recommendations
+   */
+  generateImportRecommendations(stats, duplicates) {
+    const recommendations = {
+      suggestedStrategy: TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING,
+      reasons: [],
+      warnings: []
+    };
+
+    // Analyze duplicate patterns
+    const duplicatePercentage = (duplicates.summary.duplicateTestCases / stats.totalTestCases) * 100;
+    
+    if (duplicatePercentage > 50) {
+      recommendations.suggestedStrategy = TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING;
+      recommendations.reasons.push(`High duplicate rate (${duplicatePercentage.toFixed(1)}%) - updating existing cases recommended`);
+    } else if (duplicatePercentage > 10) {
+      recommendations.suggestedStrategy = TestLinkImportService.IMPORT_STRATEGIES.MERGE_DATA;
+      recommendations.reasons.push(`Moderate duplicate rate (${duplicatePercentage.toFixed(1)}%) - consider merging data`);
+    } else if (duplicatePercentage === 0) {
+      recommendations.suggestedStrategy = TestLinkImportService.IMPORT_STRATEGIES.CREATE_NEW;
+      recommendations.reasons.push('No duplicates found - safe to create new cases');
+    } else {
+      recommendations.suggestedStrategy = TestLinkImportService.IMPORT_STRATEGIES.SKIP_DUPLICATES;
+      recommendations.reasons.push(`Low duplicate rate (${duplicatePercentage.toFixed(1)}%) - skipping duplicates recommended`);
+    }
+
+    // Add warnings for large imports
+    if (stats.totalTestCases > 1000) {
+      recommendations.warnings.push('Large import detected - consider breaking into smaller files');
+    }
+
+    if (stats.maxDepth > 5) {
+      recommendations.warnings.push('Deep hierarchy detected - may impact performance');
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Import TestLink XML from file with strategy
    * @param {string} filePath - Path to XML file
    * @param {number} projectId - Project ID to import into
+   * @param {string} strategy - Import strategy
    * @param {number} documentId - Document ID (optional)
    * @returns {Promise<Object>} Import result
    */
-  async importFromFile(filePath, projectId, documentId = null) {
+  async importFromFile(filePath, projectId, strategy = TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING, documentId = null) {
     const importLogId = await this.createImportLog(projectId, documentId, 'testlink', filePath);
     
     try {
@@ -31,7 +301,8 @@ class TestLinkImportService {
       const stats = this.parser.getStatistics(parsedData);
       await this.updateImportLog(importLogId, 'processing', {
         total_test_suites: stats.totalTestSuites,
-        total_test_cases: stats.totalTestCases
+        total_test_cases: stats.totalTestCases,
+        strategy: strategy
       });
 
       // Start database transaction
@@ -40,15 +311,18 @@ class TestLinkImportService {
       try {
         await client.query('BEGIN');
 
-        // Import test suites and test cases
-        const result = await this.importTestSuiteRecursive(parsedData, projectId, null, client);
+        // Import test suites and test cases with strategy
+        const result = await this.importTestSuiteRecursiveWithStrategy(parsedData, projectId, null, client, strategy);
 
         await client.query('COMMIT');
 
         // Update import log with success
         await this.updateImportLog(importLogId, 'completed', {
           imported_test_suites: result.importedSuites,
-          imported_test_cases: result.importedCases
+          imported_test_cases: result.importedCases,
+          skipped_test_cases: result.skippedCases,
+          updated_test_cases: result.updatedCases,
+          strategy: strategy
         });
 
         return {
@@ -56,7 +330,10 @@ class TestLinkImportService {
           importLogId,
           importedSuites: result.importedSuites,
           importedCases: result.importedCases,
-          statistics: stats
+          skippedCases: result.skippedCases,
+          updatedCases: result.updatedCases,
+          statistics: stats,
+          strategy: strategy
         };
 
       } catch (error) {
@@ -70,109 +347,6 @@ class TestLinkImportService {
       await this.updateImportLog(importLogId, 'failed', { errors: [error.message] });
       throw error;
     }
-  }
-
-  /**
-   * Import TestLink XML from content string
-   * @param {string} xmlContent - XML content
-   * @param {number} projectId - Project ID to import into
-   * @param {number} documentId - Document ID (optional)
-   * @param {string} fileName - File name for logging
-   * @returns {Promise<Object>} Import result
-   */
-  async importFromContent(xmlContent, projectId, documentId = null, fileName = 'uploaded.xml') {
-    const importLogId = await this.createImportLog(projectId, documentId, 'testlink', fileName);
-    
-    try {
-      // Parse XML content
-      const parsedData = await this.parser.parseContent(xmlContent);
-      
-      // Validate parsed data
-      const validation = this.parser.validateParsedData(parsedData);
-      if (!validation.isValid) {
-        await this.updateImportLog(importLogId, 'failed', { errors: validation.errors });
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-      }
-
-      // Get statistics
-      const stats = this.parser.getStatistics(parsedData);
-      await this.updateImportLog(importLogId, 'processing', {
-        total_test_suites: stats.totalTestSuites,
-        total_test_cases: stats.totalTestCases
-      });
-
-      // Start database transaction
-      const client = await this.db.connect();
-      
-      try {
-        await client.query('BEGIN');
-
-        // Import test suites and test cases
-        const result = await this.importTestSuiteRecursive(parsedData, projectId, null, client);
-
-        await client.query('COMMIT');
-
-        // Update import log with success
-        await this.updateImportLog(importLogId, 'completed', {
-          imported_test_suites: result.importedSuites,
-          imported_test_cases: result.importedCases
-        });
-
-        return {
-          success: true,
-          importLogId,
-          importedSuites: result.importedSuites,
-          importedCases: result.importedCases,
-          statistics: stats
-        };
-
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
-      }
-
-    } catch (error) {
-      await this.updateImportLog(importLogId, 'failed', { errors: [error.message] });
-      throw error;
-    }
-  }
-
-  /**
-   * Import test suite recursively
-   * @param {Object} suiteData - Test suite data
-   * @param {number} projectId - Project ID
-   * @param {number} parentId - Parent suite ID (null for root)
-   * @param {Object} client - Database client
-   * @returns {Promise<Object>} Import result
-   */
-  async importTestSuiteRecursive(suiteData, projectId, parentId, client) {
-    let importedSuites = 0;
-    let importedCases = 0;
-
-    // Import current test suite
-    const suiteId = await this.importTestSuite(suiteData, projectId, parentId, client);
-    importedSuites++;
-
-    // Import test cases in this suite
-    if (suiteData.test_cases && suiteData.test_cases.length > 0) {
-      for (const testCaseData of suiteData.test_cases) {
-        await this.importTestCase(testCaseData, projectId, suiteId, client);
-        importedCases++;
-      }
-    }
-
-    // Import nested test suites
-    if (suiteData.test_suites && suiteData.test_suites.length > 0) {
-      for (const childSuiteData of suiteData.test_suites) {
-        const childResult = await this.importTestSuiteRecursive(childSuiteData, projectId, suiteId, client);
-        importedSuites += childResult.importedSuites;
-        importedCases += childResult.importedCases;
-      }
-    }
-
-    return { importedSuites, importedCases };
   }
 
   /**
@@ -205,69 +379,6 @@ class TestLinkImportService {
 
     const result = await client.query(query, values);
     return result.rows[0].id;
-  }
-
-  /**
-   * Import a single test case
-   * @param {Object} testCaseData - Test case data
-   * @param {number} projectId - Project ID
-   * @param {number} suiteId - Test suite ID
-   * @param {Object} client - Database client
-   * @returns {Promise<number>} Created test case ID
-   */
-  async importTestCase(testCaseData, projectId, suiteId, client) {
-    // Check for existing test case by internal_id
-    const existingQuery = `
-      SELECT id FROM test_cases 
-      WHERE internal_id = $1 AND import_source = 'testlink'
-    `;
-    const existingResult = await client.query(existingQuery, [testCaseData.internal_id]);
-    
-    if (existingResult.rows.length > 0) {
-      // Update existing test case
-      return await this.updateExistingTestCase(testCaseData, existingResult.rows[0].id, client);
-    }
-
-    // Create new test case
-    const query = `
-      INSERT INTO test_cases (
-        test_suite_id, title, description, prerequisites,
-        external_id, internal_id, version, node_order, execution_type,
-        importance, is_open, active, import_source, imported_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
-      RETURNING id
-    `;
-
-    const values = [
-      suiteId,
-      testCaseData.name,
-      testCaseData.summary || '',
-      testCaseData.preconditions || '',
-      testCaseData.external_id || null,
-      testCaseData.internal_id,
-      testCaseData.version || '1',
-      testCaseData.node_order || 0,
-      testCaseData.execution_type || 1,
-      testCaseData.importance || 2,
-      testCaseData.is_open === 1,
-      testCaseData.active === 1,
-      'testlink'
-    ];
-
-    const result = await client.query(query, values);
-    const testCaseId = result.rows[0].id;
-
-    // Import test steps
-    if (testCaseData.steps && testCaseData.steps.length > 0) {
-      await this.importTestSteps(testCaseData.steps, testCaseId, client);
-    }
-
-    // Import custom fields
-    if (testCaseData.custom_fields && testCaseData.custom_fields.length > 0) {
-      await this.importCustomFields(testCaseData.custom_fields, testCaseId, client);
-    }
-
-    return testCaseId;
   }
 
   /**
@@ -313,6 +424,225 @@ class TestLinkImportService {
     }
 
     // Update custom fields
+    await client.query('DELETE FROM custom_fields WHERE test_case_id = $1', [testCaseId]);
+    if (testCaseData.custom_fields && testCaseData.custom_fields.length > 0) {
+      await this.importCustomFields(testCaseData.custom_fields, testCaseId, client);
+    }
+
+    return testCaseId;
+  }
+
+  /**
+   * Import test suite recursively with strategy
+   * @param {Object} suiteData - Test suite data
+   * @param {number} projectId - Project ID
+   * @param {number} parentId - Parent suite ID (null for root)
+   * @param {Object} client - Database client
+   * @param {string} strategy - Import strategy
+   * @returns {Promise<Object>} Import result
+   */
+  async importTestSuiteRecursiveWithStrategy(suiteData, projectId, parentId, client, strategy) {
+    let importedSuites = 0;
+    let importedCases = 0;
+    let skippedCases = 0;
+    let updatedCases = 0;
+
+    // Import current test suite
+    const suiteId = await this.importTestSuite(suiteData, projectId, parentId, client);
+    importedSuites++;
+
+    // Import test cases in this suite with strategy
+    if (suiteData.test_cases && suiteData.test_cases.length > 0) {
+      for (const testCaseData of suiteData.test_cases) {
+        const caseResult = await this.importTestCaseWithStrategy(testCaseData, projectId, suiteId, client, strategy);
+        
+        if (caseResult.action === 'created') {
+          importedCases++;
+        } else if (caseResult.action === 'updated') {
+          updatedCases++;
+        } else if (caseResult.action === 'skipped') {
+          skippedCases++;
+        }
+      }
+    }
+
+    // Import nested test suites
+    if (suiteData.test_suites && suiteData.test_suites.length > 0) {
+      for (const childSuiteData of suiteData.test_suites) {
+        const childResult = await this.importTestSuiteRecursiveWithStrategy(childSuiteData, projectId, suiteId, client, strategy);
+        importedSuites += childResult.importedSuites;
+        importedCases += childResult.importedCases;
+        skippedCases += childResult.skippedCases;
+        updatedCases += childResult.updatedCases;
+      }
+    }
+
+    return { importedSuites, importedCases, skippedCases, updatedCases };
+  }
+
+  /**
+   * Import a single test case with strategy
+   * @param {Object} testCaseData - Test case data
+   * @param {number} projectId - Project ID
+   * @param {number} suiteId - Test suite ID
+   * @param {Object} client - Database client
+   * @param {string} strategy - Import strategy
+   * @returns {Promise<Object>} Import result
+   */
+  async importTestCaseWithStrategy(testCaseData, projectId, suiteId, client, strategy) {
+    // Check for existing test case by internal_id
+    const existingQuery = `
+      SELECT id FROM test_cases 
+      WHERE internal_id = $1 AND import_source = 'testlink'
+    `;
+    const existingResult = await client.query(existingQuery, [testCaseData.internal_id]);
+    
+    if (existingResult.rows.length > 0) {
+      // Handle duplicate based on strategy
+      switch (strategy) {
+        case TestLinkImportService.IMPORT_STRATEGIES.SKIP_DUPLICATES:
+          return { action: 'skipped', testCaseId: existingResult.rows[0].id };
+          
+        case TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING:
+          await this.updateExistingTestCase(testCaseData, existingResult.rows[0].id, client);
+          return { action: 'updated', testCaseId: existingResult.rows[0].id };
+          
+        case TestLinkImportService.IMPORT_STRATEGIES.CREATE_NEW:
+          // Create new with modified internal_id to avoid conflict
+          const newInternalId = `${testCaseData.internal_id}_${Date.now()}`;
+          testCaseData.internal_id = newInternalId;
+          const testCaseId = await this.createNewTestCase(testCaseData, projectId, suiteId, client);
+          return { action: 'created', testCaseId };
+          
+        case TestLinkImportService.IMPORT_STRATEGIES.MERGE_DATA:
+          await this.mergeTestCaseData(testCaseData, existingResult.rows[0].id, client);
+          return { action: 'updated', testCaseId: existingResult.rows[0].id };
+          
+        default:
+          // Default to update existing
+          await this.updateExistingTestCase(testCaseData, existingResult.rows[0].id, client);
+          return { action: 'updated', testCaseId: existingResult.rows[0].id };
+      }
+    }
+
+    // Create new test case
+    const testCaseId = await this.createNewTestCase(testCaseData, projectId, suiteId, client);
+    return { action: 'created', testCaseId };
+  }
+
+  /**
+   * Create new test case
+   * @param {Object} testCaseData - Test case data
+   * @param {number} projectId - Project ID
+   * @param {number} suiteId - Test suite ID
+   * @param {Object} client - Database client
+   * @returns {Promise<number>} Created test case ID
+   */
+  async createNewTestCase(testCaseData, projectId, suiteId, client) {
+    const query = `
+      INSERT INTO test_cases (
+        test_suite_id, title, description, prerequisites,
+        external_id, internal_id, version, node_order, execution_type,
+        importance, is_open, active, import_source, imported_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
+      RETURNING id
+    `;
+
+    const values = [
+      suiteId,
+      testCaseData.name,
+      testCaseData.summary || '',
+      testCaseData.preconditions || '',
+      testCaseData.external_id || null,
+      testCaseData.internal_id,
+      testCaseData.version || '1',
+      testCaseData.node_order || 0,
+      testCaseData.execution_type || 1,
+      testCaseData.importance || 2,
+      testCaseData.is_open === 1,
+      testCaseData.active === 1,
+      'testlink'
+    ];
+
+    const result = await client.query(query, values);
+    const testCaseId = result.rows[0].id;
+
+    // Import test steps
+    if (testCaseData.steps && testCaseData.steps.length > 0) {
+      await this.importTestSteps(testCaseData.steps, testCaseId, client);
+    }
+
+    // Import custom fields
+    if (testCaseData.custom_fields && testCaseData.custom_fields.length > 0) {
+      await this.importCustomFields(testCaseData.custom_fields, testCaseId, client);
+    }
+
+    return testCaseId;
+  }
+
+  /**
+   * Merge test case data (combine information from both)
+   * @param {Object} testCaseData - New test case data
+   * @param {number} testCaseId - Existing test case ID
+   * @param {Object} client - Database client
+   * @returns {Promise<number>} Test case ID
+   */
+  async mergeTestCaseData(testCaseData, testCaseId, client) {
+    // Get existing test case data
+    const existingQuery = `
+      SELECT title, description, prerequisites, version, execution_type, importance, is_open, active
+      FROM test_cases WHERE id = $1
+    `;
+    const existingResult = await client.query(existingQuery, [testCaseId]);
+    const existing = existingResult.rows[0];
+
+    // Merge logic: prefer newer data, but keep existing if new is empty
+    const mergedData = {
+      title: testCaseData.name || existing.title,
+      description: testCaseData.summary || existing.description,
+      prerequisites: testCaseData.preconditions || existing.prerequisites,
+      version: testCaseData.version || existing.version,
+      execution_type: testCaseData.execution_type || existing.execution_type,
+      importance: testCaseData.importance || existing.importance,
+      is_open: testCaseData.is_open === 1 ? true : existing.is_open,
+      active: testCaseData.active === 1 ? true : existing.active
+    };
+
+    const query = `
+      UPDATE test_cases SET
+        title = $1,
+        description = $2,
+        prerequisites = $3,
+        version = $4,
+        execution_type = $5,
+        importance = $6,
+        is_open = $7,
+        active = $8,
+        imported_at = NOW()
+      WHERE id = $9
+    `;
+
+    const values = [
+      mergedData.title,
+      mergedData.description,
+      mergedData.prerequisites,
+      mergedData.version,
+      mergedData.execution_type,
+      mergedData.importance,
+      mergedData.is_open,
+      mergedData.active,
+      testCaseId
+    ];
+
+    await client.query(query, values);
+
+    // Merge test steps (replace existing with new)
+    await client.query('DELETE FROM test_steps WHERE test_case_id = $1', [testCaseId]);
+    if (testCaseData.steps && testCaseData.steps.length > 0) {
+      await this.importTestSteps(testCaseData.steps, testCaseId, client);
+    }
+
+    // Merge custom fields (replace existing with new)
     await client.query('DELETE FROM custom_fields WHERE test_case_id = $1', [testCaseId]);
     if (testCaseData.custom_fields && testCaseData.custom_fields.length > 0) {
       await this.importCustomFields(testCaseData.custom_fields, testCaseId, client);
@@ -368,6 +698,81 @@ class TestLinkImportService {
       ];
 
       await client.query(query, values);
+    }
+  }
+
+  /**
+   * Import TestLink XML from content string
+   * @param {string} xmlContent - XML content
+   * @param {number} projectId - Project ID to import into
+   * @param {string} strategy - Import strategy
+   * @param {number} documentId - Document ID (optional)
+   * @param {string} fileName - File name for logging
+   * @returns {Promise<Object>} Import result
+   */
+  async importFromContent(xmlContent, projectId, strategy = TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING, documentId = null, fileName = 'uploaded.xml') {
+    const importLogId = await this.createImportLog(projectId, documentId, 'testlink', fileName);
+    
+    try {
+      // Parse XML content
+      const parsedData = await this.parser.parseContent(xmlContent);
+      
+      // Validate parsed data
+      const validation = this.parser.validateParsedData(parsedData);
+      if (!validation.isValid) {
+        await this.updateImportLog(importLogId, 'failed', { errors: validation.errors });
+        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+      }
+
+      // Get statistics
+      const stats = this.parser.getStatistics(parsedData);
+      await this.updateImportLog(importLogId, 'processing', {
+        total_test_suites: stats.totalTestSuites,
+        total_test_cases: stats.totalTestCases,
+        strategy: strategy
+      });
+
+      // Start database transaction
+      const client = await this.db.connect();
+      
+      try {
+        await client.query('BEGIN');
+
+        // Import test suites and test cases with strategy
+        const result = await this.importTestSuiteRecursiveWithStrategy(parsedData, projectId, null, client, strategy);
+
+        await client.query('COMMIT');
+
+        // Update import log with success
+        await this.updateImportLog(importLogId, 'completed', {
+          imported_test_suites: result.importedSuites,
+          imported_test_cases: result.importedCases,
+          skipped_test_cases: result.skippedCases,
+          updated_test_cases: result.updatedCases,
+          strategy: strategy
+        });
+
+        return {
+          success: true,
+          importLogId,
+          importedSuites: result.importedSuites,
+          importedCases: result.importedCases,
+          skippedCases: result.skippedCases,
+          updatedCases: result.updatedCases,
+          statistics: stats,
+          strategy: strategy
+        };
+
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+
+    } catch (error) {
+      await this.updateImportLog(importLogId, 'failed', { errors: [error.message] });
+      throw error;
     }
   }
 

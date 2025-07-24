@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
-import { Upload, FileText, Download, Trash2, Plus, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { Button, Card, Badge, Input } from '../components/ui';
+import React, { useState, useRef } from 'react';
+import { Upload, FileText, Trash2, Plus, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Button, Card, Badge } from '../components/ui';
 import Layout from '../components/layout/Layout';
+import { importAPI } from '../services/api';
 
 const Import = () => {
   const [dragActive, setDragActive] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+  const fileInputRef = useRef(null);
 
   const importHistory = [
     {
@@ -60,8 +64,7 @@ const Import = () => {
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      // Handle file upload
-      console.log('File dropped:', e.dataTransfer.files[0]);
+      handleFileUpload(e.dataTransfer.files[0]);
     }
   };
 
@@ -92,12 +95,74 @@ const Import = () => {
   };
 
   const handleLayoutSearch = (query) => {
-    setSearchQuery(query);
     // TODO: Implement import history search
+    console.log('Search query:', query);
   };
 
   const handleImportFile = () => {
-    console.log('Import file');
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0]);
+    }
+  };
+
+  const handleFileUpload = async (file) => {
+    if (!file || !file.name.endsWith('.xml')) {
+      setUploadError('Please select a valid XML file');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+    setUploadSuccess(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('xmlFile', file);
+      formData.append('projectId', '1'); // Use the sample project
+
+      // First, preview the import to show user what will be imported
+      const previewResponse = await importAPI.previewFile(formData);
+      console.log('Preview response:', previewResponse.data);
+      
+      // Show preview information to user
+      const previewData = previewResponse.data.data;
+      const duplicateCount = previewData.duplicates.summary.duplicateTestCases;
+      const totalCount = previewData.statistics.totalTestCases;
+      
+      if (duplicateCount > 0) {
+        const confirmMessage = `Found ${duplicateCount} duplicate test cases out of ${totalCount} total. Do you want to proceed with the import?`;
+        if (!window.confirm(confirmMessage)) {
+          setUploading(false);
+          return;
+        }
+      }
+
+      // Proceed with import using the recommended strategy
+      const importFormData = new FormData();
+      importFormData.append('xmlFile', file);
+      importFormData.append('projectId', '1');
+      importFormData.append('strategy', previewData.recommendations.suggestedStrategy);
+
+      const response = await importAPI.importFile(importFormData);
+
+      setUploadSuccess(`Successfully imported ${file.name} with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`);
+      console.log('Import response:', response.data);
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError(error.response?.data?.error || 'Failed to upload file');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleDownloadTemplate = () => {
@@ -163,13 +228,50 @@ const Import = () => {
                   <span className="font-medium text-apple-blue hover:text-apple-blue/80" data-element="import-upload-link">
                     Upload TestLink XML file
                   </span>
-                  <input id="import-file-upload" name="import-file-upload" type="file" accept=".xml" className="sr-only" data-element="import-file-input" />
+                  <input 
+                    ref={fileInputRef}
+                    id="import-file-upload" 
+                    name="import-file-upload" 
+                    type="file" 
+                    accept=".xml" 
+                    className="sr-only" 
+                    data-element="import-file-input"
+                    onChange={handleFileSelect}
+                  />
                 </label>
                 <p className="pl-1" data-element="import-drag-text">or drag and drop</p>
               </div>
               <p className="text-xs text-apple-gray-4 mt-2" data-element="import-file-types">
                 TestLink XML export files only
               </p>
+              
+              {/* Upload Status */}
+              {uploading && (
+                <div className="mt-4 p-3 bg-apple-blue/10 border border-apple-blue/20 rounded-apple">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-apple-blue animate-spin" />
+                    <span className="text-sm text-apple-blue">Uploading and processing file...</span>
+                  </div>
+                </div>
+              )}
+              
+              {uploadError && (
+                <div className="mt-4 p-3 bg-apple-red/10 border border-apple-red/20 rounded-apple">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-apple-red" />
+                    <span className="text-sm text-apple-red">{uploadError}</span>
+                  </div>
+                </div>
+              )}
+              
+              {uploadSuccess && (
+                <div className="mt-4 p-3 bg-apple-green/10 border border-apple-green/20 rounded-apple">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-apple-green" />
+                    <span className="text-sm text-apple-green">{uploadSuccess}</span>
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Help Section */}

@@ -164,4 +164,35 @@ export const healthAPI = {
   check: () => api.get('/health'),
 };
 
+export const importAPI = {
+  // Get available import strategies
+  getStrategies: () => api.get('/api/import/strategies'),
+  
+  // Preview import from file
+  previewFile: (formData) => api.post('/api/import/testlink/preview', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
+  
+  // Preview import from content
+  previewContent: (data) => api.post('/api/import/testlink/content/preview', data),
+  
+  // Import from file
+  importFile: (formData) => api.post('/api/import/testlink', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
+  
+  // Import from content
+  importContent: (data) => api.post('/api/import/testlink/content', data),
+  
+  // Get import status
+  getStatus: (importLogId) => api.get(`/api/import/status/${importLogId}`),
+  
+  // Get import logs for project
+  getLogs: (projectId) => api.get(`/api/import/logs/${projectId}`),
+};
+
 export default api; 

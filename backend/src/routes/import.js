@@ -51,11 +51,17 @@ router.post('/testlink', upload.single('xmlFile'), async (req, res) => {
       return res.status(400).json({ error: 'No XML file uploaded' });
     }
 
-    const { projectId, documentId } = req.body;
+    const { projectId, documentId, strategy } = req.body;
     
     if (!projectId) {
       return res.status(400).json({ error: 'Project ID is required' });
     }
+
+    // Validate strategy
+    const validStrategies = Object.values(TestLinkImportService.IMPORT_STRATEGIES);
+    const importStrategy = strategy && validStrategies.includes(strategy) 
+      ? strategy 
+      : TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING;
 
     // Initialize import service
     const service = initializeImportService(req.app.locals.db);
@@ -64,6 +70,7 @@ router.post('/testlink', upload.single('xmlFile'), async (req, res) => {
     const result = await service.importFromFile(
       req.file.path, 
       parseInt(projectId), 
+      importStrategy,
       documentId ? parseInt(documentId) : null
     );
 
@@ -97,10 +104,59 @@ router.post('/testlink', upload.single('xmlFile'), async (req, res) => {
   }
 });
 
+// POST /api/import/testlink/preview - Preview import without importing
+router.post('/testlink/preview', upload.single('xmlFile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No XML file uploaded' });
+    }
+
+    const { projectId } = req.body;
+    
+    if (!projectId) {
+      return res.status(400).json({ error: 'Project ID is required' });
+    }
+
+    // Initialize import service
+    const service = initializeImportService(req.app.locals.db);
+    
+    // Preview the import
+    const preview = await service.previewImport(req.file.path, parseInt(projectId));
+
+    // Clean up uploaded file
+    try {
+      await fs.unlink(req.file.path);
+    } catch (cleanupError) {
+      console.warn('Failed to cleanup uploaded file:', cleanupError);
+    }
+
+    res.json({
+      message: 'Import preview completed',
+      data: preview
+    });
+
+  } catch (error) {
+    // Clean up uploaded file on error
+    if (req.file) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup uploaded file on error:', cleanupError);
+      }
+    }
+
+    console.error('Preview error:', error);
+    res.status(500).json({ 
+      error: 'Preview failed', 
+      details: error.message 
+    });
+  }
+});
+
 // POST /api/import/testlink/content - Import TestLink XML from content
 router.post('/testlink/content', async (req, res) => {
   try {
-    const { xmlContent, projectId, documentId, fileName } = req.body;
+    const { xmlContent, projectId, documentId, fileName, strategy } = req.body;
     
     if (!xmlContent) {
       return res.status(400).json({ error: 'XML content is required' });
@@ -110,13 +166,20 @@ router.post('/testlink/content', async (req, res) => {
       return res.status(400).json({ error: 'Project ID is required' });
     }
 
+    // Validate strategy
+    const validStrategies = Object.values(TestLinkImportService.IMPORT_STRATEGIES);
+    const importStrategy = strategy && validStrategies.includes(strategy) 
+      ? strategy 
+      : TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING;
+
     // Initialize import service
     const service = initializeImportService(req.app.locals.db);
     
     // Import the content
     const result = await service.importFromContent(
       xmlContent,
-      parseInt(projectId),
+      parseInt(projectId), 
+      importStrategy,
       documentId ? parseInt(documentId) : null,
       fileName || 'uploaded.xml'
     );
@@ -133,6 +196,55 @@ router.post('/testlink/content', async (req, res) => {
       details: error.message 
     });
   }
+});
+
+// POST /api/import/testlink/content/preview - Preview import from content
+router.post('/testlink/content/preview', async (req, res) => {
+  try {
+    const { xmlContent, projectId } = req.body;
+    
+    if (!xmlContent) {
+      return res.status(400).json({ error: 'XML content is required' });
+    }
+
+    if (!projectId) {
+      return res.status(400).json({ error: 'Project ID is required' });
+    }
+
+    // Initialize import service
+    const service = initializeImportService(req.app.locals.db);
+    
+    // Preview the import
+    const preview = await service.previewImportFromContent(xmlContent, parseInt(projectId));
+
+    res.json({
+      message: 'Import preview completed',
+      data: preview
+    });
+
+  } catch (error) {
+    console.error('Preview error:', error);
+    res.status(500).json({ 
+      error: 'Preview failed', 
+      details: error.message 
+    });
+  }
+});
+
+// GET /api/import/strategies - Get available import strategies
+router.get('/strategies', (req, res) => {
+  res.json({
+    message: 'Available import strategies',
+    data: {
+      strategies: TestLinkImportService.IMPORT_STRATEGIES,
+      descriptions: {
+        [TestLinkImportService.IMPORT_STRATEGIES.SKIP_DUPLICATES]: 'Skip importing if test case already exists',
+        [TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING]: 'Update existing test cases with new data',
+        [TestLinkImportService.IMPORT_STRATEGIES.CREATE_NEW]: 'Create new test cases even if duplicates exist',
+        [TestLinkImportService.IMPORT_STRATEGIES.MERGE_DATA]: 'Merge data from both existing and new test cases'
+      }
+    }
+  });
 });
 
 // GET /api/import/status/:importLogId - Get import status
