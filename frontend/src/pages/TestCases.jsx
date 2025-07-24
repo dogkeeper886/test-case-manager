@@ -197,6 +197,14 @@ const TestCases = () => {
     // TODO: Implement global search
   };
 
+  // Handle create test case from top nav
+  const handleCreateTestCase = () => {
+    console.log('Create test case clicked');
+    // TODO: Open create test case modal or navigate to create form
+    // For now, show a placeholder alert
+    alert('Create Test Case functionality will be implemented here');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-apple-gray-1 flex items-center justify-center">
@@ -234,10 +242,10 @@ const TestCases = () => {
       ]}
       actions={[
         {
-          label: 'Add Test Case',
+          label: 'Create Test Case',
           variant: 'primary',
           icon: <Plus className="w-4 h-4" />,
-          onClick: () => console.log('Add test case')
+          onClick: () => handleCreateTestCase()
         }
       ]}
       showSearch={false}

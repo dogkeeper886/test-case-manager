@@ -192,10 +192,10 @@ const Dashboard = () => {
       breadcrumbs={[]}
       actions={[
         {
-          label: 'Add Test Case',
+          label: 'Create Test Case',
           variant: 'primary',
           icon: <Plus className="w-4 h-4" />,
-          onClick: () => navigate('/testcases')
+          onClick: () => navigate('/testcases?action=create')
         }
       ]}
       showSearch={false}

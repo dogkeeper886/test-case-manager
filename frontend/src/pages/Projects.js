@@ -97,6 +97,13 @@ const Projects = () => {
     }
   };
 
+  const handleCreateProject = () => {
+    console.log('Create project clicked');
+    // TODO: Open create project modal or navigate to create form
+    // For now, show a placeholder alert
+    alert('Create Project functionality will be implemented here');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-apple-gray-1 flex items-center justify-center">
@@ -128,10 +135,10 @@ const Projects = () => {
       ]}
       actions={[
         {
-          label: 'Add Project',
+          label: 'Create Project',
           variant: 'primary',
           icon: <Plus className="w-4 h-4" />,
-          onClick: () => console.log('Add project')
+          onClick: () => handleCreateProject()
         }
       ]}
     >
