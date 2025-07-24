@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS import_logs (
     document_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
     import_type VARCHAR(50) NOT NULL, -- 'testlink', 'other'
     file_name VARCHAR(255) NOT NULL,
+    file_size INTEGER DEFAULT 0, -- File size in bytes
     total_test_suites INTEGER DEFAULT 0,
     total_test_cases INTEGER DEFAULT 0,
     imported_test_suites INTEGER DEFAULT 0,

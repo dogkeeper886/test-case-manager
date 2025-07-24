@@ -3,12 +3,12 @@ import { Upload, FileText, Trash2, Plus, AlertCircle, CheckCircle, Clock } from 
 import { Button, Card, Badge } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import { importAPI } from '../services/api';
+import { showSuccess, showError } from '../utils/toast';
 
 const Import = () => {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
-  const [uploadSuccess, setUploadSuccess] = useState(null);
+  // Removed uploadError and uploadSuccess state - now using toast notifications
   const [importHistory, setImportHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyError, setHistoryError] = useState(null);
@@ -30,16 +30,16 @@ const Import = () => {
           id: log.id,
           filename: log.file_name || 'Unknown file',
           size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
-          uploaded: new Date(log.created_at).toLocaleDateString(),
+          uploaded: new Date(log.started_at).toLocaleDateString(),
           status: log.status === 'completed' ? 'Completed' : 
                   log.status === 'failed' ? 'Failed' : 
                   log.status === 'processing' ? 'Processing' : 'Unknown',
-          testCases: log.additional_data?.imported_test_cases || 0,
-          testSuites: log.additional_data?.imported_test_suites || 0,
+          testCases: log.imported_test_cases || 0,
+          testSuites: log.imported_test_suites || 0,
           projects: 1, // Always 1 for now
-          duration: log.additional_data?.duration || '--',
-          error: log.additional_data?.errors?.[0] || null,
-          strategy: log.additional_data?.strategy || 'unknown'
+          duration: log.duration || '--',
+          error: log.errors?.[0] || null,
+          strategy: log.strategy || 'unknown'
         }));
         
         setImportHistory(transformedHistory);
@@ -119,13 +119,11 @@ const Import = () => {
 
   const handleFileUpload = async (file) => {
     if (!file || !file.name.endsWith('.xml')) {
-      setUploadError('Please select a valid XML file');
+      showError('Please select a valid XML file');
       return;
     }
 
     setUploading(true);
-    setUploadError(null);
-    setUploadSuccess(null);
 
     try {
       const formData = new FormData();
@@ -157,7 +155,7 @@ const Import = () => {
 
       const response = await importAPI.importFile(importFormData);
 
-      setUploadSuccess(`Successfully imported ${file.name} with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`);
+      showSuccess(`Successfully imported ${file.name} with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`);
       console.log('Import response:', response.data);
       
       // Refresh import history after successful import
@@ -167,16 +165,16 @@ const Import = () => {
         id: log.id,
         filename: log.file_name || 'Unknown file',
         size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
-        uploaded: new Date(log.created_at).toLocaleDateString(),
+        uploaded: new Date(log.started_at).toLocaleDateString(),
         status: log.status === 'completed' ? 'Completed' : 
                 log.status === 'failed' ? 'Failed' : 
                 log.status === 'processing' ? 'Processing' : 'Unknown',
-        testCases: log.additional_data?.imported_test_cases || 0,
-        testSuites: log.additional_data?.imported_test_suites || 0,
+        testCases: log.imported_test_cases || 0,
+        testSuites: log.imported_test_suites || 0,
         projects: 1,
-        duration: log.additional_data?.duration || '--',
-        error: log.additional_data?.errors?.[0] || null,
-        strategy: log.additional_data?.strategy || 'unknown'
+        duration: log.duration || '--',
+        error: log.errors?.[0] || null,
+        strategy: log.strategy || 'unknown'
       }));
       setImportHistory(transformedHistory);
       
@@ -187,25 +185,39 @@ const Import = () => {
       
     } catch (error) {
       console.error('Upload error:', error);
-      setUploadError(error.response?.data?.error || 'Failed to upload file');
+      showError(error.response?.data?.error || 'Failed to upload file');
     } finally {
       setUploading(false);
     }
   };
 
   const handleDownloadTemplate = () => {
-    console.log('Download template');
+    try {
+      // Create a link element to trigger download
+      const link = document.createElement('a');
+      link.href = 'http://localhost:3001/api/import/template';
+      link.download = 'testlink-template.xml';
+      link.target = '_blank';
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Failed to download template:', error);
+      // Fallback: open in new tab
+      window.open('http://localhost:3001/api/import/template', '_blank');
+    }
   };
 
   const handleRetryImport = async (importId) => {
     try {
       setUploading(true);
-      setUploadError(null);
       
       // Retry the import with the same strategy
       const response = await importAPI.retryImport(importId);
       
-      setUploadSuccess(`Successfully retried import with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`);
+      showSuccess(`Successfully retried import with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`);
       console.log('Retry response:', response.data);
       
       // Refresh import history after successful retry
@@ -215,22 +227,22 @@ const Import = () => {
         id: log.id,
         filename: log.file_name || 'Unknown file',
         size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
-        uploaded: new Date(log.created_at).toLocaleDateString(),
+        uploaded: new Date(log.started_at).toLocaleDateString(),
         status: log.status === 'completed' ? 'Completed' : 
                 log.status === 'failed' ? 'Failed' : 
                 log.status === 'processing' ? 'Processing' : 'Unknown',
-        testCases: log.additional_data?.imported_test_cases || 0,
-        testSuites: log.additional_data?.imported_test_suites || 0,
+        testCases: log.imported_test_cases || 0,
+        testSuites: log.imported_test_suites || 0,
         projects: 1,
-        duration: log.additional_data?.duration || '--',
-        error: log.additional_data?.errors?.[0] || null,
-        strategy: log.additional_data?.strategy || 'unknown'
+        duration: log.duration || '--',
+        error: log.errors?.[0] || null,
+        strategy: log.strategy || 'unknown'
       }));
       setImportHistory(transformedHistory);
       
     } catch (error) {
       console.error('Retry error:', error);
-      setUploadError(error.response?.data?.error || 'Failed to retry import');
+      showError(error.response?.data?.error || 'Failed to retry import');
     } finally {
       setUploading(false);
     }
@@ -243,12 +255,11 @@ const Import = () => {
     
     try {
       setUploading(true);
-      setUploadError(null);
       
       // Delete the import log
       await importAPI.deleteImportLog(importId);
       
-      setUploadSuccess('Import record deleted successfully');
+      showSuccess('Import record deleted successfully');
       
       // Refresh import history after successful deletion
       const historyResponse = await importAPI.getLogs(1);
@@ -257,22 +268,22 @@ const Import = () => {
         id: log.id,
         filename: log.file_name || 'Unknown file',
         size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
-        uploaded: new Date(log.created_at).toLocaleDateString(),
+        uploaded: new Date(log.started_at).toLocaleDateString(),
         status: log.status === 'completed' ? 'Completed' : 
                 log.status === 'failed' ? 'Failed' : 
                 log.status === 'processing' ? 'Processing' : 'Unknown',
-        testCases: log.additional_data?.imported_test_cases || 0,
-        testSuites: log.additional_data?.imported_test_suites || 0,
+        testCases: log.imported_test_cases || 0,
+        testSuites: log.imported_test_suites || 0,
         projects: 1,
-        duration: log.additional_data?.duration || '--',
-        error: log.additional_data?.errors?.[0] || null,
-        strategy: log.additional_data?.strategy || 'unknown'
+        duration: log.duration || '--',
+        error: log.errors?.[0] || null,
+        strategy: log.strategy || 'unknown'
       }));
       setImportHistory(transformedHistory);
       
     } catch (error) {
       console.error('Delete error:', error);
-      setUploadError(error.response?.data?.error || 'Failed to delete import record');
+      showError(error.response?.data?.error || 'Failed to delete import record');
     } finally {
       setUploading(false);
     }
@@ -356,23 +367,7 @@ const Import = () => {
                 </div>
               )}
               
-              {uploadError && (
-                <div className="mt-4 p-3 bg-apple-red/10 border border-apple-red/20 rounded-apple">
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-apple-red" />
-                    <span className="text-sm text-apple-red">{uploadError}</span>
-                  </div>
-                </div>
-              )}
-              
-              {uploadSuccess && (
-                <div className="mt-4 p-3 bg-apple-green/10 border border-apple-green/20 rounded-apple">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-apple-green" />
-                    <span className="text-sm text-apple-green">{uploadSuccess}</span>
-                  </div>
-                </div>
-              )}
+              {/* Toast notifications now handle success/error messages */}
             </div>
             
             {/* Help Section */}

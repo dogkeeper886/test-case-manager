@@ -138,13 +138,15 @@
   - ✅ Data transformation for UI compatibility
   - ✅ Implemented retry functionality
   - ✅ Implemented delete functionality
+  - ✅ Fixed SIZE, DURATION, and UPLOADED fields display
 - [x] **Requirements**:
   - [x] Fetch real import logs from API (API endpoint exists)
   - [x] Display actual import results (implemented)
   - [x] Implement retry functionality
   - [x] Add delete import functionality
-- [x] **Files**: `frontend/src/pages/Import.js`, `backend/src/routes/import.js`
-- [x] **Status**: ✅ COMPLETED - Full import history functionality working
+  - [x] Fix missing field values (SIZE, DURATION, UPLOADED)
+- [x] **Files**: `frontend/src/pages/Import.js`, `backend/src/routes/import.js`, `backend/src/services/TestLinkImportService.js`, `database/migrations/001_testlink_import_schema.sql`
+- [x] **Status**: ✅ COMPLETED - Full import history functionality working with all fields displaying correctly
 
 ### 2.7 File Upload Functionality Testing
 - [x] **Task**: Test file upload functionality end-to-end
@@ -270,6 +272,7 @@
   - [ ] Migration guide
   - [ ] **NEW**: Duplicate handling guide
   - [ ] **NEW**: Import strategy documentation
+  - [x] **NEW**: TestLink XML template for users
 - [ ] **Files**: `docs/` directory
 
 ## Deployment Tasks
@@ -347,6 +350,36 @@
 - **Root Cause**: Backend container needed restart to pick up new routes
 - **Solution**: Restarted backend container, routes now working correctly
 - **Status**: ✅ RESOLVED - Delete functionality working properly
+
+### ✅ **Import History Field Display Bug - FIXED**
+- **Issue**: SIZE, DURATION, and UPLOADED fields showing "Unknown", "--", and incorrect dates
+- **Root Cause**: 
+  - Database missing `file_size` column
+  - Frontend using wrong field names (`created_at` instead of `started_at`)
+  - Backend not calculating duration from timestamps
+- **Solution**: 
+  - Added `file_size INTEGER DEFAULT 0` column to `import_logs` table
+  - Updated `TestLinkImportService.createImportLog()` to capture file size
+  - Enhanced `getImportLogs()` to calculate duration from `started_at` and `completed_at`
+  - Fixed frontend transformation to use correct field names
+- **Files Modified**: 
+  - `database/migrations/001_testlink_import_schema.sql`
+  - `backend/src/services/TestLinkImportService.js`
+  - `frontend/src/pages/Import.js`
+- **Status**: ✅ RESOLVED - All fields now display correctly (SIZE: "0.3 MB", DURATION: "0s", UPLOADED: "7/25/2025")
+
+### ✅ **TestLink XML Template Download - IMPLEMENTED**
+- **Issue**: Download template button was just a stub with no functionality
+- **Solution**: 
+  - Created comprehensive TestLink XML template with sample data
+  - Added backend API route `/api/import/template` to serve the template
+  - Implemented frontend download functionality with fallback
+  - Template includes sample test suites, test cases, steps, and custom fields
+- **Files Created/Modified**: 
+  - `backend/public/templates/testlink-template.xml` (new template file)
+  - `backend/src/routes/import.js` (added download route)
+  - `frontend/src/pages/Import.js` (implemented download handler)
+- **Status**: ✅ COMPLETED - Users can now download a proper TestLink XML template
 
 ## Estimated Timeline
 

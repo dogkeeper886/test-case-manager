@@ -1,4 +1,5 @@
 const TestLinkXMLParser = require('../utils/TestLinkXMLParser');
+const fs = require('fs').promises;
 
 class TestLinkImportService {
   constructor(db) {
@@ -284,7 +285,11 @@ class TestLinkImportService {
    * @returns {Promise<Object>} Import result
    */
   async importFromFile(filePath, projectId, strategy = TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING, documentId = null) {
-    const importLogId = await this.createImportLog(projectId, documentId, 'testlink', filePath);
+    // Get file size
+    const fileStats = await fs.stat(filePath);
+    const fileSize = fileStats.size;
+    
+    const importLogId = await this.createImportLog(projectId, documentId, 'testlink', filePath, fileSize);
     
     try {
       // Parse XML file
@@ -782,17 +787,18 @@ class TestLinkImportService {
    * @param {number} documentId - Document ID
    * @param {string} importType - Import type
    * @param {string} fileName - File name
+   * @param {number} fileSize - File size in bytes
    * @returns {Promise<number>} Import log ID
    */
-  async createImportLog(projectId, documentId, importType, fileName) {
+  async createImportLog(projectId, documentId, importType, fileName, fileSize = 0) {
     const query = `
       INSERT INTO import_logs (
-        project_id, document_id, import_type, file_name, status
-      ) VALUES ($1, $2, $3, $4, 'processing')
+        project_id, document_id, import_type, file_name, file_size, status
+      ) VALUES ($1, $2, $3, $4, $5, 'processing')
       RETURNING id
     `;
 
-    const result = await this.db.query(query, [projectId, documentId, importType, fileName]);
+    const result = await this.db.query(query, [projectId, documentId, importType, fileName, fileSize]);
     return result.rows[0].id;
   }
 
@@ -874,7 +880,29 @@ class TestLinkImportService {
     `;
     
     const result = await this.db.query(query, [projectId]);
-    return result.rows;
+    
+    // Calculate duration and format data for frontend
+    return result.rows.map(log => {
+      let duration = '--';
+      if (log.completed_at && log.started_at) {
+        const startTime = new Date(log.started_at);
+        const endTime = new Date(log.completed_at);
+        const durationMs = endTime.getTime() - startTime.getTime();
+        const durationSeconds = Math.round(durationMs / 1000);
+        if (durationSeconds < 60) {
+          duration = `${durationSeconds}s`;
+        } else {
+          const minutes = Math.floor(durationSeconds / 60);
+          const seconds = durationSeconds % 60;
+          duration = `${minutes}m ${seconds}s`;
+        }
+      }
+      
+      return {
+        ...log,
+        duration: duration
+      };
+    });
   }
 
   /**

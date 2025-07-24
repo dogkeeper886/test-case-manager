@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const TestLinkImportService = require('../services/TestLinkImportService');
 
 const router = express.Router();
@@ -424,6 +425,32 @@ router.post('/validate', async (req, res) => {
     console.error('Validation error:', error);
     res.status(500).json({ 
       error: 'Validation failed', 
+      details: error.message 
+    });
+  }
+});
+
+// GET /api/import/template - Download TestLink XML template
+router.get('/template', (req, res) => {
+  try {
+    const templatePath = path.join(__dirname, '../../public/templates/testlink-template.xml');
+    
+    // Check if template file exists
+    if (!fsSync.existsSync(templatePath)) {
+      return res.status(404).json({ error: 'Template file not found' });
+    }
+    
+    // Set headers for file download
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Content-Disposition', 'attachment; filename="testlink-template.xml"');
+    
+    // Send the file
+    res.sendFile(templatePath);
+    
+  } catch (error) {
+    console.error('Template download error:', error);
+    res.status(500).json({ 
+      error: 'Failed to download template', 
       details: error.message 
     });
   }

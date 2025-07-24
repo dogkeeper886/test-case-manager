@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './styles/index.css';
+import { TOAST_CONTAINER_CONFIG } from './utils/toast';
 
 
 import Dashboard from './pages/Dashboard';
@@ -36,7 +37,7 @@ function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/test" element={<ComponentTest />} />
           </Routes>
-          <ToastContainer position="top-right" />
+          <ToastContainer {...TOAST_CONTAINER_CONFIG} />
         </div>
       </Router>
     </QueryClientProvider>

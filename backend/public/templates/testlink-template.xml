@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite id="1" name="Sample Test Suite" details="This is a sample test suite for demonstration purposes">
+    <testcase id="1" name="Sample Test Case" internalid="TC001" version="1" summary="A sample test case">
+      <node_order><![CDATA[1]]></node_order>
+      <externalid><![CDATA[EXT001]]></externalid>
+      <version><![CDATA[1]]></version>
+      <summary><![CDATA[A sample test case for demonstration]]></summary>
+      <preconditions><![CDATA[User is logged into the system]]></preconditions>
+      <execution_type><![CDATA[1]]></execution_type>
+      <importance><![CDATA[2]]></importance>
+      <estimated_exec_duration><![CDATA[5]]></estimated_exec_duration>
+      <status><![CDATA[1]]></status>
+      <is_open><![CDATA[1]]></is_open>
+      <active><![CDATA[1]]></active>
+      <steps>
+        <step>
+          <step_number><![CDATA[1]]></step_number>
+          <actions><![CDATA[Navigate to the login page]]></actions>
+          <expectedresults><![CDATA[Login page is displayed]]></expectedresults>
+          <execution_type><![CDATA[1]]></execution_type>
+        </step>
+        <step>
+          <step_number><![CDATA[2]]></step_number>
+          <actions><![CDATA[Enter valid username and password]]></actions>
+          <expectedresults><![CDATA[User is successfully logged in]]></expectedresults>
+          <execution_type><![CDATA[1]]></execution_type>
+        </step>
+      </steps>
+      <custom_fields>
+        <custom_field>
+          <name><![CDATA[CF_AUTOMATION_STATUS]]></name>
+          <value><![CDATA[Manual]]></value>
+        </custom_field>
+        <custom_field>
+          <name><![CDATA[CF_PRIORITY]]></name>
+          <value><![CDATA[Medium]]></value>
+        </custom_field>
+      </custom_fields>
+    </testcase>
+    <testcase id="2" name="Another Sample Test Case" internalid="TC002" version="1" summary="Another sample test case">
+      <node_order><![CDATA[2]]></node_order>
+      <externalid><![CDATA[EXT002]]></externalid>
+      <version><![CDATA[1]]></version>
+      <summary><![CDATA[Another sample test case for demonstration]]></summary>
+      <preconditions><![CDATA[User is logged into the system]]></preconditions>
+      <execution_type><![CDATA[1]]></execution_type>
+      <importance><![CDATA[3]]></importance>
+      <estimated_exec_duration><![CDATA[10]]></estimated_exec_duration>
+      <status><![CDATA[1]]></status>
+      <is_open><![CDATA[1]]></is_open>
+      <active><![CDATA[1]]></active>
+      <steps>
+        <step>
+          <step_number><![CDATA[1]]></step_number>
+          <actions><![CDATA[Click on the settings menu]]></actions>
+          <expectedresults><![CDATA[Settings menu opens]]></expectedresults>
+          <execution_type><![CDATA[1]]></execution_type>
+        </step>
+        <step>
+          <step_number><![CDATA[2]]></step_number>
+          <actions><![CDATA[Select user preferences]]></actions>
+          <expectedresults><![CDATA[User preferences page is displayed]]></expectedresults>
+          <execution_type><![CDATA[1]]></execution_type>
+        </step>
+      </steps>
+      <custom_fields>
+        <custom_field>
+          <name><![CDATA[CF_AUTOMATION_STATUS]]></name>
+          <value><![CDATA[Manual]]></value>
+        </custom_field>
+        <custom_field>
+          <name><![CDATA[CF_PRIORITY]]></name>
+          <value><![CDATA[High]]></value>
+        </custom_field>
+      </custom_fields>
+    </testcase>
+  </testsuite>
+  <testsuite id="2" name="Nested Test Suite" details="A test suite with nested structure">
+    <testsuite id="3" name="Sub Test Suite" details="A sub test suite">
+      <testcase id="3" name="Nested Test Case" internalid="TC003" version="1" summary="A test case in a nested suite">
+        <node_order><![CDATA[1]]></node_order>
+        <externalid><![CDATA[EXT003]]></externalid>
+        <version><![CDATA[1]]></version>
+        <summary><![CDATA[A test case in a nested suite]]></summary>
+        <preconditions><![CDATA[System is running]]></preconditions>
+        <execution_type><![CDATA[1]]></execution_type>
+        <importance><![CDATA[1]]></importance>
+        <estimated_exec_duration><![CDATA[3]]></estimated_exec_duration>
+        <status><![CDATA[1]]></status>
+        <is_open><![CDATA[1]]></is_open>
+        <active><![CDATA[1]]></active>
+        <steps>
+          <step>
+            <step_number><![CDATA[1]]></step_number>
+            <actions><![CDATA[Perform a simple action]]></actions>
+            <expectedresults><![CDATA[Action is completed successfully]]></expectedresults>
+            <execution_type><![CDATA[1]]></execution_type>
+          </step>
+        </steps>
+        <custom_fields>
+          <custom_field>
+            <name><![CDATA[CF_AUTOMATION_STATUS]]></name>
+            <value><![CDATA[Manual]]></value>
+          </custom_field>
+        </custom_fields>
+      </testcase>
+    </testsuite>
+  </testsuite>
+</testsuites> 
