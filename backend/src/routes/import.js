@@ -301,6 +301,93 @@ router.get('/logs/:projectId', async (req, res) => {
   }
 });
 
+// POST /api/import/retry/:importLogId - Retry failed import
+router.post('/retry/:importLogId', async (req, res) => {
+  try {
+    const { importLogId } = req.params;
+    const { strategy } = req.body;
+    
+    // Initialize import service
+    const service = initializeImportService(req.app.locals.db);
+    
+    // Get the original import log
+    const originalLog = await service.getImportLog(parseInt(importLogId));
+    
+    if (!originalLog) {
+      return res.status(404).json({ error: 'Import log not found' });
+    }
+    
+    if (originalLog.status !== 'failed') {
+      return res.status(400).json({ error: 'Can only retry failed imports' });
+    }
+    
+    // Check if the original file still exists
+    if (!originalLog.file_path || !fs.existsSync(originalLog.file_path)) {
+      return res.status(404).json({ error: 'Original file not found for retry' });
+    }
+    
+    // Retry the import with the same or new strategy
+    const retryStrategy = strategy || originalLog.additional_data?.strategy || 'update_existing';
+    const result = await service.importFromFile(
+      originalLog.file_path, 
+      originalLog.project_id, 
+      retryStrategy
+    );
+    
+    res.json({
+      message: 'Import retry completed',
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Retry import error:', error);
+    res.status(500).json({ 
+      error: 'Retry failed', 
+      details: error.message 
+    });
+  }
+});
+
+// DELETE /api/import/logs/:importLogId - Delete import log
+router.delete('/logs/:importLogId', async (req, res) => {
+  try {
+    const { importLogId } = req.params;
+    
+    // Initialize import service
+    const service = initializeImportService(req.app.locals.db);
+    
+    // Get the import log
+    const importLog = await service.getImportLog(parseInt(importLogId));
+    
+    if (!importLog) {
+      return res.status(404).json({ error: 'Import log not found' });
+    }
+    
+    // Delete the import log
+    await service.deleteImportLog(parseInt(importLogId));
+    
+    // Optionally delete the associated file if it exists
+    if (importLog.file_path && fs.existsSync(importLog.file_path)) {
+      try {
+        await fs.unlink(importLog.file_path);
+      } catch (fileError) {
+        console.warn('Failed to delete associated file:', fileError);
+      }
+    }
+    
+    res.json({
+      message: 'Import log deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete import log error:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete import log', 
+      details: error.message 
+    });
+  }
+});
+
 // POST /api/import/validate - Validate TestLink XML content
 router.post('/validate', async (req, res) => {
   try {

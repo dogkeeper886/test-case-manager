@@ -876,6 +876,20 @@ class TestLinkImportService {
     const result = await this.db.query(query, [projectId]);
     return result.rows;
   }
+
+  /**
+   * Delete import log by ID
+   * @param {number} importLogId - Import log ID
+   * @returns {Promise<boolean>} Success status
+   */
+  async deleteImportLog(importLogId) {
+    const query = `
+      DELETE FROM import_logs WHERE id = $1
+    `;
+    
+    const result = await this.db.query(query, [importLogId]);
+    return result.rowCount > 0;
+  }
 }
 
 module.exports = TestLinkImportService; 

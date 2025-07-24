@@ -90,6 +90,31 @@
 - [x] **Impact**: Optimizes storage and provides traceability
 - [x] **Status**: ✅ COMPLETED - TestLink storage strategy confirmed correct
 
+### 2.8 Apply Again Feature ⭐ NEW
+- [ ] **Task**: Implement "Apply Again" feature for stored import files
+- [ ] **Current Analysis**:
+  - ❌ Current: Files deleted after import (no re-import possible)
+  - ❌ Users must re-upload same file to try different strategies
+  - ❌ No way to re-apply import with different settings
+- [ ] **Requirements**:
+  - [ ] **File Storage Option**:
+    - [ ] Option A: Store TestLink files permanently (enables Apply Again)
+    - [ ] Option B: Keep temporary storage but add "Apply Again" from import logs
+    - [ ] Option C: Hybrid approach (store for X days, then cleanup)
+  - [ ] **Apply Again Functionality**:
+    - [ ] Re-import same file with different strategy
+    - [ ] Re-import with different project selection
+    - [ ] Re-import with different import options
+    - [ ] Show import history with "Apply Again" buttons
+  - [ ] **User Interface**:
+    - [ ] "Apply Again" button in import history
+    - [ ] Strategy selection modal for re-import
+    - [ ] Project selection for re-import
+    - [ ] Import options configuration
+- [ ] **Files**: `backend/src/routes/import.js`, `frontend/src/pages/Import.js`
+- [ ] **Impact**: Significantly improves user experience and workflow efficiency
+- [ ] **Status**: ❌ NOT STARTED - New feature request
+
 ### 2.3 Import Preview and Validation ⭐ NEW
 - [x] **Task**: Add import preview functionality
 - [x] **Requirements**:
@@ -134,13 +159,15 @@
   - ✅ Added loading and error states
   - ✅ Real-time history refresh after imports
   - ✅ Data transformation for UI compatibility
+  - ✅ Implemented retry functionality
+  - ✅ Implemented delete functionality
 - [x] **Requirements**:
   - [x] Fetch real import logs from API (API endpoint exists)
   - [x] Display actual import results (implemented)
-  - [ ] Implement retry functionality
-  - [ ] Add delete import functionality
+  - [x] Implement retry functionality
+  - [x] Add delete import functionality
 - [x] **Files**: `frontend/src/pages/Import.js`, `backend/src/routes/import.js`
-- [x] **Status**: ✅ COMPLETED - Real import history working
+- [x] **Status**: ✅ COMPLETED - Full import history functionality working
 
 ### 2.7 File Upload Functionality Testing
 - [x] **Task**: Test file upload functionality end-to-end
@@ -333,9 +360,9 @@
 ## Next Immediate Actions
 
 1. **Implement error handling** (High Priority)
-2. **Add import retry functionality** (Medium Priority)
-3. **Add import delete functionality** (Medium Priority)
-4. **Frontend UI testing** (Medium Priority) - Browser tool limitations
+2. **Implement Apply Again feature** (High Priority) - ⭐ NEW
+3. **Frontend UI testing** (Medium Priority) - Browser tool limitations
+4. **Add import configuration options** (Medium Priority)
 
 ## Estimated Timeline
 

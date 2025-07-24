@@ -197,12 +197,85 @@ const Import = () => {
     console.log('Download template');
   };
 
-  const handleRetryImport = (importId) => {
-    console.log('Retry import:', importId);
+  const handleRetryImport = async (importId) => {
+    try {
+      setUploading(true);
+      setUploadError(null);
+      
+      // Retry the import with the same strategy
+      const response = await importAPI.retryImport(importId);
+      
+      setUploadSuccess(`Successfully retried import with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`);
+      console.log('Retry response:', response.data);
+      
+      // Refresh import history after successful retry
+      const historyResponse = await importAPI.getLogs(1);
+      const logs = historyResponse.data.data || [];
+      const transformedHistory = logs.map(log => ({
+        id: log.id,
+        filename: log.file_name || 'Unknown file',
+        size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
+        uploaded: new Date(log.created_at).toLocaleDateString(),
+        status: log.status === 'completed' ? 'Completed' : 
+                log.status === 'failed' ? 'Failed' : 
+                log.status === 'processing' ? 'Processing' : 'Unknown',
+        testCases: log.additional_data?.imported_test_cases || 0,
+        testSuites: log.additional_data?.imported_test_suites || 0,
+        projects: 1,
+        duration: log.additional_data?.duration || '--',
+        error: log.additional_data?.errors?.[0] || null,
+        strategy: log.additional_data?.strategy || 'unknown'
+      }));
+      setImportHistory(transformedHistory);
+      
+    } catch (error) {
+      console.error('Retry error:', error);
+      setUploadError(error.response?.data?.error || 'Failed to retry import');
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleDeleteImport = (importId) => {
-    console.log('Delete import:', importId);
+  const handleDeleteImport = async (importId) => {
+    if (!window.confirm('Are you sure you want to delete this import record? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      setUploading(true);
+      setUploadError(null);
+      
+      // Delete the import log
+      await importAPI.deleteImportLog(importId);
+      
+      setUploadSuccess('Import record deleted successfully');
+      
+      // Refresh import history after successful deletion
+      const historyResponse = await importAPI.getLogs(1);
+      const logs = historyResponse.data.data || [];
+      const transformedHistory = logs.map(log => ({
+        id: log.id,
+        filename: log.file_name || 'Unknown file',
+        size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
+        uploaded: new Date(log.created_at).toLocaleDateString(),
+        status: log.status === 'completed' ? 'Completed' : 
+                log.status === 'failed' ? 'Failed' : 
+                log.status === 'processing' ? 'Processing' : 'Unknown',
+        testCases: log.additional_data?.imported_test_cases || 0,
+        testSuites: log.additional_data?.imported_test_suites || 0,
+        projects: 1,
+        duration: log.additional_data?.duration || '--',
+        error: log.additional_data?.errors?.[0] || null,
+        strategy: log.additional_data?.strategy || 'unknown'
+      }));
+      setImportHistory(transformedHistory);
+      
+    } catch (error) {
+      console.error('Delete error:', error);
+      setUploadError(error.response?.data?.error || 'Failed to delete import record');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (

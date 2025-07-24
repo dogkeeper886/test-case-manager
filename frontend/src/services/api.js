@@ -193,6 +193,12 @@ export const importAPI = {
   
   // Get import logs for project
   getLogs: (projectId) => api.get(`/api/import/logs/${projectId}`),
+  
+  // Retry failed import
+  retryImport: (importLogId, strategy) => api.post(`/api/import/retry/${importLogId}`, { strategy }),
+  
+  // Delete import log
+  deleteImportLog: (importLogId) => api.delete(`/api/import/logs/${importLogId}`),
 };
 
 export default api; 
