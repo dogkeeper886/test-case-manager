@@ -8,7 +8,7 @@ import './styles/index.css';
 
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
-import TestCases from './pages/TestCases';
+import TestCases from './pages/TestCases.jsx';
 import TestCaseDetail from './pages/TestCaseDetail';
 import TestSuiteBrowser from './pages/TestSuiteBrowser';
 import Documents from './pages/Documents';

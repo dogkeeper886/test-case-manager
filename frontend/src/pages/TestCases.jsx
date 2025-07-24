@@ -251,13 +251,13 @@ const TestCases = () => {
       showSearch={false}
     >
       {/* Page Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7">
+      <div className="mb-6" data-element="testcases-header">
+        <div className="flex items-center justify-between" data-element="testcases-header-content">
+          <div data-element="testcases-title-section">
+            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7" data-element="testcases-title">
               Test Cases
             </h1>
-            <p className="text-apple-gray-5 mt-1">
+            <p className="text-apple-gray-5 mt-1" data-element="testcases-subtitle">
               {filteredTestCases.length} of {testCases.length} test cases
             </p>
           </div>
@@ -265,15 +265,16 @@ const TestCases = () => {
       </div>
 
       {/* Filters and Search */}
-      <Card elevation="sm" padding="lg" className="mb-6">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+      <Card elevation="sm" padding="lg" className="mb-6" data-element="testcases-filters-card">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center" data-element="testcases-filters-content">
           {/* Search */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0" data-element="testcases-search-container">
             <Input
               placeholder="Search test cases..."
               icon={<Search className="w-4 h-4" />}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              data-element="testcases-search-input"
             />
           </div>
 
@@ -282,6 +283,7 @@ const TestCases = () => {
             variant="secondary"
             icon={showFilters ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
             onClick={() => setShowFilters(!showFilters)}
+            data-element="testcases-filter-toggle"
           >
             Filters
           </Button>
@@ -366,17 +368,17 @@ const TestCases = () => {
         </Card>
 
         {/* Test Cases Grid */}
-        <div className="mt-6">
+        <div className="mt-6" data-element="testcases-grid">
           {filteredTestCases.length === 0 ? (
-            <Card elevation="sm" padding="xl">
+            <Card elevation="sm" padding="xl" data-element="testcases-empty-state">
               <Card.Body className="text-center py-12">
-                <div className="text-apple-gray-4 mb-4">
+                <div className="text-apple-gray-4 mb-4" data-element="testcases-empty-icon">
                   <Search className="w-16 h-16 mx-auto" />
                 </div>
-                <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
+                <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2" data-element="testcases-empty-title">
                   No test cases found
                 </h3>
-                <p className="text-apple-gray-5">
+                <p className="text-apple-gray-5" data-element="testcases-empty-message">
                   {searchQuery || selectedProject || selectedSuite || statusFilter || priorityFilter
                     ? 'Try adjusting your search or filters'
                     : 'Get started by creating your first test case'}
@@ -384,7 +386,7 @@ const TestCases = () => {
               </Card.Body>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-element="testcases-cards-container">
               {filteredTestCases.map(testCase => (
                 <Card 
                   key={testCase.id} 
@@ -392,17 +394,18 @@ const TestCases = () => {
                   hover={true}
                   className="cursor-pointer transition-all duration-200 hover:shadow-apple-md"
                   onClick={() => handleViewTestCase(testCase)}
+                  data-element={`testcase-card-${testCase.id}`}
                 >
                   <Card.Header>
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-lg font-sf font-semibold text-apple-gray-7 line-clamp-2">
+                    <div className="flex items-start justify-between" data-element={`testcase-header-${testCase.id}`}>
+                      <h3 className="text-lg font-sf font-semibold text-apple-gray-7 line-clamp-2" data-element={`testcase-title-${testCase.id}`}>
                         {testCase.title}
                       </h3>
-                      <div className="flex gap-1 ml-2">
-                        <Badge variant={getStatusBadgeVariant(testCase.status)} size="sm">
+                      <div className="flex gap-1 ml-2" data-element={`testcase-badges-${testCase.id}`}>
+                        <Badge variant={getStatusBadgeVariant(testCase.status)} size="sm" data-element={`testcase-status-badge-${testCase.id}`}>
                           {getStatusText(testCase.status)}
                         </Badge>
-                        <Badge variant={getPriorityBadgeVariant(testCase.priority)} size="sm">
+                        <Badge variant={getPriorityBadgeVariant(testCase.priority)} size="sm" data-element={`testcase-priority-badge-${testCase.id}`}>
                           {getPriorityText(testCase.priority)}
                         </Badge>
                       </div>
@@ -410,24 +413,24 @@ const TestCases = () => {
                   </Card.Header>
                   
                   <Card.Body>
-                    <p className="text-apple-gray-5 text-sm mb-3 line-clamp-3">
+                    <p className="text-apple-gray-5 text-sm mb-3 line-clamp-3" data-element={`testcase-description-${testCase.id}`}>
                       {testCase.description || 'No description available'}
                     </p>
                     
-                    <div className="space-y-2 text-xs text-apple-gray-4">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-2 text-xs text-apple-gray-4" data-element={`testcase-metadata-${testCase.id}`}>
+                      <div className="flex items-center justify-between" data-element={`testcase-project-${testCase.id}`}>
                         <span>Project:</span>
                         <span className="font-medium">{testCase.project_name || 'Unknown'}</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between" data-element={`testcase-suite-${testCase.id}`}>
                         <span>Test Suite:</span>
                         <span className="font-medium">{testCase.test_suite_name || 'No Suite'}</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between" data-element={`testcase-execution-${testCase.id}`}>
                         <span>Execution:</span>
                         <span className="font-medium">{getExecutionTypeText(testCase.execution_type)}</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between" data-element={`testcase-id-${testCase.id}`}>
                         <span>ID:</span>
                         <span className="font-medium">#{testCase.id}</span>
                       </div>
@@ -435,28 +438,31 @@ const TestCases = () => {
                   </Card.Body>
                   
                   <Card.Footer>
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-apple-gray-4">
+                    <div className="flex items-center justify-between" data-element={`testcase-footer-${testCase.id}`}>
+                      <div className="text-xs text-apple-gray-4" data-element={`testcase-updated-${testCase.id}`}>
                         Updated {new Date(testCase.updated_at).toLocaleDateString()}
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1" data-element={`testcase-actions-${testCase.id}`}>
                         <Button
                           variant="ghost"
                           size="sm"
                           icon={<Eye className="w-3 h-3" />}
                           onClick={() => handleViewTestCase(testCase)}
+                          data-element={`testcase-view-button-${testCase.id}`}
                         />
                         <Button
                           variant="ghost"
                           size="sm"
                           icon={<Edit className="w-3 h-3" />}
                           onClick={() => handleEditTestCase(testCase)}
+                          data-element={`testcase-edit-button-${testCase.id}`}
                         />
                         <Button
                           variant="ghost"
                           size="sm"
                           icon={<Trash2 className="w-3 h-3" />}
                           onClick={() => handleDeleteTestCase(testCase)}
+                          data-element={`testcase-delete-button-${testCase.id}`}
                         />
                       </div>
                     </div>

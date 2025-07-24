@@ -143,13 +143,13 @@ const Projects = () => {
       ]}
     >
       {/* Page Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7">
+      <div className="mb-6" data-element="projects-header">
+        <div className="flex items-center justify-between" data-element="projects-header-content">
+          <div data-element="projects-title-section">
+            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7" data-element="projects-title">
               Projects
             </h1>
-            <p className="text-apple-gray-5 mt-1">
+            <p className="text-apple-gray-5 mt-1" data-element="projects-subtitle">
               {filteredProjects.length} of {projects.length} projects
             </p>
           </div>
@@ -157,24 +157,26 @@ const Projects = () => {
       </div>
 
       {/* Search and Filters */}
-      <Card elevation="sm" padding="lg" className="mb-6">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+      <Card elevation="sm" padding="lg" className="mb-6" data-element="projects-filters-card">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center" data-element="projects-filters-content">
           {/* Search */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0" data-element="projects-search-container">
             <Input
               placeholder="Search projects..."
               icon={<Search className="w-4 h-4" />}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              data-element="projects-search-input"
             />
           </div>
 
           {/* Status Filter */}
-          <div className="min-w-0">
+          <div className="min-w-0" data-element="projects-status-filter">
             <select
               className="w-full px-3 py-2 border border-apple-gray-3 rounded-apple focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+              data-element="projects-status-select"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -185,17 +187,17 @@ const Projects = () => {
       </Card>
 
       {/* Projects Grid */}
-      <div className="mt-6">
+      <div className="mt-6" data-element="projects-grid">
         {filteredProjects.length === 0 ? (
-          <Card elevation="sm" padding="xl">
+          <Card elevation="sm" padding="xl" data-element="projects-empty-state">
             <Card.Body className="text-center py-12">
-              <div className="text-apple-gray-4 mb-4">
+              <div className="text-apple-gray-4 mb-4" data-element="projects-empty-icon">
                 <Search className="w-16 h-16 mx-auto" />
               </div>
-              <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
+              <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2" data-element="projects-empty-title">
                 No projects found
               </h3>
-              <p className="text-apple-gray-5">
+              <p className="text-apple-gray-5" data-element="projects-empty-message">
                 {searchQuery || statusFilter
                   ? 'Try adjusting your search or filters'
                   : 'Get started by creating your first project'}
@@ -203,7 +205,7 @@ const Projects = () => {
             </Card.Body>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-element="projects-cards-container">
             {filteredProjects.map(project => {
               const stats = getProjectStats(project.name);
               return (
@@ -213,16 +215,18 @@ const Projects = () => {
                   hover={true}
                   className="cursor-pointer transition-all duration-200 hover:shadow-apple-md"
                   onClick={() => handleViewProject(project)}
+                  data-element={`project-card-${project.id}`}
                 >
                   <Card.Header>
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-lg font-sf font-semibold text-apple-gray-7 line-clamp-2">
+                    <div className="flex items-start justify-between" data-element={`project-header-${project.id}`}>
+                      <h3 className="text-lg font-sf font-semibold text-apple-gray-7 line-clamp-2" data-element={`project-title-${project.id}`}>
                         {project.name}
                       </h3>
-                      <div className="flex gap-1 ml-2">
+                      <div className="flex gap-1 ml-2" data-element={`project-badge-${project.id}`}>
                         <Badge 
                           variant={stats.total > 0 ? 'success' : 'default'} 
                           size="sm"
+                          data-element={`project-status-badge-${project.id}`}
                         >
                           {stats.status}
                         </Badge>
@@ -231,28 +235,28 @@ const Projects = () => {
                   </Card.Header>
                   
                   <Card.Body>
-                    <p className="text-apple-gray-5 text-sm mb-3 line-clamp-3">
+                    <p className="text-apple-gray-5 text-sm mb-3 line-clamp-3" data-element={`project-description-${project.id}`}>
                       {project.description || 'No description available'}
                     </p>
                     
-                    <div className="space-y-2 text-xs text-apple-gray-4">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-2 text-xs text-apple-gray-4" data-element={`project-stats-${project.id}`}>
+                      <div className="flex items-center justify-between" data-element={`project-total-tests-${project.id}`}>
                         <span>Total Tests:</span>
                         <span className="font-medium">{stats.total}</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between" data-element={`project-pending-${project.id}`}>
                         <span>Pending:</span>
                         <span className="font-medium">{stats.pending}</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between" data-element={`project-passed-${project.id}`}>
                         <span>Passed:</span>
                         <span className="font-medium">{stats.passed}</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between" data-element={`project-failed-${project.id}`}>
                         <span>Failed:</span>
                         <span className="font-medium">{stats.failed}</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between" data-element={`project-created-${project.id}`}>
                         <span>Created:</span>
                         <span className="font-medium">
                           {new Date(project.created_at).toLocaleDateString()}
@@ -262,11 +266,11 @@ const Projects = () => {
                   </Card.Body>
                   
                   <Card.Footer>
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-apple-gray-4">
+                    <div className="flex items-center justify-between" data-element={`project-footer-${project.id}`}>
+                      <div className="text-xs text-apple-gray-4" data-element={`project-id-${project.id}`}>
                         ID: #{project.id}
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1" data-element={`project-actions-${project.id}`}>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -275,6 +279,7 @@ const Projects = () => {
                             e.stopPropagation();
                             handleViewProject(project);
                           }}
+                          data-element={`project-view-button-${project.id}`}
                         />
                         <Button
                           variant="ghost"
@@ -284,6 +289,7 @@ const Projects = () => {
                             e.stopPropagation();
                             handleEditProject(project);
                           }}
+                          data-element={`project-edit-button-${project.id}`}
                         />
                         <Button
                           variant="ghost"
@@ -293,6 +299,7 @@ const Projects = () => {
                             e.stopPropagation();
                             handleDeleteProject(project);
                           }}
+                          data-element={`project-delete-button-${project.id}`}
                         />
                       </div>
                     </div>
