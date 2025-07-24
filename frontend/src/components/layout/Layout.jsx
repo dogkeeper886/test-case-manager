@@ -21,7 +21,7 @@ const Layout = ({
   };
 
   return (
-    <div className="min-h-screen bg-apple-gray-1 font-sf">
+    <div className="min-h-screen bg-apple-gray-1 font-sf flex">
       {/* Sidebar */}
       <Sidebar
         testSuites={testSuites}
@@ -35,7 +35,7 @@ const Layout = ({
       />
 
       {/* Main Content */}
-      <div className="lg:ml-80">
+      <div className="flex-1 lg:ml-80">
         {/* Top Navigation */}
         <TopNav
           onMenuToggle={toggleSidebar}
@@ -46,7 +46,7 @@ const Layout = ({
         />
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-6 bg-apple-gray-1 min-h-screen">
           {children}
         </main>
       </div>

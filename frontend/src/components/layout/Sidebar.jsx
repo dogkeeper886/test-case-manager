@@ -43,14 +43,15 @@ const Sidebar = ({
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50
+        fixed inset-y-0 left-0 z-50
         w-80 bg-white border-r border-apple-gray-2
         transform transition-transform duration-300 ease-in-out
+        flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-apple-gray-2">
-          <h1 className="text-lg font-sf-display font-semibold text-apple-gray-7">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-apple-gray-2 flex-shrink-0 h-16" data-element="sidebar-header">
+          <h1 className="text-lg font-sf-display font-semibold text-apple-gray-7" data-element="sidebar-title">
             Test Manager
           </h1>
           <Button
@@ -59,11 +60,12 @@ const Sidebar = ({
             icon={<X className="w-4 h-4" />}
             onClick={onToggle}
             className="lg:hidden"
+            data-element="sidebar-close-button"
           />
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-apple-gray-2">
+        <div className="px-6 py-4 border-b border-apple-gray-2 flex-shrink-0" data-element="sidebar-search">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-apple-gray-4" />
             <Input
@@ -72,12 +74,13 @@ const Sidebar = ({
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               className="pl-10"
+              data-element="sidebar-search-input"
             />
           </div>
         </div>
 
         {/* Navigation */}
-        <div className="p-2">
+        <div className="px-6 py-2 flex-shrink-0" data-element="sidebar-navigation">
           <nav className="space-y-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -90,6 +93,7 @@ const Sidebar = ({
                     text-apple-gray-6 hover:text-apple-gray-7 hover:bg-apple-gray-2/50
                     transition-colors duration-200
                   "
+                  data-element={`sidebar-nav-${item.id}`}
                 >
                   <Icon className="w-4 h-4 mr-3" />
                   {item.label}
@@ -100,9 +104,9 @@ const Sidebar = ({
         </div>
 
         {/* Test Suite Tree */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4" data-element="sidebar-test-suites">
           <div className="mb-3">
-            <h3 className="text-sm font-medium text-apple-gray-7 mb-2">
+            <h3 className="text-sm font-medium text-apple-gray-7 mb-2" data-element="sidebar-test-suites-title">
               Test Suites
             </h3>
           </div>
@@ -116,8 +120,8 @@ const Sidebar = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-apple-gray-2">
-          <div className="text-xs text-apple-gray-4 text-center">
+        <div className="px-6 py-4 border-t border-apple-gray-2 flex-shrink-0" data-element="sidebar-footer">
+          <div className="text-xs text-apple-gray-4 text-center" data-element="sidebar-version">
             Test Case Manager v1.0
           </div>
         </div>

@@ -251,13 +251,13 @@ const Dashboard = () => {
       showSearch={false}
     >
       {/* Page Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7">
+      <div className="mb-8" data-element="dashboard-header">
+        <div className="flex items-center justify-between" data-element="dashboard-header-content">
+          <div data-element="dashboard-title-section">
+            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7" data-element="dashboard-title">
               Dashboard
             </h1>
-            <p className="text-apple-gray-5 mt-1">
+            <p className="text-apple-gray-5 mt-1" data-element="dashboard-subtitle">
               Overview of your test case management system
             </p>
           </div>

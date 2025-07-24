@@ -3,8 +3,19 @@
 @tailwind utilities;
 
 @layer base {
-  body {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html, body {
     @apply font-sans antialiased;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #root {
+    height: 100%;
   }
 }
 
