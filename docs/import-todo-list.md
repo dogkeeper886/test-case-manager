@@ -340,6 +340,14 @@
 2. **Frontend UI testing** (Medium Priority) - Browser tool limitations
 3. **Add import configuration options** (Medium Priority)
 
+## Recent Bug Fixes
+
+### ✅ **Import History Delete Bug - FIXED**
+- **Issue**: DELETE /api/import/logs/:id returning 404 errors
+- **Root Cause**: Backend container needed restart to pick up new routes
+- **Solution**: Restarted backend container, routes now working correctly
+- **Status**: ✅ RESOLVED - Delete functionality working properly
+
 ## Estimated Timeline
 
 - **Critical fixes**: 1-2 hours
