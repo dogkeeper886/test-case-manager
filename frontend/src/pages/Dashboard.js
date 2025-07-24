@@ -189,9 +189,7 @@ const Dashboard = () => {
       selectedSuiteId={selectedSuiteId}
       selectedTestCaseId={selectedTestCaseId}
       onSearch={handleLayoutSearch}
-      breadcrumbs={[
-        { label: 'Dashboard', href: '/' }
-      ]}
+      breadcrumbs={[]}
       actions={[
         {
           label: 'Add Test Case',
