@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText } from 'lucide-react';
 import { Card, Badge } from '../ui';
 
@@ -12,7 +12,12 @@ const TestSuiteTree = ({
   const [expandedSuites, setExpandedSuites] = useState(new Set());
   const [loading] = useState(false);
 
-  // Expand all suites by default
+  // Ensure testSuites is always an array and memoize it
+  const safeTestSuites = useMemo(() => {
+    return Array.isArray(testSuites) ? testSuites : [];
+  }, [testSuites]);
+
+  // Expand all suites by default - only run when testSuites prop actually changes
   useEffect(() => {
     const allSuiteIds = new Set();
     const collectSuiteIds = (suites) => {
@@ -23,9 +28,9 @@ const TestSuiteTree = ({
         }
       });
     };
-    collectSuiteIds(testSuites);
+    collectSuiteIds(safeTestSuites);
     setExpandedSuites(allSuiteIds);
-  }, [testSuites]);
+  }, [testSuites]); // Use testSuites directly instead of safeTestSuites
 
   const toggleSuite = (suiteId) => {
     setExpandedSuites(prev => {
@@ -198,31 +203,31 @@ const TestSuiteTree = ({
 
   if (loading) {
     return (
-      <Card elevation={1} className="p-4">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-apple-blue"></div>
-          <span className="ml-2 text-sm text-apple-gray-5">Loading test suites...</span>
+      <Card elevation={1} className="p-4" data-element="testsuite-tree-loading-card">
+        <div className="flex items-center justify-center py-8" data-element="testsuite-tree-loading-container">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-apple-blue" data-element="testsuite-tree-loading-spinner"></div>
+          <span className="ml-2 text-sm text-apple-gray-5" data-element="testsuite-tree-loading-text">Loading test suites...</span>
         </div>
       </Card>
     );
   }
 
-  if (testSuites.length === 0) {
+  if (safeTestSuites.length === 0) {
     return (
-      <Card elevation={1} className="p-4">
-        <div className="text-center py-8">
-          <Folder className="w-12 h-12 text-apple-gray-4 mx-auto mb-3" />
-          <p className="text-sm text-apple-gray-5">No test suites found</p>
-          <p className="text-xs text-apple-gray-4 mt-1">Import TestLink XML to get started</p>
+      <Card elevation={1} className="p-4" data-element="testsuite-tree-empty-card">
+        <div className="text-center py-8" data-element="testsuite-tree-empty-container">
+          <Folder className="w-12 h-12 text-apple-gray-4 mx-auto mb-3" data-element="testsuite-tree-empty-icon" />
+          <p className="text-sm text-apple-gray-5" data-element="testsuite-tree-empty-text">No test suites found</p>
+          <p className="text-xs text-apple-gray-4 mt-1" data-element="testsuite-tree-empty-description">Import TestLink XML to get started</p>
         </div>
       </Card>
     );
   }
 
   return (
-    <Card elevation={1} className="p-2">
-      <div className="space-y-1">
-        {testSuites.map(suite => renderTestSuite(suite))}
+    <Card elevation={1} className="p-2" data-element="testsuite-tree-card">
+      <div className="space-y-1" data-element="testsuite-tree-container">
+        {safeTestSuites.map(suite => renderTestSuite(suite))}
       </div>
     </Card>
   );

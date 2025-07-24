@@ -70,10 +70,10 @@ const TestSuiteBrowser = () => {
           }
         ]}
       >
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-apple-blue mx-auto mb-4"></div>
-            <p className="text-apple-gray-5">Loading test suites...</p>
+        <div className="flex items-center justify-center py-12" data-element="testsuites-loading-container">
+          <div className="text-center" data-element="testsuites-loading-content">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-apple-blue mx-auto mb-4" data-element="testsuites-loading-spinner"></div>
+            <p className="text-apple-gray-5" data-element="testsuites-loading-text">Loading test suites...</p>
           </div>
         </div>
       </Layout>
@@ -93,10 +93,10 @@ const TestSuiteBrowser = () => {
           { label: 'Test Suite Browser', href: '/test-suites' }
         ]}
       >
-        <Card className="max-w-md mx-auto">
-          <Card.Body className="text-center">
-            <p className="text-error mb-4">{error}</p>
-            <Button onClick={fetchTestSuites}>Try Again</Button>
+        <Card className="max-w-md mx-auto" data-element="testsuites-error-card">
+          <Card.Body className="text-center" data-element="testsuites-error-content">
+            <p className="text-error mb-4" data-element="testsuites-error-message">{error}</p>
+            <Button onClick={fetchTestSuites} data-element="testsuites-error-retry-button">Try Again</Button>
           </Card.Body>
         </Card>
       </Layout>
@@ -125,13 +125,13 @@ const TestSuiteBrowser = () => {
       showSearch={false}
     >
       {/* Page Header */}
-      <div className="mb-6">
+      <div className="mb-6" data-element="testsuites-page-header">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7">
+            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7" data-element="testsuites-page-title">
               Test Suite Browser
             </h1>
-            <p className="text-apple-gray-5 mt-1">
+            <p className="text-apple-gray-5 mt-1" data-element="testsuites-page-description">
               Browse and manage your test suites hierarchically
             </p>
           </div>
@@ -139,19 +139,19 @@ const TestSuiteBrowser = () => {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" data-element="testsuites-main-content">
         {/* Test Suite Tree */}
-        <div className="lg:col-span-1">
-          <Card elevation="sm" className="h-full">
-            <Card.Header>
-              <h3 className="text-lg font-sf font-semibold text-apple-gray-7">
+        <div className="lg:col-span-1" data-element="testsuites-tree-section">
+          <Card elevation="sm" className="h-full" data-element="testsuites-tree-card">
+            <Card.Header data-element="testsuites-tree-header">
+              <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="testsuites-tree-title">
                 Test Suite Tree
               </h3>
-              <p className="text-sm text-apple-gray-5 mt-1">
+              <p className="text-sm text-apple-gray-5 mt-1" data-element="testsuites-tree-description">
                 Navigate through your test suite hierarchy
               </p>
             </Card.Header>
-            <Card.Body className="p-0">
+            <Card.Body className="p-0" data-element="testsuites-tree-body">
               <TestSuiteTree
                 testSuites={testSuites}
                 onSuiteSelect={handleSuiteSelect}
@@ -164,37 +164,37 @@ const TestSuiteBrowser = () => {
         </div>
 
         {/* Details Panel */}
-        <div className="lg:col-span-2">
-          <Card elevation="sm" className="h-full">
-            <Card.Header>
-              <h3 className="text-lg font-sf font-semibold text-apple-gray-7">
+        <div className="lg:col-span-2" data-element="testsuites-details-section">
+          <Card elevation="sm" className="h-full" data-element="testsuites-details-card">
+            <Card.Header data-element="testsuites-details-header">
+              <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="testsuites-details-title">
                 Suite Details
               </h3>
             </Card.Header>
-            <Card.Body>
+            <Card.Body data-element="testsuites-details-body">
               {selectedSuiteId ? (
-                <div className="space-y-4">
-                  <div className="text-center py-8">
-                    <div className="text-apple-gray-4 mb-4">
+                <div className="space-y-4" data-element="testsuites-selected-suite">
+                  <div className="text-center py-8" data-element="testsuites-suite-content">
+                    <div className="text-apple-gray-4 mb-4" data-element="testsuites-suite-icon">
                       <Search className="w-16 h-16 mx-auto" />
                     </div>
-                    <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
+                    <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2" data-element="testsuites-suite-title">
                       Suite Selected
                     </h3>
-                    <p className="text-apple-gray-5">
+                    <p className="text-apple-gray-5" data-element="testsuites-suite-description">
                       Test suite details will be displayed here
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <div className="text-apple-gray-4 mb-4">
+                <div className="text-center py-8" data-element="testsuites-empty-state">
+                  <div className="text-apple-gray-4 mb-4" data-element="testsuites-empty-icon">
                     <Search className="w-16 h-16 mx-auto" />
                   </div>
-                  <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
+                  <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2" data-element="testsuites-empty-title">
                     Select a Test Suite
                   </h3>
-                  <p className="text-apple-gray-5">
+                  <p className="text-apple-gray-5" data-element="testsuites-empty-description">
                     Choose a test suite from the tree to view its details
                   </p>
                 </div>
