@@ -79,6 +79,13 @@ Successfully completed the comprehensive layout consistency and element identity
 - **Shadows**: `shadow-apple` for consistent elevation and depth
 - **Border Radius**: `rounded-apple` for consistent corner styling
 
+### Navigation Design Pattern: Contextual Breadcrumbs with Page Titles
+- **Dual Identity System**: Page titles for immediate identification + breadcrumbs for navigation context
+- **Current Implementation**: Simple pages with single-level breadcrumbs (e.g., "Test Cases")
+- **Future Support**: Complex hierarchical navigation (e.g., "Projects > Project A > Test Suites > Suite B")
+- **Benefits**: Scalable for complex pages, maintains clear page identity, follows Apple design principles
+- **Documentation**: Comprehensive navigation patterns documented in `docs/navigation-design-patterns.md`
+
 ### Component Consistency
 - **Layout**: Unified `Layout` component across all pages
 - **Cards**: Consistent `Card` component with `elevation` prop

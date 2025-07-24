@@ -655,6 +655,53 @@ font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
 
 ## 🎯 **CRITICAL LAYOUT CONSISTENCY REQUIREMENT** ✅ **COMPLETED**
 
+## 🎯 **DESIGN GOALS & PRINCIPLES**
+
+### **Core Design Principle**: Every element should have identity to describe it easily
+- **Element Identity**: All UI elements must have descriptive `data-element` attributes
+- **Easy Identification**: Elements should be easily identifiable for testing and debugging
+- **Consistent Naming**: Use consistent naming conventions for element attributes
+- **Accessibility**: Ensure elements are properly labeled for screen readers
+- **Documentation**: Document element identities in component documentation
+
+### **Navigation & Page Identity Design Goal**: Contextual Breadcrumbs with Page Titles
+- **Purpose**: Support complex navigation hierarchies while maintaining clear page identity
+- **Implementation**: 
+  - **Page Titles**: Always present for clear page identification (`data-element="*-title"`)
+  - **Breadcrumbs**: Contextual navigation showing hierarchy (e.g., "Dashboard > Test Cases > Test Suite A")
+  - **Future Support**: Handle complex nested pages like "Projects > Project A > Test Suites > Suite B > Test Cases"
+- **Benefits**:
+  - Clear page identity at all times
+  - Navigation context for complex hierarchies
+  - Scalable for future complex pages
+  - Follows established web navigation patterns
+  - Maintains Apple design aesthetics
+
+### **Current Implementation Status**:
+- ✅ **Dashboard**: No breadcrumbs (home page), clear title
+- ✅ **Simple Pages**: Single-level breadcrumbs (e.g., "Test Cases")
+- 🔄 **Complex Pages**: Need hierarchical breadcrumbs (e.g., "Projects > Project A > Test Suites")
+- 🔄 **Future Pages**: Support for deep nesting (e.g., "Projects > Project A > Test Suites > Suite B > Test Cases > Test Case X")
+
+### **Breadcrumb Hierarchy Examples**:
+```
+Dashboard: (no breadcrumbs - home page)
+Test Cases: "Test Cases"
+Projects: "Projects"
+Test Suites: "Test Suites"
+Documents: "Documents"
+Import: "Import"
+Settings: "Settings"
+Reports: "Reports"
+
+Future Complex Pages:
+Project Detail: "Projects > Project A"
+Test Suite Detail: "Projects > Project A > Test Suites > Suite B"
+Test Case Detail: "Projects > Project A > Test Suites > Suite B > Test Cases > Test Case X"
+Document Detail: "Documents > requirements.pdf"
+Import History: "Import > History"
+```
+
 ## ✅ ACHIEVEMENT SUMMARY
 
 ### Layout Consistency & Element Identity (COMPLETED)
