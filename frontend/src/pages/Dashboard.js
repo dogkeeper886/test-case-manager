@@ -3,15 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FolderOpen, 
   FileText, 
-  CheckCircle, 
-  XCircle, 
   Clock,
   TrendingUp,
-  Plus,
-  Upload,
-  BarChart3,
   ArrowRight,
-  Activity
+  Activity,
+  BarChart3,
+  Plus
 } from 'lucide-react';
 import { Button, Card } from '../components/ui';
 import Layout from '../components/layout/Layout';
@@ -117,36 +114,7 @@ const Dashboard = () => {
     },
   ];
 
-  const quickActions = [
-    {
-      label: 'Test Cases',
-      description: 'Browse all test cases',
-      icon: <FileText className="w-5 h-5" />,
-      variant: 'primary',
-      onClick: () => navigate('/testcases')
-    },
-    {
-      label: 'Test Suites',
-      description: 'Explore hierarchy',
-      icon: <FolderOpen className="w-5 h-5" />,
-      variant: 'secondary',
-      onClick: () => navigate('/test-suites')
-    },
-    {
-      label: 'Import',
-      description: 'Upload documents',
-      icon: <Upload className="w-5 h-5" />,
-      variant: 'secondary',
-      onClick: () => navigate('/documents')
-    },
-    {
-      label: 'Reports',
-      description: 'Generate reports',
-      icon: <BarChart3 className="w-5 h-5" />,
-      variant: 'secondary',
-      onClick: () => navigate('/reports')
-    }
-  ];
+
 
   const recentActivity = [
     {
@@ -283,74 +251,42 @@ const Dashboard = () => {
         })}
       </div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <Card elevation="sm">
-          <Card.Header>
-            <h3 className="text-xl font-sf font-semibold text-apple-gray-7">
-              Recent Activity
-            </h3>
-          </Card.Header>
-          <Card.Body>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div 
-                  key={activity.id}
-                  className="flex items-center justify-between p-3 rounded-apple hover:bg-apple-gray-2/50 cursor-pointer transition-colors duration-200"
-                  onClick={() => navigate(activity.link)}
-                >
-                  <div className="flex items-center space-x-3">
-                    {getActivityIcon(activity.type)}
-                    <span className="text-sm font-sf text-apple-gray-6">{activity.action}</span>
-                  </div>
-                  <span className="text-xs font-sf text-apple-gray-4">{activity.time}</span>
+      {/* Recent Activity */}
+      <Card elevation="sm">
+        <Card.Header>
+          <h3 className="text-xl font-sf font-semibold text-apple-gray-7">
+            Recent Activity
+          </h3>
+        </Card.Header>
+        <Card.Body>
+          <div className="space-y-4">
+            {recentActivity.map((activity) => (
+              <div 
+                key={activity.id}
+                className="flex items-center justify-between p-3 rounded-apple hover:bg-apple-gray-2/50 cursor-pointer transition-colors duration-200"
+                onClick={() => navigate(activity.link)}
+              >
+                <div className="flex items-center space-x-3">
+                  {getActivityIcon(activity.type)}
+                  <span className="text-sm font-sf text-apple-gray-6">{activity.action}</span>
                 </div>
-              ))}
-              <div className="pt-2 border-t border-apple-gray-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/testcases')}
-                  className="text-apple-blue hover:text-blue-600"
-                >
-                  View All Activity
-                  <ArrowRight className="w-3 h-3 ml-1" />
-                </Button>
+                <span className="text-xs font-sf text-apple-gray-4">{activity.time}</span>
               </div>
+            ))}
+            <div className="pt-2 border-t border-apple-gray-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/testcases')}
+                className="text-apple-blue hover:text-blue-600"
+              >
+                View All Activity
+                <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
             </div>
-          </Card.Body>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card elevation="sm">
-          <Card.Header>
-            <h3 className="text-xl font-sf font-semibold text-apple-gray-7">
-              Quick Actions
-            </h3>
-          </Card.Header>
-          <Card.Body>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {quickActions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant={action.variant}
-                  className="w-full justify-start h-auto py-3 px-4"
-                  onClick={action.onClick}
-                >
-                  <div className="flex items-center space-x-3">
-                    {action.icon}
-                    <div className="text-left">
-                      <div className="font-sf font-medium">{action.label}</div>
-                      <div className="text-xs opacity-80">{action.description}</div>
-                    </div>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </Card.Body>
-        </Card>
-      </div>
+          </div>
+        </Card.Body>
+      </Card>
     </Layout>
   );
 };
