@@ -12,6 +12,8 @@ import TestCases from './pages/TestCases.jsx';
 import TestCaseDetail from './pages/TestCaseDetail';
 import TestSuiteBrowser from './pages/TestSuiteBrowser';
 import Documents from './pages/Documents';
+import Import from './pages/Import';
+import Settings from './pages/Settings';
 import Reports from './pages/Reports';
 import ComponentTest from './pages/ComponentTest';
 
@@ -29,6 +31,8 @@ function App() {
             <Route path="/testcases/:id" element={<TestCaseDetail />} />
             <Route path="/test-suites" element={<TestSuiteBrowser />} />
             <Route path="/documents" element={<Documents />} />
+            <Route path="/import" element={<Import />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/test" element={<ComponentTest />} />
           </Routes>
