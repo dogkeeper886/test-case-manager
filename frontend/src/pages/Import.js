@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, FileText, Trash2, Plus, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { Button, Card, Badge } from '../components/ui';
 import Layout from '../components/layout/Layout';
@@ -9,44 +9,52 @@ const Import = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [importHistory, setImportHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [historyError, setHistoryError] = useState(null);
   const fileInputRef = useRef(null);
 
-  const importHistory = [
-    {
-      id: 1,
-      filename: 'testlink-export-2024-01.xml',
-      size: '15.2 MB',
-      uploaded: '2024-01-20',
-      status: 'Completed',
-      testCases: 245,
-      testSuites: 12,
-      projects: 3,
-      duration: '2m 34s',
-    },
-    {
-      id: 2,
-      filename: 'legacy-tests.xml',
-      size: '8.7 MB',
-      uploaded: '2024-01-18',
-      status: 'Failed',
-      testCases: 0,
-      testSuites: 0,
-      projects: 0,
-      duration: '0m 12s',
-      error: 'Invalid XML format',
-    },
-    {
-      id: 3,
-      filename: 'regression-suite.xml',
-      size: '22.1 MB',
-      uploaded: '2024-01-15',
-      status: 'Processing',
-      testCases: 0,
-      testSuites: 0,
-      projects: 0,
-      duration: '--',
-    },
-  ];
+  // Fetch import history on component mount
+  useEffect(() => {
+    const fetchImportHistory = async () => {
+      try {
+        setLoadingHistory(true);
+        setHistoryError(null);
+        
+        // Fetch import logs for project 1 (sample project)
+        const response = await importAPI.getLogs(1);
+        const logs = response.data.data || [];
+        
+        // Transform API data to match UI format
+        const transformedHistory = logs.map(log => ({
+          id: log.id,
+          filename: log.file_name || 'Unknown file',
+          size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
+          uploaded: new Date(log.created_at).toLocaleDateString(),
+          status: log.status === 'completed' ? 'Completed' : 
+                  log.status === 'failed' ? 'Failed' : 
+                  log.status === 'processing' ? 'Processing' : 'Unknown',
+          testCases: log.additional_data?.imported_test_cases || 0,
+          testSuites: log.additional_data?.imported_test_suites || 0,
+          projects: 1, // Always 1 for now
+          duration: log.additional_data?.duration || '--',
+          error: log.additional_data?.errors?.[0] || null,
+          strategy: log.additional_data?.strategy || 'unknown'
+        }));
+        
+        setImportHistory(transformedHistory);
+      } catch (error) {
+        console.error('Failed to fetch import history:', error);
+        setHistoryError('Failed to load import history');
+        // Fallback to empty array
+        setImportHistory([]);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    fetchImportHistory();
+  }, []);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -151,6 +159,26 @@ const Import = () => {
 
       setUploadSuccess(`Successfully imported ${file.name} with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`);
       console.log('Import response:', response.data);
+      
+      // Refresh import history after successful import
+      const historyResponse = await importAPI.getLogs(1);
+      const logs = historyResponse.data.data || [];
+      const transformedHistory = logs.map(log => ({
+        id: log.id,
+        filename: log.file_name || 'Unknown file',
+        size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
+        uploaded: new Date(log.created_at).toLocaleDateString(),
+        status: log.status === 'completed' ? 'Completed' : 
+                log.status === 'failed' ? 'Failed' : 
+                log.status === 'processing' ? 'Processing' : 'Unknown',
+        testCases: log.additional_data?.imported_test_cases || 0,
+        testSuites: log.additional_data?.imported_test_suites || 0,
+        projects: 1,
+        duration: log.additional_data?.duration || '--',
+        error: log.additional_data?.errors?.[0] || null,
+        strategy: log.additional_data?.strategy || 'unknown'
+      }));
+      setImportHistory(transformedHistory);
       
       // Reset file input
       if (fileInputRef.current) {
@@ -337,7 +365,35 @@ const Import = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-apple-gray-2" data-element="import-table-body">
-                  {importHistory.map((importItem, index) => (
+                  {loadingHistory ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-8 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <Clock className="w-5 h-5 text-apple-gray-4 animate-spin" />
+                          <span className="text-apple-gray-5">Loading import history...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : historyError ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-8 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <AlertCircle className="w-5 h-5 text-apple-red" />
+                          <span className="text-apple-red">{historyError}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : importHistory.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-8 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <FileText className="w-5 h-5 text-apple-gray-4" />
+                          <span className="text-apple-gray-5">No import history found</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    importHistory.map((importItem, index) => (
                     <tr key={importItem.id} className="hover:bg-apple-gray-1/50 transition-colors" data-element={`import-row-${index + 1}`}>
                       <td className="px-6 py-4 whitespace-nowrap" data-element={`import-file-${index + 1}`}>
                         <div className="flex items-center" data-element={`import-file-info-${index + 1}`}>
@@ -412,7 +468,8 @@ const Import = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  )}
                 </tbody>
               </table>
             </div>
