@@ -683,6 +683,11 @@ font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
 - 🔄 **Complex Pages**: Need hierarchical breadcrumbs (e.g., "Projects > Project A > Test Suites")
 - 🔄 **Future Pages**: Support for deep nesting (e.g., "Projects > Project A > Test Suites > Suite B > Test Cases > Test Case X")
 
+### **Detailed Implementation Plan**:
+- 📋 **Navigation Implementation Todo**: See `docs/navigation-implementation-todo.md` for detailed tasks for each page
+- **Current Progress**: 8/18 tasks completed (44% - Phase 1 completed)
+- **Next Priority**: Implement Project Detail page with hierarchical breadcrumbs
+
 ### **Breadcrumb Hierarchy Examples**:
 ```
 Dashboard: (no breadcrumbs - home page)
