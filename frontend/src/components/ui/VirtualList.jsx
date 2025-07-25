@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const VirtualList = ({
   items = [],
@@ -74,20 +73,15 @@ const VirtualList = ({
         ref={scrollElementRef}
         style={{ height: totalHeight, position: 'relative' }}
       >
-        <AnimatePresence>
-          {visibleItems.map((item) => (
-            <motion.div
-              key={item.id || item.virtualIndex}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-              style={item.style}
-            >
-              {renderItem(item, item.virtualIndex)}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {visibleItems.map((item) => (
+          <div
+            key={item.id || item.virtualIndex}
+            style={item.style}
+            className="transition-opacity duration-200"
+          >
+            {renderItem(item, item.virtualIndex)}
+          </div>
+        ))}
       </div>
     </div>
   );

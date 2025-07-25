@@ -20,7 +20,7 @@ import {
 import { Button, Card, Badge } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import { testCasesAPI } from '../services/api';
-import { showSuccess, showError, showWarning, showInfo } from '../utils/toast';
+import { showSuccess, showError, showWarning, dismissToast } from '../utils/toast';
 
 const TestCaseDetail = () => {
   const { id } = useParams();
@@ -134,13 +134,13 @@ const TestCaseDetail = () => {
     if (window.confirm(confirmMessage)) {
       try {
         // Show loading state
-        const loadingToast = showWarning('Deleting test case...', { autoClose: false });
+        const loadingToastId = showWarning('Deleting test case...', { autoClose: false });
         
         // Delete the test case
         await testCasesAPI.delete(testCase.id);
         
         // Dismiss loading toast and show success
-        loadingToast.dismiss();
+        dismissToast(loadingToastId);
         showSuccess(`Test case "${testCase.title}" deleted successfully`);
         
         // Navigate back to test cases list

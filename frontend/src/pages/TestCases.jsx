@@ -1,9 +1,37 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Filter, Plus, Eye, Edit, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
-import { Button, Card, Badge, Input } from '../components/ui';
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Grid3X3, 
+  List, 
+  Kanban, 
+  Calendar,
+  BarChart3,
+  Settings,
+  Download,
+  Upload,
+  Trash2,
+  Eye,
+  Edit,
+  Copy,
+  CheckSquare,
+  Square,
+  MoreHorizontal,
+  ChevronUp,
+  ChevronDown,
+  ArrowLeft,
+  ArrowRight,
+  RefreshCw,
+  Monitor,
+  Activity,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
+import { Button, Badge, Card, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
-import TestCasesTable from '../components/test-cases/TestCasesTable';
+import { TestCasesTable } from '../components/test-cases';
 import TestCasesTableOptimized from '../components/test-cases/TestCasesTableOptimized';
 import TestCasesCompactCards from '../components/test-cases/TestCasesCompactCards';
 import TestCasesKanban from '../components/test-cases/TestCasesKanban';
@@ -14,8 +42,8 @@ import { PerformanceMonitor, PerformanceAnalytics } from '../components/ui';
 import { testCasesAPI, testSuitesAPI, projectsAPI } from '../services/api';
 import useTestCaseStore from '../stores/testCaseStore';
 import useFilterStore from '../stores/filterStore';
+import { showSuccess, showError, showWarning, showInfo, dismissToast } from '../utils/toast';
 import useOptimizedFilters from '../hooks/useOptimizedFilters';
-import { showSuccess, showError, showWarning, showInfo } from '../utils/toast';
 
 const TestCases = () => {
   const navigate = useNavigate();
@@ -37,6 +65,7 @@ const TestCases = () => {
   const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
   const [showPerformanceAnalytics, setShowPerformanceAnalytics] = useState(false);
   const [useOptimizedTable, setUseOptimizedTable] = useState(true);
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   const { setTestCases: setStoreTestCases, setTestSuites: setStoreTestSuites } = useTestCaseStore();
   
@@ -217,13 +246,13 @@ const TestCases = () => {
     if (window.confirm(confirmMessage)) {
       try {
         // Show loading state
-        const loadingToast = showWarning('Deleting test case...', { autoClose: false });
+        const loadingToastId = showWarning('Deleting test case...', { autoClose: false });
         
         // Delete the test case
         await testCasesAPI.delete(testCase.id);
         
         // Dismiss loading toast and show success
-        loadingToast.dismiss();
+        dismissToast(loadingToastId);
         showSuccess(`Test case "${testCase.title}" deleted successfully`);
         
         // Refresh data
@@ -288,6 +317,39 @@ const TestCases = () => {
     );
   };
 
+  // New select all functionality
+  const handleSelectAll = () => {
+    const allIds = filteredTestCases.map(testCase => testCase.id);
+    setSelectedIds(allIds);
+    showInfo(`Selected all ${allIds.length} test cases`);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedIds([]);
+    showInfo('Deselected all test cases');
+  };
+
+  const handleSelectAllToggle = () => {
+    if (selectedIds.length === filteredTestCases.length) {
+      handleDeselectAll();
+    } else {
+      handleSelectAll();
+    }
+  };
+
+  // Check if all items are selected
+  const isAllSelected = selectedIds.length === filteredTestCases.length && filteredTestCases.length > 0;
+  const isPartiallySelected = selectedIds.length > 0 && selectedIds.length < filteredTestCases.length;
+
+  // Show/hide bulk actions based on selection
+  useEffect(() => {
+    if (selectedIds.length > 0) {
+      setShowBulkActions(true);
+    } else {
+      setShowBulkActions(false);
+    }
+  }, [selectedIds.length]);
+
   const handleBulkAction = async (action) => {
     if (selectedIds.length === 0) {
       showWarning('Please select test cases first.');
@@ -301,25 +363,39 @@ const TestCases = () => {
         if (window.confirm(confirmMessage)) {
           try {
             // Show loading state
-            const loadingToast = showWarning(`Deleting ${selectedIds.length} test case${selectedIds.length > 1 ? 's' : ''}...`, { autoClose: false });
+            const loadingToastId = showWarning(`Deleting ${selectedIds.length} test case${selectedIds.length > 1 ? 's' : ''}...`, { autoClose: false });
             
-            // Delete all selected test cases
-            const deletePromises = selectedIds.map(id => testCasesAPI.delete(id));
-            await Promise.all(deletePromises);
+            // Delete all selected test cases with individual error handling
+            const deleteResults = await Promise.allSettled(
+              selectedIds.map(id => testCasesAPI.delete(id))
+            );
             
-            // Dismiss loading toast and show success
-            loadingToast.dismiss();
-            showSuccess(`Successfully deleted ${selectedIds.length} test case${selectedIds.length > 1 ? 's' : ''}`);
+            // Count successful and failed deletions
+            const successful = deleteResults.filter(result => result.status === 'fulfilled').length;
+            const failed = deleteResults.filter(result => result.status === 'rejected').length;
+            
+            // Dismiss loading toast
+            dismissToast(loadingToastId);
+            
+            // Show appropriate success/error message
+            if (successful > 0 && failed === 0) {
+              showSuccess(`Successfully deleted ${successful} test case${successful > 1 ? 's' : ''}`);
+            } else if (successful > 0 && failed > 0) {
+              showWarning(`Deleted ${successful} test case${successful > 1 ? 's' : ''}, but failed to delete ${failed} test case${failed > 1 ? 's' : ''}. Some test cases may have already been deleted.`);
+            } else {
+              showError(`Failed to delete any test cases. Please try again.`);
+            }
             
             // Refresh data and clear selection
             await fetchData();
             setSelectedIds([]);
+            setShowBulkActions(false);
             
           } catch (err) {
             console.error('Error during bulk delete:', err);
             
             // Show error message
-            let errorMessage = `Failed to delete some test cases. Please try again.`;
+            let errorMessage = `Failed to delete test cases. Please try again.`;
             
             if (err.response?.status === 403) {
               errorMessage = 'You do not have permission to delete some test cases.';
@@ -353,14 +429,14 @@ const TestCases = () => {
       }
 
       // Show loading state
-      const loadingToast = showInfo(`Updating status to ${newStatus}...`, { autoClose: false });
+      const loadingToastId = showInfo(`Updating status to ${newStatus}...`, { autoClose: false });
 
       // Update the test case status
       const updatedTestCase = { ...testCase, status: newStatus };
       await testCasesAPI.update(testCaseId, updatedTestCase);
       
       // Dismiss loading toast and show success
-      loadingToast.dismiss();
+      dismissToast(loadingToastId);
       showSuccess(`Status updated to ${newStatus}`);
       
       // Refresh data
@@ -465,10 +541,10 @@ const TestCases = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between" data-testid="test-cases-header">
           <div>
-            <h1 className="text-2xl font-sf font-bold text-apple-gray-7">Test Cases</h1>
-            <p className="text-apple-gray-5 mt-1">
+            <h1 className="text-2xl font-sf font-bold text-apple-gray-7" data-testid="test-cases-title">Test Cases</h1>
+            <p className="text-apple-gray-5 mt-1" data-testid="test-cases-count">
               {filteredTestCases.length} of {testCases.length} test cases
             </p>
           </div>
@@ -476,19 +552,45 @@ const TestCases = () => {
             variant="primary"
             icon={<Plus className="w-4 h-4" />}
             onClick={handleCreateTestCase}
+            data-testid="create-test-case-button"
           >
             Create Test Case
           </Button>
         </div>
 
         {/* Filters and Search */}
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center mb-6">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center mb-6" data-testid="test-cases-controls">
           {/* View Toggle */}
           <ViewToggle
             currentView={viewMode}
             onViewChange={handleViewChange}
             className="flex-shrink-0"
+            data-testid="view-toggle"
           />
+
+          {/* Select All Toggle - Apple Design Guidelines */}
+          {filteredTestCases.length > 0 && (
+            <Button
+              variant="ghost"
+              icon={isAllSelected ? <CheckCircle className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+              onClick={handleSelectAllToggle}
+              className={`flex-shrink-0 transition-all duration-200 ${
+                isAllSelected 
+                  ? 'text-apple-blue bg-apple-blue/10 hover:bg-apple-blue/20' 
+                  : isPartiallySelected 
+                    ? 'text-apple-orange bg-apple-orange/10 hover:bg-apple-orange/20'
+                    : 'text-apple-gray-5 hover:text-apple-gray-7 hover:bg-apple-gray-2'
+              }`}
+              data-testid="select-all-toggle"
+            >
+              {isAllSelected ? 'Deselect All' : isPartiallySelected ? 'Select All' : 'Select All'}
+              {selectedIds.length > 0 && (
+                <span className="ml-2 px-2 py-1 text-xs font-medium bg-apple-blue/10 text-apple-blue rounded-full" data-testid="selected-count-badge">
+                  {selectedIds.length}
+                </span>
+              )}
+            </Button>
+          )}
 
           {/* Filters Toggle */}
           <Button
@@ -496,10 +598,11 @@ const TestCases = () => {
             icon={<Filter className="w-4 h-4" />}
             onClick={() => setShowFilters(!showFilters)}
             className="flex-shrink-0"
+            data-testid="filters-toggle-button"
           >
             Filters
             {getActiveFiltersCount() > 0 && (
-              <span className="ml-2 px-2 py-1 text-xs font-medium bg-apple-blue/10 text-apple-blue rounded-full">
+              <span className="ml-2 px-2 py-1 text-xs font-medium bg-apple-blue/10 text-apple-blue rounded-full" data-testid="active-filters-count">
                 {getActiveFiltersCount()}
               </span>
             )}
@@ -510,6 +613,7 @@ const TestCases = () => {
             variant="ghost"
             onClick={() => setUseOptimizedTable(!useOptimizedTable)}
             className="flex-shrink-0"
+            data-testid="table-optimization-toggle"
           >
             {useOptimizedTable ? 'Optimized' : 'Standard'} Table
           </Button>
@@ -519,6 +623,7 @@ const TestCases = () => {
             variant="ghost"
             onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
             className="flex-shrink-0"
+            data-testid="performance-monitor-toggle"
           >
             Performance
           </Button>
@@ -528,6 +633,7 @@ const TestCases = () => {
             variant="ghost"
             onClick={() => setShowPerformanceAnalytics(!showPerformanceAnalytics)}
             className="flex-shrink-0"
+            data-testid="performance-analytics-toggle"
           >
             Analytics
           </Button>
@@ -535,7 +641,7 @@ const TestCases = () => {
 
         {/* Advanced Filter Panel */}
         {showFilters && (
-          <div className="mb-6">
+          <div className="mb-6" data-testid="advanced-filter-panel">
             <FilterPanel
               filters={{
                 search: { query: searchQuery, field: searchField, operator: searchOperator },
@@ -554,44 +660,56 @@ const TestCases = () => {
               savedPresets={savedPresets}
               projects={projects}
               testSuites={testSuites}
+              data-testid="filter-panel"
             />
           </div>
         )}
 
-        {/* Bulk Actions */}
+        {/* Bulk Actions - Fixed Position Overlay */}
         {selectedIds.length > 0 && (
-          <div className="flex items-center gap-2 p-3 bg-apple-blue/5 border border-apple-blue/20 rounded-apple-lg">
-            <span className="text-sm font-sf text-apple-gray-7">
-              {selectedIds.length} test case{selectedIds.length !== 1 ? 's' : ''} selected
-            </span>
-            <div className="flex items-center gap-2 ml-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleBulkAction('export')}
-              >
-                Export
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleBulkAction('delete')}
-                className="text-red-600 hover:text-red-700"
-              >
-                Delete
-              </Button>
+          <div 
+            className={`fixed top-20 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-apple-gray-2 shadow-apple-sm transition-all duration-300 ease-out ${
+              showBulkActions ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+            }`}
+            data-testid="bulk-actions-bar"
+          >
+            <div className="max-w-7xl mx-auto px-6">
+              <div className="flex items-center gap-2 py-3">
+                <span className="text-sm font-sf font-medium text-apple-gray-7" data-testid="selected-count">
+                  {selectedIds.length} test case{selectedIds.length !== 1 ? 's' : ''} selected
+                </span>
+                <div className="flex items-center gap-2 ml-auto" data-testid="bulk-action-buttons">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleBulkAction('export')}
+                    data-testid="bulk-export-button"
+                  >
+                    Export
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleBulkAction('delete')}
+                    className="text-red-600 hover:text-red-700"
+                    data-testid="bulk-delete-button"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* Test Cases Display */}
         {filteredTestCases.length === 0 ? (
-          <Card elevation="sm" padding="xl">
+          <Card elevation="sm" padding="xl" data-testid="empty-state-card">
             <Card.Body className="text-center py-12">
-              <h3 className="text-lg font-sf font-semibold text-apple-gray-7 mb-2">
+              <h3 className="text-lg font-sf font-semibold text-apple-gray-7 mb-2" data-testid="empty-state-title">
                 No test cases found
               </h3>
-              <p className="text-apple-gray-5">
+              <p className="text-apple-gray-5" data-testid="empty-state-message">
                 {getActiveFiltersCount() > 0
                   ? 'Try adjusting your search or filters'
                   : 'Get started by creating your first test case'}
@@ -599,34 +717,36 @@ const TestCases = () => {
             </Card.Body>
           </Card>
         ) : (
-          <div>
-                      {viewMode === 'table' && (
-            useOptimizedTable ? (
-              <TestCasesTableOptimized
-                testCases={sortedTestCases}
-                onView={handleViewTestCase}
-                onEdit={handleEditTestCase}
-                onDelete={handleDeleteTestCase}
-                onSelect={handleSelect}
-                selectedIds={selectedIds}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                onSort={handleSort}
-              />
-            ) : (
-              <TestCasesTable
-                testCases={sortedTestCases}
-                onView={handleViewTestCase}
-                onEdit={handleEditTestCase}
-                onDelete={handleDeleteTestCase}
-                onSelect={handleSelect}
-                selectedIds={selectedIds}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                onSort={handleSort}
-              />
-            )
-          )}
+          <div data-testid="test-cases-display">
+            {viewMode === 'table' && (
+              useOptimizedTable ? (
+                <TestCasesTableOptimized
+                  testCases={sortedTestCases}
+                  onView={handleViewTestCase}
+                  onEdit={handleEditTestCase}
+                  onDelete={handleDeleteTestCase}
+                  onSelect={handleSelect}
+                  selectedIds={selectedIds}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                  data-testid="test-cases-table-optimized"
+                />
+              ) : (
+                <TestCasesTable
+                  testCases={sortedTestCases}
+                  onView={handleViewTestCase}
+                  onEdit={handleEditTestCase}
+                  onDelete={handleDeleteTestCase}
+                  onSelect={handleSelect}
+                  selectedIds={selectedIds}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                  data-testid="test-cases-table"
+                />
+              )
+            )}
             
             {viewMode === 'cards' && (
               <TestCasesCompactCards
@@ -634,6 +754,7 @@ const TestCases = () => {
                 onView={handleViewTestCase}
                 onEdit={handleEditTestCase}
                 onDelete={handleDeleteTestCase}
+                data-testid="test-cases-cards"
               />
             )}
             
@@ -644,6 +765,7 @@ const TestCases = () => {
                 onEdit={handleEditTestCase}
                 onDelete={handleDeleteTestCase}
                 onStatusChange={handleStatusChange}
+                data-testid="test-cases-kanban"
               />
             )}
             
@@ -653,6 +775,7 @@ const TestCases = () => {
                 onView={handleViewTestCase}
                 onEdit={handleEditTestCase}
                 onDelete={handleDeleteTestCase}
+                data-testid="test-cases-timeline"
               />
             )}
           </div>
