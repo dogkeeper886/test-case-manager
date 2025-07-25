@@ -686,6 +686,39 @@ font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
 - **Documentation**: Document element identities in component documentation
 
 **Tasks**:
+- [ ] **Test Case Detail Page Enhancement** 🔄 **NEW PRIORITY**
+  - [ ] **Real Data Integration Issues**:
+    - [ ] Fix "No description available" - ensure real description data displays
+    - [ ] Fix "Unknown" Project and "No Suite" - ensure real project/suite data displays
+    - [ ] Fix "Invalid Date" for Created/Updated timestamps
+    - [ ] Verify API endpoint returns complete test case data with related information
+    - [ ] Test data fetching and display for all test case fields
+  - [ ] **Design Guidelines Compliance**:
+    - [ ] Add `data-element` attributes to all UI elements for easy identification
+    - [ ] Ensure Apple design system compliance (typography, spacing, colors)
+    - [ ] Implement proper visual hierarchy and information architecture
+    - [ ] Add consistent hover states and interactive feedback
+    - [ ] Ensure responsive design works on all devices
+  - [ ] **Information Architecture Improvements**:
+    - [ ] **Move Test Steps to Primary View**: Test steps should be visible in first glance, not hidden in tabs
+    - [ ] **Reorganize Layout**: Most important information (title, description, steps) should be immediately visible
+    - [ ] **Improve Content Hierarchy**: Description and test steps should be prominently displayed
+    - [ ] **Sidebar Optimization**: Move metadata (project, suite, dates) to sidebar for better focus
+    - [ ] **Tab Restructuring**: Consider if tabs are needed or if single-page layout is better
+  - [ ] **User Experience Enhancements**:
+    - [ ] Add loading states for data fetching
+    - [ ] Implement error handling for missing data
+    - [ ] Add copy functionality for test case information
+    - [ ] Improve navigation between test cases
+    - [ ] Add keyboard shortcuts for common actions
+  - [ ] **Testing & Validation**:
+    - [ ] Test with real test case data (ID 428 and others)
+    - [ ] Verify all data fields display correctly
+    - [ ] Test responsive design on mobile and tablet
+    - [ ] Validate accessibility compliance
+    - [ ] Test navigation and user interactions
+
+**Tasks**:
 - [ ] **Create Test Case Modal/Form**
   - [ ] Design and implement create test case modal
   - [ ] Add form validation and error handling
