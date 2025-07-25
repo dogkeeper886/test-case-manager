@@ -20,6 +20,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -31,6 +32,15 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:watch": "react-scripts test --watch",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:all": "npm run test:coverage && npm run test:e2e",
+    "test:ci": "npm run test:coverage && npm run test:e2e --reporter=html",
+    "playwright:install": "playwright install",
+    "playwright:install-deps": "playwright install-deps",
     "eject": "react-scripts eject",
     "dev": "react-scripts start"
   },

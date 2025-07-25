@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # Test Database
+  test-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: testcasemanager_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - test_postgres_data:/var/lib/postgresql/data
+      - ../database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Test Backend
+  test-backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    environment:
+      NODE_ENV: test
+      DB_HOST: test-postgres
+      DB_PORT: 5432
+      DB_NAME: testcasemanager_test
+      DB_USER: postgres
+      DB_PASSWORD: test_password
+      PORT: 3001
+      JWT_SECRET: test-jwt-secret
+    ports:
+      - "3002:3001"
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+    volumes:
+      - ../backend:/app
+      - /app/node_modules
+    command: npm run test:watch
+
+  # Test Frontend with Playwright
+  test-frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend.test
+    environment:
+      NODE_ENV: test
+      REACT_APP_API_URL: http://test-backend:3001
+      CI: true
+    ports:
+      - "3003:3000"
+    depends_on:
+      - test-backend
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - playwright-results:/app/playwright-results
+      - playwright-screenshots:/app/playwright-screenshots
+    command: npm run test:e2e
+
+  # Playwright Browser Tests
+  playwright:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.playwright
+    environment:
+      NODE_ENV: test
+      CI: true
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+    depends_on:
+      - test-frontend
+      - test-backend
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - playwright-results:/app/playwright-results
+      - playwright-screenshots:/app/playwright-screenshots
+    command: npx playwright test --reporter=html
+
+  # Test Runner (for running all tests)
+  test-runner:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test-runner
+    environment:
+      NODE_ENV: test
+      CI: true
+    depends_on:
+      - test-backend
+      - test-frontend
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - test-results:/app/test-results
+    command: npm run test:all
+
+volumes:
+  test_postgres_data:
+  playwright-results:
+  playwright-screenshots:
+  test-results: 
