@@ -15,7 +15,9 @@ import {
   Settings,
   Tag,
   Download,
-  Share2
+  Share2,
+  Info,
+  List
 } from 'lucide-react';
 import { Button, Card, Badge } from '../components/ui';
 import Layout from '../components/layout/Layout';
@@ -40,7 +42,9 @@ const TestCaseDetail = () => {
       setError(null);
       
       const response = await testCasesAPI.getById(id);
-      setTestCase(response.data);
+      
+      // The API returns {success: true, data: {...}}, so we need response.data.data
+      setTestCase(response.data.data);
       
     } catch (err) {
       console.error('Error fetching test case:', err);
@@ -86,6 +90,24 @@ const TestCaseDetail = () => {
       case 4: return 'Blocked';
       case 5: return 'Skipped';
       default: return 'Unknown';
+    }
+  };
+
+  const getImportanceText = (importance) => {
+    switch (importance) {
+      case 1: return 'Low';
+      case 2: return 'Medium';
+      case 3: return 'High';
+      default: return 'Medium';
+    }
+  };
+
+  const getImportanceBadgeVariant = (importance) => {
+    switch (importance) {
+      case 1: return 'default';
+      case 2: return 'warning';
+      case 3: return 'error';
+      default: return 'warning';
     }
   };
 
@@ -195,10 +217,10 @@ const TestCaseDetail = () => {
     );
   }
 
+  // Updated tab structure: Overview and Details
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <FileText className="w-4 h-4" /> },
-    { id: 'steps', label: 'Test Steps', icon: <Play className="w-4 h-4" /> },
-    { id: 'custom', label: 'Custom Fields', icon: <Settings className="w-4 h-4" /> },
+    { id: 'details', label: 'Details', icon: <Info className="w-4 h-4" /> },
   ];
 
   return (
@@ -230,38 +252,59 @@ const TestCaseDetail = () => {
       showSearch={false}
     >
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
+      <div className="mb-6" data-element="test-case-header">
+        <div className="flex items-center gap-4 mb-4" data-element="test-case-header-actions">
           <Button
             variant="ghost"
             icon={<ArrowLeft className="w-4 h-4" />}
             onClick={handleBack}
+            data-element="test-case-back-button"
           >
             Back
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-element="test-case-status-badges">
             {getStatusIcon(testCase.status)}
-            <Badge variant={getStatusBadgeVariant(testCase.status)}>
+            <Badge variant={getStatusBadgeVariant(testCase.status)} data-element="test-case-status-badge">
               {getStatusText(testCase.status)}
             </Badge>
-            <Badge variant={getPriorityBadgeVariant(testCase.priority)}>
+            <Badge variant={getPriorityBadgeVariant(testCase.priority)} data-element="test-case-priority-badge">
               {getPriorityText(testCase.priority)}
             </Badge>
+            <Badge variant={getImportanceBadgeVariant(testCase.importance)} data-element="test-case-importance-badge">
+              {getImportanceText(testCase.importance)}
+            </Badge>
+            {testCase.execution_type === 2 && (
+              <Badge variant="success" size="sm" data-element="test-case-automated-badge">
+                Automated
+              </Badge>
+            )}
           </div>
         </div>
         
-        <h1 className="text-3xl font-sf-display font-semibold text-apple-gray-7 mb-2">
+        <h1 className="text-3xl font-sf-display font-semibold text-apple-gray-7 mb-2" data-element="test-case-title">
           {testCase.title}
         </h1>
         
-        <p className="text-apple-gray-5 text-lg">
-          Test Case #{testCase.id}
-        </p>
+        <div className="flex items-center gap-4 text-apple-gray-5" data-element="test-case-meta">
+          <p className="text-lg" data-element="test-case-id">
+            Test Case #{testCase.id}
+          </p>
+          {testCase.external_id && (
+            <p className="text-sm font-mono" data-element="test-case-external-id-header">
+              External ID: {testCase.external_id}
+            </p>
+          )}
+          {testCase.version && (
+            <p className="text-sm" data-element="test-case-version-header">
+              Version {testCase.version}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6">
-        <div className="flex space-x-1 bg-apple-gray-2 p-1 rounded-apple">
+      <div className="mb-6" data-element="test-case-tabs">
+        <div className="flex space-x-1 bg-apple-gray-2 p-1 rounded-apple" data-element="test-case-tabs-container">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -273,6 +316,7 @@ const TestCaseDetail = () => {
                   : 'text-apple-gray-5 hover:text-apple-gray-7'
                 }
               `}
+              data-element={`test-case-tab-${tab.id}`}
             >
               {tab.icon}
               {tab.label}
@@ -281,167 +325,301 @@ const TestCaseDetail = () => {
         </div>
       </div>
 
-      {/* Tab Content */}
+      {/* Main Content - Reorganized for better information hierarchy */}
       <div className="space-y-6">
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card elevation="sm">
+          <div className="space-y-6">
+            {/* 1. Summary Section - First Priority */}
+            <Card elevation="sm" data-element="test-case-summary-card">
+              <Card.Header>
+                <h3 className="text-xl font-sf font-semibold text-apple-gray-7" data-element="test-case-summary-title">
+                  Summary
+                </h3>
+              </Card.Header>
+              <Card.Body data-element="test-case-summary-content">
+                <div 
+                  className="text-apple-gray-6 leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: testCase.description || 'No description available' }}
+                  data-element="test-case-summary-text"
+                />
+              </Card.Body>
+            </Card>
+
+            {/* 2. Preconditions Section - Second Priority */}
+            {testCase.prerequisites && (
+              <Card elevation="sm" data-element="test-case-prerequisites-card">
                 <Card.Header>
-                  <h3 className="text-xl font-sf font-semibold text-apple-gray-7">
-                    Description
+                  <h3 className="text-xl font-sf font-semibold text-apple-gray-7" data-element="test-case-prerequisites-title">
+                    Preconditions
                   </h3>
                 </Card.Header>
-                <Card.Body>
-                  <p className="text-apple-gray-6 leading-relaxed">
-                    {testCase.description || 'No description available'}
-                  </p>
+                <Card.Body data-element="test-case-prerequisites-content">
+                  <div 
+                    className="text-apple-gray-6 leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: testCase.prerequisites }}
+                    data-element="test-case-prerequisites-text"
+                  />
                 </Card.Body>
               </Card>
+            )}
 
-              {testCase.preconditions && (
-                <Card elevation="sm">
-                  <Card.Header>
-                    <h3 className="text-xl font-sf font-semibold text-apple-gray-7">
-                      Preconditions
-                    </h3>
-                  </Card.Header>
-                  <Card.Body>
-                    <p className="text-apple-gray-6 leading-relaxed">
-                      {testCase.preconditions}
-                    </p>
-                  </Card.Body>
-                </Card>
-              )}
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              <Card elevation="sm">
-                <Card.Header>
-                  <h3 className="text-lg font-sf font-semibold text-apple-gray-7">
-                    Details
+            {/* 3. Test Steps Section - Third Priority */}
+            <Card elevation="sm" data-element="test-case-steps-card">
+              <Card.Header>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-sf font-semibold text-apple-gray-7" data-element="test-case-steps-title">
+                    Test Steps
                   </h3>
-                </Card.Header>
-                <Card.Body>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-apple-gray-5">Project</label>
-                      <p className="text-apple-gray-7 font-medium">{testCase.project_name || 'Unknown'}</p>
+                  <Badge variant="default" size="sm" data-element="test-case-steps-count">
+                    {testCase.steps?.length || 0} steps
+                  </Badge>
+                </div>
+              </Card.Header>
+              <Card.Body data-element="test-case-steps-content">
+                {testCase.steps && testCase.steps.length > 0 ? (
+                  <div data-element="test-case-steps-list">
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block" data-element="test-case-steps-table-desktop">
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse" data-element="test-case-steps-table">
+                          <thead>
+                            <tr className="border-b border-apple-gray-2" data-element="test-case-steps-table-header">
+                              <th className="text-left py-3 px-4 font-medium text-apple-gray-6 text-sm uppercase tracking-wide" data-element="test-case-steps-table-header-step">
+                                Step
+                              </th>
+                              <th className="text-left py-3 px-4 font-medium text-apple-gray-6 text-sm uppercase tracking-wide" data-element="test-case-steps-table-header-action">
+                                Action
+                              </th>
+                              <th className="text-left py-3 px-4 font-medium text-apple-gray-6 text-sm uppercase tracking-wide" data-element="test-case-steps-table-header-expected">
+                                Expected Result
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-apple-gray-1" data-element="test-case-steps-table-body">
+                            {testCase.steps.map((step, index) => (
+                              <tr 
+                                key={step.id || index} 
+                                className="hover:bg-apple-gray-1 transition-colors"
+                                data-element={`test-case-step-row-${index + 1}`}
+                              >
+                                <td className="py-4 px-4 align-top" data-element={`test-case-step-number-cell-${index + 1}`}>
+                                  <div className="flex items-center gap-3">
+                                    <div 
+                                      className="flex-shrink-0 w-8 h-8 bg-apple-blue text-white rounded-full flex items-center justify-center text-sm font-medium"
+                                      data-element={`test-case-step-number-${index + 1}`}
+                                    >
+                                      {step.step_number || index + 1}
+                                    </div>
+                                    {step.execution_type === 2 && (
+                                      <Badge variant="success" size="sm" data-element={`test-case-step-automated-${index + 1}`}>
+                                        Auto
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-4 px-4 align-top" data-element={`test-case-step-action-cell-${index + 1}`}>
+                                  <div 
+                                    className="text-apple-gray-7 prose prose-sm max-w-none"
+                                    dangerouslySetInnerHTML={{ __html: step.action }}
+                                    data-element={`test-case-step-action-${index + 1}`}
+                                  />
+                                </td>
+                                <td className="py-4 px-4 align-top" data-element={`test-case-step-expected-cell-${index + 1}`}>
+                                  <div 
+                                    className="text-apple-gray-6 prose prose-sm max-w-none"
+                                    dangerouslySetInnerHTML={{ __html: step.expected_result }}
+                                    data-element={`test-case-step-expected-${index + 1}`}
+                                  />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-apple-gray-5">Test Suite</label>
-                      <p className="text-apple-gray-7 font-medium">{testCase.test_suite_name || 'No Suite'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-apple-gray-5">Execution Type</label>
-                      <p className="text-apple-gray-7 font-medium">
-                        {testCase.execution_type === 1 ? 'Manual' : 'Automated'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-apple-gray-5">Created</label>
-                      <p className="text-apple-gray-7 font-medium">
-                        {new Date(testCase.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-apple-gray-5">Updated</label>
-                      <p className="text-apple-gray-7 font-medium">
-                        {new Date(testCase.updated_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
 
-              {testCase.keywords && (
-                <Card elevation="sm">
-                  <Card.Header>
-                    <h3 className="text-lg font-sf font-semibold text-apple-gray-7">
-                      Keywords
-                    </h3>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="flex flex-wrap gap-2">
-                      {testCase.keywords.split(',').map((keyword, index) => (
-                        <Badge key={index} variant="default" size="sm">
-                          {keyword.trim()}
-                        </Badge>
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-4" data-element="test-case-steps-cards-mobile">
+                      {testCase.steps.map((step, index) => (
+                        <div 
+                          key={step.id || index} 
+                          className="border border-apple-gray-2 rounded-apple p-4 hover:border-apple-gray-3 transition-colors"
+                          data-element={`test-case-step-card-${index + 1}`}
+                        >
+                          <div className="flex items-start gap-4">
+                            <div 
+                              className="flex-shrink-0 w-8 h-8 bg-apple-blue text-white rounded-full flex items-center justify-center text-sm font-medium"
+                              data-element={`test-case-step-number-mobile-${index + 1}`}
+                            >
+                              {step.step_number || index + 1}
+                            </div>
+                            <div className="flex-1 space-y-3">
+                              <div className="flex items-center gap-2" data-element={`test-case-step-header-${index + 1}`}>
+                                <h4 className="font-medium text-apple-gray-7" data-element={`test-case-step-action-title-mobile-${index + 1}`}>
+                                  Action
+                                </h4>
+                                {step.execution_type === 2 && (
+                                  <Badge variant="success" size="sm" data-element={`test-case-step-automated-mobile-${index + 1}`}>
+                                    Automated
+                                  </Badge>
+                                )}
+                              </div>
+                              <div 
+                                className="text-apple-gray-7 prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{ __html: step.action }}
+                                data-element={`test-case-step-action-mobile-${index + 1}`}
+                              />
+                              <div>
+                                <h4 className="font-medium text-apple-gray-7 mb-2" data-element={`test-case-step-expected-title-mobile-${index + 1}`}>
+                                  Expected Result
+                                </h4>
+                                <div 
+                                  className="text-apple-gray-6 prose prose-sm max-w-none"
+                                  dangerouslySetInnerHTML={{ __html: step.expected_result }}
+                                  data-element={`test-case-step-expected-mobile-${index + 1}`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       ))}
                     </div>
-                  </Card.Body>
-                </Card>
-              )}
-            </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8" data-element="test-case-no-steps">
+                    <Play className="w-16 h-16 text-apple-gray-4 mx-auto mb-4" />
+                    <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
+                      No test steps defined
+                    </h3>
+                    <p className="text-apple-gray-5">
+                      Add test steps to define the actions and expected results for this test case.
+                    </p>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
           </div>
         )}
 
-        {activeTab === 'steps' && (
-          <Card elevation="sm">
-            <Card.Header>
-              <h3 className="text-xl font-sf font-semibold text-apple-gray-7">
-                Test Steps
-              </h3>
-            </Card.Header>
-            <Card.Body>
-              {testCase.steps && testCase.steps.length > 0 ? (
+        {activeTab === 'details' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Basic Details */}
+            <Card elevation="sm" data-element="test-case-details-card">
+              <Card.Header>
+                <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="test-case-details-title">
+                  Basic Information
+                </h3>
+              </Card.Header>
+              <Card.Body data-element="test-case-details-content">
                 <div className="space-y-4">
-                  {testCase.steps.map((step, index) => (
-                    <div key={index} className="border border-apple-gray-2 rounded-apple p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-8 h-8 bg-apple-blue text-white rounded-full flex items-center justify-center text-sm font-medium">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 space-y-3">
-                          <div>
-                            <h4 className="font-medium text-apple-gray-7 mb-2">Action</h4>
-                            <p className="text-apple-gray-6">{step.action}</p>
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-apple-gray-7 mb-2">Expected Result</h4>
-                            <p className="text-apple-gray-6">{step.expected_result}</p>
-                          </div>
+                  <div data-element="test-case-project">
+                    <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-project-label">Project</label>
+                    <p className="text-apple-gray-7 font-medium" data-element="test-case-project-value">{testCase.project_name || 'Unknown'}</p>
+                  </div>
+                  <div data-element="test-case-suite">
+                    <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-suite-label">Test Suite</label>
+                    <p className="text-apple-gray-7 font-medium" data-element="test-case-suite-value">{testCase.test_suite_name || 'No Suite'}</p>
+                  </div>
+                  <div data-element="test-case-execution-type">
+                    <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-execution-type-label">Execution Type</label>
+                    <p className="text-apple-gray-7 font-medium" data-element="test-case-execution-type-value">
+                      {testCase.execution_type === 1 ? 'Manual' : 'Automated'}
+                    </p>
+                  </div>
+                  <div data-element="test-case-importance">
+                    <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-importance-label">Importance</label>
+                    <div className="flex items-center gap-2" data-element="test-case-importance-value">
+                      <Badge variant={getImportanceBadgeVariant(testCase.importance)} size="sm">
+                        {getImportanceText(testCase.importance)}
+                      </Badge>
+                    </div>
+                  </div>
+                  {testCase.external_id && (
+                    <div data-element="test-case-external-id">
+                      <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-external-id-label">External ID</label>
+                      <p className="text-apple-gray-7 font-medium font-mono text-sm" data-element="test-case-external-id-value">{testCase.external_id}</p>
+                    </div>
+                  )}
+                  {testCase.internal_id && (
+                    <div data-element="test-case-internal-id">
+                      <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-internal-id-label">Internal ID</label>
+                      <p className="text-apple-gray-7 font-medium font-mono text-sm" data-element="test-case-internal-id-value">{testCase.internal_id}</p>
+                    </div>
+                  )}
+                  {testCase.version && (
+                    <div data-element="test-case-version">
+                      <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-version-label">Version</label>
+                      <p className="text-apple-gray-7 font-medium" data-element="test-case-version-value">v{testCase.version}</p>
+                    </div>
+                  )}
+                  <div data-element="test-case-created">
+                    <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-created-label">Created</label>
+                    <p className="text-apple-gray-7 font-medium" data-element="test-case-created-value">
+                      {new Date(testCase.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div data-element="test-case-updated">
+                    <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-updated-label">Updated</label>
+                    <p className="text-apple-gray-7 font-medium" data-element="test-case-updated-value">
+                      {new Date(testCase.updated_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {testCase.import_source && (
+                    <div data-element="test-case-import-source">
+                      <label className="text-sm font-medium text-apple-gray-5" data-element="test-case-import-source-label">Import Source</label>
+                      <p className="text-apple-gray-7 font-medium capitalize" data-element="test-case-import-source-value">{testCase.import_source}</p>
+                    </div>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+
+            {/* Custom Fields */}
+            <Card elevation="sm" data-element="test-case-custom-fields-card">
+              <Card.Header>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="test-case-custom-fields-title">
+                    Custom Fields
+                  </h3>
+                  <Badge variant="default" size="sm" data-element="test-case-custom-fields-count">
+                    {testCase.custom_fields?.length || 0} fields
+                  </Badge>
+                </div>
+              </Card.Header>
+              <Card.Body data-element="test-case-custom-fields-content">
+                {testCase.custom_fields && testCase.custom_fields.length > 0 ? (
+                  <div className="space-y-4" data-element="test-case-custom-fields-list">
+                    {testCase.custom_fields.map((field, index) => (
+                      <div 
+                        key={field.id} 
+                        className="border border-apple-gray-2 rounded-apple p-4 hover:border-apple-gray-3 transition-colors"
+                        data-element={`test-case-custom-field-${index + 1}`}
+                      >
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-apple-gray-7 text-sm uppercase tracking-wide" data-element={`test-case-custom-field-name-${index + 1}`}>
+                            {field.field_name}
+                          </h4>
+                          <p className="text-apple-gray-6 font-sf" data-element={`test-case-custom-field-value-${index + 1}`}>
+                            {field.field_value || 'No value'}
+                          </p>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Play className="w-16 h-16 text-apple-gray-4 mx-auto mb-4" />
-                  <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
-                    No test steps defined
-                  </h3>
-                  <p className="text-apple-gray-5">
-                    Add test steps to define the actions and expected results for this test case.
-                  </p>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-        )}
-
-        {activeTab === 'custom' && (
-          <Card elevation="sm">
-            <Card.Header>
-              <h3 className="text-xl font-sf font-semibold text-apple-gray-7">
-                Custom Fields
-              </h3>
-            </Card.Header>
-            <Card.Body>
-              <div className="text-center py-8">
-                <Settings className="w-16 h-16 text-apple-gray-4 mx-auto mb-4" />
-                <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
-                  No custom fields
-                </h3>
-                <p className="text-apple-gray-5">
-                  Custom fields allow you to add additional metadata to your test cases.
-                </p>
-              </div>
-            </Card.Body>
-          </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8" data-element="test-case-no-custom-fields">
+                    <Settings className="w-16 h-16 text-apple-gray-4 mx-auto mb-4" />
+                    <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
+                      No custom fields
+                    </h3>
+                    <p className="text-apple-gray-5">
+                      Custom fields allow you to add additional metadata to your test cases.
+                    </p>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </div>
         )}
       </div>
     </Layout>
