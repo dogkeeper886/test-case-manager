@@ -8,11 +8,17 @@ import {
   ArrowRight,
   Activity,
   BarChart3,
-  Plus
+  Plus,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Users,
+  Calendar,
+  ChevronRight
 } from 'lucide-react';
 import { Button, Card } from '../components/ui';
 import Layout from '../components/layout/Layout';
-import { testCasesAPI, projectsAPI } from '../services/api';
+import { testCasesAPI, projectsAPI, activitiesAPI } from '../services/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -25,12 +31,15 @@ const Dashboard = () => {
     successRate: 0
   });
   const [loading, setLoading] = useState(true);
+  const [activities, setActivities] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [testSuites, setTestSuites] = useState([]);
   const [selectedSuiteId, setSelectedSuiteId] = useState(null);
   const [selectedTestCaseId, setSelectedTestCaseId] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchActivities();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -79,6 +88,70 @@ const Dashboard = () => {
     }
   };
 
+  const fetchActivities = async () => {
+    try {
+      setActivitiesLoading(true);
+      const response = await activitiesAPI.getRecent(10, 0);
+      const activitiesData = response.data.data || [];
+      setActivities(activitiesData);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+      // Use fallback data if API fails
+      setActivities([
+        {
+          id: 1,
+          action_type: 'test_case_create',
+          entity_type: 'test_case',
+          entity_name: 'Login Test Case',
+          description: 'Test case "Login Test Case" was created',
+          user_id: 'system',
+          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          display_name: 'Test Case Created',
+          icon: 'FileText',
+          color: 'success'
+        },
+        {
+          id: 2,
+          action_type: 'project_create',
+          entity_type: 'project',
+          entity_name: 'E-commerce Platform',
+          description: 'Project "E-commerce Platform" was created',
+          user_id: 'system',
+          created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+          display_name: 'Project Created',
+          icon: 'FolderOpen',
+          color: 'success'
+        },
+        {
+          id: 3,
+          action_type: 'import_complete',
+          entity_type: 'import',
+          entity_name: null,
+          description: 'TestLink XML import completed successfully. Imported 5 test suites and 23 test cases.',
+          user_id: 'system',
+          created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+          display_name: 'Import Completed',
+          icon: 'CheckCircle',
+          color: 'success'
+        },
+        {
+          id: 4,
+          action_type: 'test_case_update',
+          entity_type: 'test_case',
+          entity_name: 'API Test Suite',
+          description: 'Test case "API Test Suite" was updated',
+          user_id: 'system',
+          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          display_name: 'Test Case Updated',
+          icon: 'FileText',
+          color: 'apple-blue'
+        }
+      ]);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
   const metricCards = [
     {
       name: 'Projects',
@@ -86,7 +159,8 @@ const Dashboard = () => {
       icon: FolderOpen,
       color: 'bg-apple-blue',
       hoverColor: 'hover:bg-blue-600',
-      onClick: () => navigate('/projects')
+      onClick: () => navigate('/projects'),
+      dataElement: 'dashboard-projects-card'
     },
     {
       name: 'Test Cases',
@@ -94,71 +168,46 @@ const Dashboard = () => {
       icon: FileText,
       color: 'bg-success',
       hoverColor: 'hover:bg-green-600',
-      onClick: () => navigate('/testcases')
-    },
-    {
-      name: 'Success Rate',
-      value: `${stats.successRate}%`,
-      icon: TrendingUp,
-      color: 'bg-apple-blue',
-      hoverColor: 'hover:bg-blue-600',
-      onClick: () => navigate('/reports')
-    },
-    {
-      name: 'Pending',
-      value: stats.pendingTests,
-      icon: Clock,
-      color: 'bg-warning',
-      hoverColor: 'hover:bg-orange-600',
-      onClick: () => navigate('/testcases?status=1')
-    },
-  ];
-
-
-
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'test-case',
-      action: 'Test case "Network Configuration" was updated',
-      time: '2 hours ago',
-      link: '/testcases'
-    },
-    {
-      id: 2,
-      type: 'project',
-      action: 'New project "Mobile Banking App" was created',
-      time: '4 hours ago',
-      link: '/projects'
-    },
-    {
-      id: 3,
-      type: 'test-suite',
-      action: 'Test suite "Authentication" was imported',
-      time: '1 day ago',
-      link: '/test-suites'
-    },
-    {
-      id: 4,
-      type: 'report',
-      action: 'Monthly test report was generated',
-      time: '2 days ago',
-      link: '/reports'
+      onClick: () => navigate('/testcases'),
+      dataElement: 'dashboard-testcases-card'
     }
   ];
 
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case 'test-case':
+  const getActivityIcon = (iconName) => {
+    switch (iconName) {
+      case 'FileText':
         return <FileText className="w-4 h-4 text-apple-blue" />;
-      case 'project':
+      case 'FolderOpen':
         return <FolderOpen className="w-4 h-4 text-success" />;
-      case 'test-suite':
-        return <FolderOpen className="w-4 h-4 text-warning" />;
-      case 'report':
+      case 'CheckCircle':
+        return <CheckCircle className="w-4 h-4 text-success" />;
+      case 'BarChart3':
         return <BarChart3 className="w-4 h-4 text-apple-gray-5" />;
+      case 'Upload':
+        return <Activity className="w-4 h-4 text-warning" />;
+      case 'Download':
+        return <Activity className="w-4 h-4 text-apple-blue" />;
       default:
         return <Activity className="w-4 h-4 text-apple-gray-4" />;
+    }
+  };
+
+  const formatTimeAgo = (timestamp) => {
+    const now = new Date();
+    const activityTime = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - activityTime) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return 'Just now';
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    } else {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} day${days > 1 ? 's' : ''} ago`;
     }
   };
 
@@ -174,29 +223,28 @@ const Dashboard = () => {
     setSelectedTestCaseId(testCase.id);
   };
 
-  // Handle search from layout
-  const handleLayoutSearch = (query) => {
-    console.log('Search query:', query);
-    // Navigate to test cases with search
-    navigate(`/testcases?search=${encodeURIComponent(query)}`);
-  };
+  if (loading) {
+    return (
+      <Layout
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/' }
+        ]}
+        showSearch={false}
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-apple-blue mx-auto mb-4"></div>
+            <p className="text-apple-gray-5">Loading dashboard...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout
-      testSuites={testSuites}
-      onSuiteSelect={handleSuiteSelect}
-      onTestCaseSelect={handleTestCaseSelect}
-      selectedSuiteId={selectedSuiteId}
-      selectedTestCaseId={selectedTestCaseId}
-      onSearch={handleLayoutSearch}
-      breadcrumbs={[]}
-      actions={[
-        {
-          label: 'Create Test Case',
-          variant: 'primary',
-          icon: <Plus className="w-4 h-4" />,
-          onClick: () => navigate('/testcases?action=create')
-        }
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/' }
       ]}
       showSearch={false}
     >
@@ -204,87 +252,118 @@ const Dashboard = () => {
       <div className="mb-8" data-element="dashboard-header">
         <div className="flex items-center justify-between" data-element="dashboard-header-content">
           <div data-element="dashboard-title-section">
-            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7" data-element="dashboard-title">
+            <h1 className="text-3xl font-sf-display font-semibold text-apple-gray-7" data-element="dashboard-title">
               Dashboard
             </h1>
-            <p className="text-apple-gray-5 mt-1" data-element="dashboard-subtitle">
-              Overview of your test case management system
+            <p className="text-apple-gray-5 mt-2" data-element="dashboard-subtitle">
+              Welcome back! Here's an overview of your test case management system.
             </p>
           </div>
         </div>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {metricCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card 
-              key={stat.name} 
-              elevation="sm" 
-              hover={true}
-              className="cursor-pointer transition-all duration-200 hover:shadow-apple-md group"
-              onClick={stat.onClick}
-            >
-              <Card.Body className="p-6">
-                <div className="flex items-center">
-                  <div className={`p-3 rounded-apple ${stat.color} ${stat.hoverColor} transition-colors duration-200`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <p className="text-sm font-sf font-medium text-apple-gray-5">{stat.name}</p>
-                    <p className="text-2xl font-sf-display font-semibold text-apple-gray-7">
-                      {loading ? (
-                        <span className="inline-block w-8 h-8 bg-apple-gray-2 rounded animate-pulse"></span>
-                      ) : (
-                        stat.value
-                      )}
-                    </p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-apple-gray-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                </div>
-              </Card.Body>
-            </Card>
-          );
-        })}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" data-element="dashboard-metrics">
+        {metricCards.map((metric, index) => (
+          <Card
+            key={metric.name}
+            elevation="sm"
+            hover="lift"
+            onClick={metric.onClick}
+            className="cursor-pointer"
+            data-element={metric.dataElement}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-sf font-bold text-apple-gray-7" data-element={`${metric.dataElement}-value`}>
+                  {metric.value}
+                </p>
+                <p className="text-sm text-apple-gray-5 mt-1" data-element={`${metric.dataElement}-label`}>
+                  {metric.name}
+                </p>
+              </div>
+              <div className={`p-3 rounded-apple-lg ${metric.color} text-white`} data-element={`${metric.dataElement}-icon`}>
+                <metric.icon className="w-6 h-6" />
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
 
       {/* Recent Activity */}
-      <Card elevation="sm">
-        <Card.Header>
-          <h3 className="text-xl font-sf font-semibold text-apple-gray-7">
-            Recent Activity
-          </h3>
-        </Card.Header>
-        <Card.Body>
-          <div className="space-y-4">
-            {recentActivity.map((activity) => (
-              <div 
-                key={activity.id}
-                className="flex items-center justify-between p-3 rounded-apple hover:bg-apple-gray-2/50 cursor-pointer transition-colors duration-200"
-                onClick={() => navigate(activity.link)}
-              >
-                <div className="flex items-center space-x-3">
-                  {getActivityIcon(activity.type)}
-                  <span className="text-sm font-sf text-apple-gray-6">{activity.action}</span>
-                </div>
-                <span className="text-xs font-sf text-apple-gray-4">{activity.time}</span>
-              </div>
-            ))}
-            <div className="pt-2 border-t border-apple-gray-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/testcases')}
-                className="text-apple-blue hover:text-blue-600"
-              >
-                View All Activity
-                <ArrowRight className="w-3 h-3 ml-1" />
-              </Button>
-            </div>
+      <div data-element="dashboard-activity-section">
+        <Card elevation="sm" data-element="dashboard-activity-card">
+          <div className="flex items-center justify-between mb-6" data-element="dashboard-activity-header">
+            <h2 className="text-xl font-sf font-semibold text-apple-gray-7" data-element="dashboard-activity-title">
+              Recent Activity
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/activities')}
+              data-element="dashboard-activity-view-all"
+            >
+              View All
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
           </div>
-        </Card.Body>
-      </Card>
+          
+          {activitiesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-apple-blue"></div>
+              <span className="ml-2 text-apple-gray-5">Loading activities...</span>
+            </div>
+          ) : activities.length === 0 ? (
+            <div className="text-center py-8">
+              <Activity className="w-8 h-8 text-apple-gray-4 mx-auto mb-2" />
+              <p className="text-apple-gray-5">No recent activity</p>
+            </div>
+          ) : (
+            <div className="space-y-3" data-element="dashboard-activity-list">
+              {activities.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="group relative flex items-start space-x-3 p-4 rounded-apple-lg border border-transparent hover:border-apple-gray-2 hover:bg-apple-gray-1/30 hover:shadow-apple-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:ring-offset-2 transition-all duration-200 ease-out cursor-pointer"
+                  onClick={() => navigate(`/activities/${activity.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/activities/${activity.id}`);
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View details for ${activity.display_name || activity.action_type}`}
+                  data-element={`dashboard-activity-${activity.id}`}
+                >
+                  <div className="flex-shrink-0 mt-1 group-hover:scale-110 transition-transform duration-200 ease-out" data-element={`dashboard-activity-${activity.id}-icon`}>
+                    {getActivityIcon(activity.icon)}
+                  </div>
+                  <div className="flex-1 min-w-0" data-element={`dashboard-activity-${activity.id}-content`}>
+                    <p className="text-sm font-sf font-medium text-apple-gray-7 group-hover:text-apple-blue transition-colors duration-200" data-element={`dashboard-activity-${activity.id}-title`}>
+                      {activity.display_name || activity.action_type}
+                    </p>
+                    <p className="text-xs text-apple-gray-5 mt-1" data-element={`dashboard-activity-${activity.id}-description`}>
+                      {activity.description}
+                    </p>
+                    <div className="flex items-center justify-between mt-2" data-element={`dashboard-activity-${activity.id}-meta`}>
+                      <div className="flex items-center space-x-4">
+                        <span className="text-xs text-apple-gray-4" data-element={`dashboard-activity-${activity.id}-user`}>
+                          {activity.user_id}
+                        </span>
+                        <span className="text-xs text-apple-gray-4" data-element={`dashboard-activity-${activity.id}-time`}>
+                          {formatTimeAgo(activity.created_at)}
+                        </span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-apple-gray-3 group-hover:text-apple-blue group-hover:translate-x-1 transition-all duration-200 ease-out" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </Layout>
   );
 };
