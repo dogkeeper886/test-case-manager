@@ -41,6 +41,46 @@
   - [x] Tooltip component
   - [x] Loading spinner component
 
+### **1.4 Card Hover Effects Enhancement** ✅ **COMPLETED**
+- [x] **Improve card hover effects for multi-element cards**
+  - [x] **Problem Analysis**: Current lift/scale hover conflicts with internal buttons
+  - [x] **Design Multiple Hover Variants**:
+    - [x] `subtle`: Light background + shadow change (default)
+    - [x] `border`: Blue border highlight on hover
+    - [x] `background`: Background color change
+    - [x] `glow`: Blue-tinted shadow effect
+    - [x] `lift`: Original lift effect (for simple cards)
+  - [x] **Update Card Component**:
+    - [x] Add `hoverVariant` prop to Card component
+    - [x] Implement different hover effect functions
+    - [x] Maintain backward compatibility
+    - [x] Update motion animations to only apply to lift variant
+  - [x] **Apply to Test Cases Page**:
+    - [x] Update test case cards to use `subtle` hover variant
+    - [x] Test interaction between card hover and internal buttons
+    - [x] Ensure accessibility compliance
+  - [x] **Documentation**:
+    - [x] Create hover effects usage guide (`docs/card-hover-effects-guide.md`)
+    - [x] Add examples for different use cases
+    - [x] Update component documentation
+
+### **1.5 Docker Commands Documentation** ✅ **COMPLETED**
+- [x] **Create comprehensive Docker commands reference**
+  - [x] **Update README.md**: Enhanced Getting Started section with proper Docker commands
+  - [x] **Add Docker Commands Reference**: Created `docs/docker-commands-reference.md`
+  - [x] **Quick Start Commands**: Documented essential commands for every session
+  - [x] **Troubleshooting Guide**: Added common issues and solutions
+  - [x] **Development Workflow**: Documented typical development session workflow
+
+### **1.6 README Cleanup - Remove npm Commands** ✅ **COMPLETED**
+- [x] **Remove all npm-based setup instructions**
+  - [x] **Updated Prerequisites**: Removed Node.js and npm requirements
+  - [x] **Replaced Local Development Setup**: With Docker-only development environment
+  - [x] **Updated Testing Section**: Removed npm test commands, kept Docker-based testing
+  - [x] **Updated Development Commands**: Replaced npm commands with Docker commands
+  - [x] **Updated Environment Variables**: Clarified Docker-based configuration
+  - [x] **Added Docker-only note**: Emphasized no local setup required
+
 ### **1.3 Layout Foundation** ✅
 - [x] **Create responsive layout wrapper**
   - [x] Main layout component with sidebar and content area

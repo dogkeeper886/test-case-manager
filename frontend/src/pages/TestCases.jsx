@@ -392,7 +392,8 @@ const TestCases = () => {
                   key={testCase.id} 
                   elevation="md" 
                   hover={true}
-                  className="cursor-pointer transition-all duration-200 hover:shadow-apple-md"
+                  hoverVariant="subtle"
+                  className="cursor-pointer"
                   onClick={() => handleViewTestCase(testCase)}
                   data-element={`testcase-card-${testCase.id}`}
                 >

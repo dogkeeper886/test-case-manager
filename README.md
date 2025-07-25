@@ -141,8 +141,6 @@ test-case-manager/
 
 ### Prerequisites
 - Docker and Docker Compose
-- Node.js (v16 or later) - for local development
-- npm or yarn
 
 ### Quick Start with Docker
 
@@ -152,17 +150,19 @@ git clone <repository-url>
 cd test-case-manager
 ```
 
-2. **Start with Docker Compose**:
+2. **Start with Docker Compose** (Recommended):
 ```bash
-# Start all services (database, backend, frontend)
+# Navigate to docker directory
 cd docker
-docker-compose up -d
 
-# View logs
-docker-compose logs -f
+# Start all services (database, backend, frontend)
+docker compose up -d
+
+# View logs (optional)
+docker compose logs -f
 
 # Stop services
-docker-compose down
+docker compose down
 ```
 
 3. **Access the application**:
@@ -170,31 +170,54 @@ docker-compose down
 - Backend API: http://localhost:3001
 - Database: localhost:5432 (PostgreSQL)
 
-### Local Development Setup
+### 🐳 **Docker Commands Reference**
 
-1. **Install dependencies**:
+**Essential Commands for Every Session:**
+
 ```bash
-npm run install:all
+# Start the application
+cd docker
+docker compose up -d
+
+# Stop the application
+cd docker
+docker compose down
+
+# View running containers
+docker compose ps
+
+# View logs
+docker compose logs -f
+
+# Rebuild containers (if code changes)
+docker compose up -d --build
+
+# Reset everything (removes volumes too)
+docker compose down -v
+docker compose up -d
 ```
 
-2. **Set up the database** (if not using Docker):
+**Troubleshooting:**
+- If you get "address already in use" errors, run `docker compose down` first
+- If containers won't start, try `docker compose down -v` to reset volumes
+- For code changes, use `docker compose up -d --build` to rebuild containers
+
+### Development Environment
+
+The application uses Docker for all development and production environments. No local Node.js or npm installation is required.
+
+**For Development:**
 ```bash
-createdb testcasemanager
-psql testcasemanager < database/schema.sql
-psql testcasemanager < database/migrations/001_testlink_import_schema.sql
+# Start development environment with hot reloading
+cd docker
+docker compose -f docker-compose.dev.yml up --build
 ```
 
-3. **Configure environment variables**:
+**For Production:**
 ```bash
-# Copy the example environment file
-cp backend/.env.example backend/.env
-
-# Edit the .env file with your configuration
-```
-
-4. **Start the development servers**:
-```bash
-npm run dev
+# Start production environment
+cd docker
+docker compose up -d
 ```
 
 ### Docker Configuration
@@ -313,18 +336,15 @@ This ensures your data persists even when containers are recreated.
 
 ### Running Tests
 ```bash
-# Run all tests
-npm test
-
-# Run backend tests (Jest)
-npm run test:backend
-
-# Run frontend tests (React Testing Library)
-npm run test:frontend
-
 # Run tests in Docker containers
-docker-compose exec backend npm test
-docker-compose exec frontend npm test
+docker compose exec backend npm test
+docker compose exec frontend npm test
+
+# Run backend tests only
+docker compose exec backend npm test
+
+# Run frontend tests only
+docker compose exec frontend npm test
 ```
 
 ### Test Results
@@ -338,33 +358,29 @@ docker-compose exec frontend npm test
 
 ### Development Commands
 ```bash
-# Start both backend and frontend development servers
-npm run dev
+# Start development environment with hot reloading
+cd docker
+docker compose -f docker-compose.dev.yml up --build
 
-# Start backend only (port 3001)
-npm run dev:backend
+# Start production environment
+cd docker
+docker compose up -d
 
-# Start frontend only (port 3000)
-npm run dev:frontend
-
-# Build for production
-npm run build
-
-# Install all dependencies
-npm run install:all
+# Rebuild containers after code changes
+docker compose up -d --build
 ```
 
 ### Docker Development
 ```bash
 # Build and start development environment
 cd docker
-docker-compose -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.dev.yml up --build
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop services
-docker-compose down
+docker compose down
 ```
 
 ## 📈 Performance Results
@@ -400,18 +416,23 @@ docker-compose down
 
 ## 🔧 Environment Variables
 
-Create a `.env` file in the backend directory with the following variables:
+Environment variables are configured in the Docker Compose files. For local development, you can modify the environment variables in:
 
+- `docker/docker-compose.yml` - Production environment
+- `docker/docker-compose.dev.yml` - Development environment
+
+**Key Environment Variables:**
 ```env
-PORT=3001
-NODE_ENV=development
-
-# Database configuration
-DB_HOST=localhost  # Use 'postgres' for Docker
+# Database configuration (Docker)
+DB_HOST=postgres
 DB_PORT=5432
 DB_NAME=testcasemanager
 DB_USER=postgres
 DB_PASSWORD=your_password
+
+# Backend configuration
+PORT=3001
+NODE_ENV=development
 
 # JWT configuration
 JWT_SECRET=your-super-secret-jwt-key
@@ -424,6 +445,8 @@ OPENAI_API_KEY=your-openai-api-key
 UPLOAD_DIR=uploads
 MAX_FILE_SIZE=10485760
 ```
+
+**Note**: The application is configured to work with Docker by default. No local environment setup is required.
 
 ## 🎉 Recent Achievements
 

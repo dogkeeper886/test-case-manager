@@ -5,6 +5,7 @@ const Card = ({
   children,
   elevation = 'md',
   hover = true,
+  hoverVariant = 'subtle', // New prop for different hover styles
   className = '',
   onClick,
   padding = 'md',
@@ -36,12 +37,46 @@ const Card = ({
     xl: 'p-8',
   };
 
-  // Hover effects
-  const hoverClasses = hover ? `
-    hover:shadow-apple-md
-    hover:-translate-y-1
-    cursor-pointer
-  ` : '';
+  // Hover effect variants
+  const getHoverClasses = () => {
+    if (!hover) return '';
+    
+    switch (hoverVariant) {
+      case 'lift':
+        return `
+          hover:shadow-apple-md
+          hover:-translate-y-1
+          cursor-pointer
+        `;
+      case 'border':
+        return `
+          hover:border-2
+          hover:border-apple-blue/30
+          hover:shadow-apple-sm
+          cursor-pointer
+          border border-transparent
+        `;
+      case 'background':
+        return `
+          hover:bg-apple-gray-1/50
+          hover:shadow-apple-sm
+          cursor-pointer
+        `;
+      case 'glow':
+        return `
+          hover:shadow-apple-md
+          hover:shadow-apple-blue/20
+          cursor-pointer
+        `;
+      case 'subtle':
+      default:
+        return `
+          hover:shadow-apple-sm
+          hover:bg-apple-gray-1/30
+          cursor-pointer
+        `;
+    }
+  };
 
   // Border radius
   const borderRadius = 'rounded-apple-lg';
@@ -53,7 +88,7 @@ const Card = ({
         ${elevationClasses[elevation]}
         ${paddingClasses[padding]}
         ${borderRadius}
-        ${hoverClasses}
+        ${getHoverClasses()}
         ${className}
       `}
       {...props}
@@ -66,7 +101,7 @@ const Card = ({
     return (
       <motion.div
         onClick={onClick}
-        whileHover={hover ? { scale: 1.02 } : {}}
+        whileHover={hover && hoverVariant === 'lift' ? { scale: 1.02 } : {}}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.1 }}
       >
