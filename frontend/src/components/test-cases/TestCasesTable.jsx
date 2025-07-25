@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, MoreHorizontal, Eye, Edit, Trash2, CheckSquare, Square, FileText, CheckCircle, Minus } from 'lucide-react';
+import { ChevronUp, ChevronDown, MoreHorizontal, CheckSquare, Square, FileText, CheckCircle, Minus } from 'lucide-react';
 import { Button, Badge } from '../ui';
 
 const TestCasesTable = ({ 
   testCases, 
-  onView, 
-  onEdit, 
-  onDelete, 
   onSelect,
   selectedIds = [],
   sortBy = 'id',
@@ -208,10 +205,7 @@ const TestCasesTable = ({
                 <SortIcon field="updated_at" />
               </button>
             </th>
-            {/* Actions Header */}
-            <th className="px-4 py-3 text-left w-20" data-testid="actions-header">
-              <span className="font-sf font-semibold text-apple-gray-7">Actions</span>
-            </th>
+
           </tr>
         </thead>
         <tbody data-testid="test-cases-table-body">
@@ -219,11 +213,19 @@ const TestCasesTable = ({
             <tr
               key={testCase.id}
               data-testid={`test-case-row-${testCase.id}`}
-              className={`border-b border-apple-gray-1 transition-all duration-200 ${
+              className={`border-b border-apple-gray-1 transition-all duration-200 cursor-pointer ${
                 hoveredRow === testCase.id ? 'bg-apple-gray-1/30' : 'hover:bg-apple-gray-1/20'
               } ${selectedIds.includes(testCase.id) ? 'bg-apple-blue/5 border-apple-blue/20' : ''}`}
               onMouseEnter={() => setHoveredRow(testCase.id)}
               onMouseLeave={() => setHoveredRow(null)}
+              onClick={(e) => {
+                // Don't trigger row click if clicking on selection checkbox
+                if (e.target.closest('[data-testid*="select"]')) {
+                  return;
+                }
+                // Navigate to test case detail page
+                window.location.href = `/testcases/${testCase.id}`;
+              }}
             >
               <td className="px-4 py-3" data-testid={`test-case-select-${testCase.id}`}>
                 <button
@@ -289,40 +291,7 @@ const TestCasesTable = ({
                   {new Date(testCase.updated_at).toLocaleDateString()}
                 </span>
               </td>
-              <td className="px-4 py-3" data-testid={`test-case-actions-${testCase.id}`}>
-                <div className="flex items-center space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onView(testCase)}
-                    className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
-                    data-testid={`view-button-${testCase.id}`}
-                    aria-label={`View test case ${testCase.id}`}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit(testCase)}
-                    className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
-                    data-testid={`edit-button-${testCase.id}`}
-                    aria-label={`Edit test case ${testCase.id}`}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(testCase)}
-                    className="h-8 w-8 p-0 text-apple-gray-5 hover:text-error hover:bg-error/10 transition-all duration-200"
-                    data-testid={`delete-button-${testCase.id}`}
-                    aria-label={`Delete test case ${testCase.id}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </td>
+
             </tr>
           ))}
         </tbody>

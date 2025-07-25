@@ -1,14 +1,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Eye, Edit, Trash2, ChevronUp, ChevronDown, CheckSquare, Square, FileText, CheckCircle, Minus } from 'lucide-react';
+import { ChevronUp, ChevronDown, CheckSquare, Square, FileText, CheckCircle, Minus } from 'lucide-react';
 import { Button, Badge } from '../ui';
 import VirtualList from '../ui/VirtualList';
 import FilterCache, { debounce, throttle, memoize } from '../../utils/filterCache';
 
 const TestCasesTableOptimized = ({
   testCases = [],
-  onView,
-  onEdit,
-  onDelete,
   onSelect,
   selectedIds = [],
   sortBy = 'id',
@@ -144,13 +141,21 @@ const TestCasesTableOptimized = ({
                 <div
             key={testCase.id}
             data-testid={`test-case-row-optimized-${testCase.id}`}
-            className={`flex items-center gap-4 px-4 py-3 border-b border-apple-gray-2 transition-all duration-200 ease-out h-12 ${
+            className={`flex items-center gap-4 px-4 py-3 border-b border-apple-gray-2 transition-all duration-200 ease-out h-12 cursor-pointer ${
               isSelected ? 'bg-apple-blue/5 border-apple-blue/20' : ''
             } ${
               isHovered ? 'bg-apple-gray-1/50 shadow-apple-sm' : 'hover:bg-apple-gray-1/40'
             }`}
             onMouseEnter={() => setHoveredRow(testCase.id)}
             onMouseLeave={() => setHoveredRow(null)}
+            onClick={(e) => {
+              // Don't trigger row click if clicking on selection checkbox
+              if (e.target.closest('[data-testid*="select"]')) {
+                return;
+              }
+              // Navigate to test case detail page
+              window.location.href = `/testcases/${testCase.id}`;
+            }}
           >
         {/* Selection Checkbox */}
         <div className="flex-shrink-0" data-testid={`test-case-select-optimized-${testCase.id}`}>
@@ -223,49 +228,10 @@ const TestCasesTableOptimized = ({
           </Badge>
         </div>
 
-        {/* Actions */}
-        <div className="w-24 h-12 flex-shrink-0 flex items-center justify-center" data-testid={`test-case-actions-optimized-${testCase.id}`}>
-          {isHovered && (
-            <div
-              className="flex items-center gap-1 transition-opacity duration-150"
-              data-testid={`action-buttons-optimized-${testCase.id}`}
-            >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onView?.(testCase)}
-                  className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 rounded-apple transition-all duration-200 ease-out focus:ring-2 focus:ring-apple-blue/50 focus:ring-offset-1"
-                  data-testid={`view-button-optimized-${testCase.id}`}
-                  aria-label={`View test case ${testCase.id}`}
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEdit?.(testCase)}
-                  className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 rounded-apple transition-all duration-200 ease-out focus:ring-2 focus:ring-apple-blue/50 focus:ring-offset-1"
-                  data-testid={`edit-button-optimized-${testCase.id}`}
-                  aria-label={`Edit test case ${testCase.id}`}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete?.(testCase)}
-                  className="h-8 w-8 p-0 text-apple-gray-5 hover:text-error hover:bg-error/10 rounded-apple transition-all duration-200 ease-out focus:ring-2 focus:ring-error/50 focus:ring-offset-1"
-                  data-testid={`delete-button-optimized-${testCase.id}`}
-                  aria-label={`Delete test case ${testCase.id}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-        </div>
+
       </div>
     );
-  }, [selectedIds, hoveredRow, onSelect, onView, onEdit, onDelete]);
+  }, [selectedIds, hoveredRow, onSelect]);
 
   // Memoized header renderer
   const renderHeader = useCallback(() => (
@@ -378,10 +344,7 @@ const TestCasesTableOptimized = ({
         </button>
       </div>
 
-      {/* Actions */}
-      <div className="w-24 flex-shrink-0" data-testid="actions-header-optimized">
-        Actions
-      </div>
+
     </div>
   ), [sortBy, sortOrder, handleSort, isAllSelected, isPartiallySelected, handleSelectAll]);
 

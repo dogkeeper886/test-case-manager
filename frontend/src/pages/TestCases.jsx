@@ -736,9 +736,6 @@ const TestCases = () => {
               useOptimizedTable ? (
                 <TestCasesTableOptimized
                   testCases={sortedTestCases}
-                  onView={handleViewTestCase}
-                  onEdit={handleEditTestCase}
-                  onDelete={handleDeleteTestCase}
                   onSelect={handleSelect}
                   selectedIds={selectedIds}
                   sortBy={sortBy}
@@ -749,9 +746,6 @@ const TestCases = () => {
               ) : (
                 <TestCasesTable
                   testCases={sortedTestCases}
-                  onView={handleViewTestCase}
-                  onEdit={handleEditTestCase}
-                  onDelete={handleDeleteTestCase}
                   onSelect={handleSelect}
                   selectedIds={selectedIds}
                   sortBy={sortBy}
