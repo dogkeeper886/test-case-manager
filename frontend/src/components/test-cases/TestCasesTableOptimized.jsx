@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Edit, Trash2, ChevronUp, ChevronDown, CheckSquare, Square } from 'lucide-react';
 import { Button, Badge } from '../ui';
 import VirtualList from '../ui/VirtualList';

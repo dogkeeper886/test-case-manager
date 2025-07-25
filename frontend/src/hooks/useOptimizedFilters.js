@@ -101,14 +101,6 @@ const useOptimizedFilters = (items = [], filters = {}) => {
     return filtered;
   }), []);
 
-  // Debounced filter application
-  const debouncedApplyFilters = useCallback(
-    debounce((items, filters) => {
-      return applyFilters(items, filters);
-    }, 150),
-    [applyFilters]
-  );
-
   // Optimized filtering with caching
   const filteredItems = useMemo(() => {
     const filterKey = JSON.stringify(filters);
@@ -128,15 +120,15 @@ const useOptimizedFilters = (items = [], filters = {}) => {
       return cached.value;
     }
 
-    // Apply filters
-    const result = debouncedApplyFilters(items, filters);
+    // Apply filters synchronously
+    const result = applyFilters(items, filters);
     
     // Cache result
     cacheRef.current.set(cacheKey, result);
     lastFiltersRef.current = filterKey;
     
     return result;
-  }, [items, filters, debouncedApplyFilters]);
+  }, [items, filters, applyFilters]);
 
   // Cache statistics
   const cacheStats = useMemo(() => {
@@ -155,7 +147,7 @@ const useOptimizedFilters = (items = [], filters = {}) => {
   }, []);
 
   return {
-    filteredItems,
+    filteredItems: filteredItems || [],
     cacheStats,
     clearCache,
     invalidateCache

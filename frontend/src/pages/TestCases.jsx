@@ -15,6 +15,7 @@ import { testCasesAPI, testSuitesAPI, projectsAPI } from '../services/api';
 import useTestCaseStore from '../stores/testCaseStore';
 import useFilterStore from '../stores/filterStore';
 import useOptimizedFilters from '../hooks/useOptimizedFilters';
+import { showSuccess, showError, showWarning, showInfo } from '../utils/toast';
 
 const TestCases = () => {
   const navigate = useNavigate();
@@ -90,14 +91,29 @@ const TestCases = () => {
 
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Failed to load test cases. Please try again.');
+      
+      // Show specific error message based on error type
+      let errorMessage = 'Failed to load test cases. Please try again.';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'You do not have permission to access test cases.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.code === 'NETWORK_ERROR') {
+        errorMessage = 'Network error. Please check your connection.';
+      }
+      
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   // Optimized filtering with caching
-  const { filteredItems: filteredTestCases, cacheStats } = useOptimizedFilters(testCases, {
+  const { filteredItems: filteredTestCases, cacheStats } = useOptimizedFilters(testCases || [], {
     search: { query: searchQuery, field: searchField, operator: searchOperator },
     project: projectFilter,
     suite: suiteFilter,
@@ -107,7 +123,7 @@ const TestCases = () => {
   });
 
   // Sort filtered test cases
-  const sortedTestCases = [...filteredTestCases].sort((a, b) => {
+  const sortedTestCases = [...(filteredTestCases || [])].sort((a, b) => {
     let aValue = a[sortBy];
     let bValue = b[sortBy];
 
@@ -195,13 +211,44 @@ const TestCases = () => {
   };
 
   const handleDeleteTestCase = async (testCase) => {
-    if (window.confirm(`Are you sure you want to delete test case "${testCase.title}"?`)) {
+    // Enhanced confirmation dialog with more details
+    const confirmMessage = `Are you sure you want to delete the test case "${testCase.title}"?\n\nThis action cannot be undone and will permanently remove:\n• Test case: ${testCase.title}\n• ID: ${testCase.id}\n• All associated data`;
+    
+    if (window.confirm(confirmMessage)) {
       try {
+        // Show loading state
+        const loadingToast = showWarning('Deleting test case...', { autoClose: false });
+        
+        // Delete the test case
         await testCasesAPI.delete(testCase.id);
-        await fetchData(); // Refresh data
+        
+        // Dismiss loading toast and show success
+        loadingToast.dismiss();
+        showSuccess(`Test case "${testCase.title}" deleted successfully`);
+        
+        // Refresh data
+        await fetchData();
+        
+        // Clear selection if the deleted item was selected
+        setSelectedIds(prev => prev.filter(id => id !== testCase.id));
+        
       } catch (err) {
         console.error('Error deleting test case:', err);
-        alert('Failed to delete test case. Please try again.');
+        
+        // Show specific error message based on error type
+        let errorMessage = 'Failed to delete test case. Please try again.';
+        
+        if (err.response?.status === 404) {
+          errorMessage = 'Test case not found. It may have already been deleted.';
+        } else if (err.response?.status === 403) {
+          errorMessage = 'You do not have permission to delete this test case.';
+        } else if (err.response?.status === 409) {
+          errorMessage = 'Cannot delete test case. It may be referenced by other items.';
+        } else if (err.response?.status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+        
+        showError(errorMessage);
       }
     }
   };
@@ -241,23 +288,56 @@ const TestCases = () => {
     );
   };
 
-  const handleBulkAction = (action) => {
+  const handleBulkAction = async (action) => {
     if (selectedIds.length === 0) {
-      alert('Please select test cases first.');
+      showWarning('Please select test cases first.');
       return;
     }
 
     switch (action) {
       case 'delete':
-        if (window.confirm(`Are you sure you want to delete ${selectedIds.length} test cases?`)) {
-          // Implement bulk delete
-          console.log('Bulk delete:', selectedIds);
+        const confirmMessage = `Are you sure you want to delete ${selectedIds.length} test case${selectedIds.length > 1 ? 's' : ''}?\n\nThis action cannot be undone and will permanently remove all selected test cases.`;
+        
+        if (window.confirm(confirmMessage)) {
+          try {
+            // Show loading state
+            const loadingToast = showWarning(`Deleting ${selectedIds.length} test case${selectedIds.length > 1 ? 's' : ''}...`, { autoClose: false });
+            
+            // Delete all selected test cases
+            const deletePromises = selectedIds.map(id => testCasesAPI.delete(id));
+            await Promise.all(deletePromises);
+            
+            // Dismiss loading toast and show success
+            loadingToast.dismiss();
+            showSuccess(`Successfully deleted ${selectedIds.length} test case${selectedIds.length > 1 ? 's' : ''}`);
+            
+            // Refresh data and clear selection
+            await fetchData();
+            setSelectedIds([]);
+            
+          } catch (err) {
+            console.error('Error during bulk delete:', err);
+            
+            // Show error message
+            let errorMessage = `Failed to delete some test cases. Please try again.`;
+            
+            if (err.response?.status === 403) {
+              errorMessage = 'You do not have permission to delete some test cases.';
+            } else if (err.response?.status >= 500) {
+              errorMessage = 'Server error. Please try again later.';
+            }
+            
+            showError(errorMessage);
+          }
         }
         break;
+        
       case 'export':
         // Implement bulk export
+        showInfo(`Exporting ${selectedIds.length} test case${selectedIds.length > 1 ? 's' : ''}...`);
         console.log('Bulk export:', selectedIds);
         break;
+        
       default:
         console.log('Bulk action:', action, selectedIds);
     }
@@ -267,17 +347,39 @@ const TestCases = () => {
     try {
       // Find the test case
       const testCase = testCases.find(tc => tc.id === testCaseId);
-      if (!testCase) return;
+      if (!testCase) {
+        showError('Test case not found.');
+        return;
+      }
+
+      // Show loading state
+      const loadingToast = showInfo(`Updating status to ${newStatus}...`, { autoClose: false });
 
       // Update the test case status
       const updatedTestCase = { ...testCase, status: newStatus };
       await testCasesAPI.update(testCaseId, updatedTestCase);
       
+      // Dismiss loading toast and show success
+      loadingToast.dismiss();
+      showSuccess(`Status updated to ${newStatus}`);
+      
       // Refresh data
       await fetchData();
     } catch (err) {
       console.error('Error updating test case status:', err);
-      alert('Failed to update test case status. Please try again.');
+      
+      // Show specific error message based on error type
+      let errorMessage = 'Failed to update test case status. Please try again.';
+      
+      if (err.response?.status === 404) {
+        errorMessage = 'Test case not found. It may have been deleted.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'You do not have permission to update this test case.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      showError(errorMessage);
     }
   };
 

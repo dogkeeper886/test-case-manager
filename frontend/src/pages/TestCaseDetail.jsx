@@ -13,11 +13,14 @@ import {
   Play,
   FileText,
   Settings,
-  Tag
+  Tag,
+  Download,
+  Share2
 } from 'lucide-react';
 import { Button, Card, Badge } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import { testCasesAPI } from '../services/api';
+import { showSuccess, showError, showWarning, showInfo } from '../utils/toast';
 
 const TestCaseDetail = () => {
   const { id } = useParams();
@@ -35,11 +38,30 @@ const TestCaseDetail = () => {
     try {
       setLoading(true);
       setError(null);
+      
       const response = await testCasesAPI.getById(id);
       setTestCase(response.data);
+      
     } catch (err) {
       console.error('Error fetching test case:', err);
-      setError('Failed to load test case. Please try again.');
+      
+      // Show specific error message based on error type
+      let errorMessage = 'Failed to load test case. Please try again.';
+      
+      if (err.response?.status === 404) {
+        errorMessage = 'Test case not found. It may have been deleted or moved.';
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'You do not have permission to view this test case.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.code === 'NETWORK_ERROR') {
+        errorMessage = 'Network error. Please check your connection.';
+      }
+      
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -107,13 +129,40 @@ const TestCaseDetail = () => {
   };
 
   const handleDelete = async () => {
-    if (window.confirm(`Are you sure you want to delete "${testCase.title}"?`)) {
+    const confirmMessage = `Are you sure you want to delete the test case "${testCase.title}"?\n\nThis action cannot be undone and will permanently remove:\n• Test case: ${testCase.title}\n• ID: ${testCase.id}\n• All associated data and execution history`;
+    
+    if (window.confirm(confirmMessage)) {
       try {
+        // Show loading state
+        const loadingToast = showWarning('Deleting test case...', { autoClose: false });
+        
+        // Delete the test case
         await testCasesAPI.delete(testCase.id);
+        
+        // Dismiss loading toast and show success
+        loadingToast.dismiss();
+        showSuccess(`Test case "${testCase.title}" deleted successfully`);
+        
+        // Navigate back to test cases list
         navigate('/testcases');
+        
       } catch (err) {
         console.error('Error deleting test case:', err);
-        alert('Failed to delete test case');
+        
+        // Show specific error message based on error type
+        let errorMessage = 'Failed to delete test case. Please try again.';
+        
+        if (err.response?.status === 404) {
+          errorMessage = 'Test case not found. It may have already been deleted.';
+        } else if (err.response?.status === 403) {
+          errorMessage = 'You do not have permission to delete this test case.';
+        } else if (err.response?.status === 409) {
+          errorMessage = 'Cannot delete test case. It may be referenced by other items.';
+        } else if (err.response?.status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+        
+        showError(errorMessage);
       }
     }
   };
