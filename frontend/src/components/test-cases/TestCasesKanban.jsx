@@ -204,6 +204,13 @@ const TestCasesKanban = ({
                     draggable
                     onDragStart={(e) => handleDragStart(e, testCase)}
                     onDragEnd={handleDragEnd}
+                    onClick={(e) => {
+                      // Don't trigger card click if clicking on action buttons
+                      if (e.target.closest('button')) {
+                        return;
+                      }
+                      onView(testCase);
+                    }}
                   >
                     {/* Card Header */}
                     <div className="flex items-start justify-between mb-2">

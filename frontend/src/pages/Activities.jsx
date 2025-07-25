@@ -124,7 +124,13 @@ const Activities = () => {
   };
 
   const handleActivityClick = (activity) => {
-    navigate(`/activities/${activity.id}`);
+    // Navigate to test case detail if activity is related to a test case
+    if (activity.entity_type === 'test_case' && activity.entity_id) {
+      navigate(`/testcases/${activity.entity_id}`);
+    } else {
+      // Navigate to activity detail for other types
+      navigate(`/activities/${activity.id}`);
+    }
   };
 
   const handleSearchChange = (e) => {

@@ -77,7 +77,8 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const sql = `
+    // Get test case with related data
+    const testCaseSql = `
       SELECT 
         tc.*,
         ts.name as test_suite_name,
@@ -88,15 +89,45 @@ router.get('/:id', async (req, res) => {
       WHERE tc.id = $1
     `;
     
-    const result = await query(sql, [id]);
+    const testCaseResult = await query(testCaseSql, [id]);
     
-    if (result.rows.length === 0) {
+    if (testCaseResult.rows.length === 0) {
       return res.status(404).json({ error: 'Test case not found' });
     }
     
+    const testCase = testCaseResult.rows[0];
+    
+    // Get test steps for this test case
+    const stepsSql = `
+      SELECT 
+        id, step_number, action, expected_result, execution_type
+      FROM test_steps 
+      WHERE test_case_id = $1 
+      ORDER BY step_number ASC
+    `;
+    
+    const stepsResult = await query(stepsSql, [id]);
+    
+    // Get custom fields for this test case
+    const customFieldsSql = `
+      SELECT 
+        id, field_name, field_value
+      FROM custom_fields 
+      WHERE test_case_id = $1
+    `;
+    
+    const customFieldsResult = await query(customFieldsSql, [id]);
+    
+    // Combine all data
+    const enrichedTestCase = {
+      ...testCase,
+      steps: stepsResult.rows,
+      custom_fields: customFieldsResult.rows
+    };
+    
     res.json({
       success: true,
-      data: result.rows[0]
+      data: enrichedTestCase
     });
   } catch (error) {
     console.error('Error fetching test case:', error);

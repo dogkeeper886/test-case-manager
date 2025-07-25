@@ -221,6 +221,8 @@ const Dashboard = () => {
   const handleTestCaseSelect = (testCase) => {
     console.log('Selected test case from tree:', testCase);
     setSelectedTestCaseId(testCase.id);
+    // Navigate to test case detail page
+    navigate(`/testcases/${testCase.id}`);
   };
 
   if (loading) {

@@ -56,7 +56,7 @@ const TestCasesCompactCards = ({
         <motion.div
           key={testCase.id}
           className="group bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-md transition-all duration-200 cursor-pointer"
-          onClick={() => onSelect?.(testCase.id)}
+          onClick={() => onView?.(testCase)}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.05 }}

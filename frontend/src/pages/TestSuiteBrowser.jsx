@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
@@ -6,6 +7,7 @@ import TestSuiteTree from '../components/test-cases/TestSuiteTree';
 import { testSuitesAPI } from '../services/api';
 
 const TestSuiteBrowser = () => {
+  const navigate = useNavigate();
   const [testSuites, setTestSuites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,6 +43,8 @@ const TestSuiteBrowser = () => {
   const handleTestCaseSelect = (testCase) => {
     console.log('Selected test case from tree:', testCase);
     setSelectedTestCaseId(testCase.id);
+    // Navigate to test case detail page
+    navigate(`/testcases/${testCase.id}`);
   };
 
   // Handle search from layout

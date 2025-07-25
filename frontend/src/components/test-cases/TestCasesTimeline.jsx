@@ -229,7 +229,18 @@ const TestCasesTimeline = ({
                     <div className={`absolute -left-8 top-2 w-3 h-3 rounded-full border-2 border-white ${event.color.replace('text-', 'bg-')}`}></div>
 
                     {/* Event Card */}
-                    <Card elevation="sm" padding="md" className="hover:shadow-apple-md transition-shadow">
+                    <Card 
+                      elevation="sm" 
+                      padding="md" 
+                      className="hover:shadow-apple-md transition-shadow cursor-pointer"
+                      onClick={(e) => {
+                        // Don't trigger card click if clicking on action buttons
+                        if (e.target.closest('button')) {
+                          return;
+                        }
+                        onView(event.testCase);
+                      }}
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3 flex-1">
                           {/* Event Icon */}
