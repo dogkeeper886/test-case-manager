@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Plus, Eye, Edit, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
+import TestCasesTable from '../components/test-cases/TestCasesTable';
+import TestCasesCompactCards from '../components/test-cases/TestCasesCompactCards';
+import ViewToggle from '../components/test-cases/ViewToggle';
 import { testCasesAPI, testSuitesAPI, projectsAPI } from '../services/api';
 import useTestCaseStore from '../stores/testCaseStore';
 
@@ -22,6 +25,12 @@ const TestCases = () => {
   const [showFilters, setShowFilters] = useState(!!searchParams.get('status'));
   const [selectedSuiteId, setSelectedSuiteId] = useState(null);
   const [selectedTestCaseId, setSelectedTestCaseId] = useState(null);
+  
+  // New state for modern design
+  const [viewMode, setViewMode] = useState('table'); // 'table', 'cards', 'kanban', 'timeline'
+  const [sortBy, setSortBy] = useState('id');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const { setTestCases: setStoreTestCases, setTestSuites: setStoreTestSuites } = useTestCaseStore();
 
@@ -94,6 +103,28 @@ const TestCases = () => {
     return true;
   });
 
+  // Sort filtered test cases
+  const sortedTestCases = [...filteredTestCases].sort((a, b) => {
+    let aValue = a[sortBy];
+    let bValue = b[sortBy];
+
+    // Handle string comparisons
+    if (typeof aValue === 'string') {
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+    }
+
+    // Handle null/undefined values
+    if (aValue === null || aValue === undefined) aValue = '';
+    if (bValue === null || bValue === undefined) bValue = '';
+
+    if (sortOrder === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+
   // Get project name by ID
   const getProjectName = (projectId) => {
     const project = projects.find(p => p.id === projectId);
@@ -103,204 +134,219 @@ const TestCases = () => {
   // Get test suite name by ID
   const getTestSuiteName = (suiteId) => {
     const suite = testSuites.find(s => s.id === suiteId);
-    return suite?.name || 'No Suite';
+    return suite?.name || 'Unknown Suite';
   };
 
-  // Get status badge variant
   const getStatusBadgeVariant = (status) => {
     switch (status) {
-      case 1: return 'pending';
-      case 2: return 'passed';
-      case 3: return 'failed';
-      case 4: return 'blocked';
-      case 5: return 'skipped';
-      default: return 'default';
+      case 1: return 'success'; // Pass
+      case 2: return 'danger';  // Fail
+      case 3: return 'warning'; // Block
+      case 4: return 'secondary'; // Draft
+      default: return 'secondary';
     }
   };
 
-  // Get status text
   const getStatusText = (status) => {
     switch (status) {
-      case 1: return 'Pending';
-      case 2: return 'Passed';
-      case 3: return 'Failed';
-      case 4: return 'Blocked';
-      case 5: return 'Skipped';
+      case 1: return 'Pass';
+      case 2: return 'Fail';
+      case 3: return 'Block';
+      case 4: return 'Draft';
       default: return 'Unknown';
     }
   };
 
-  // Get priority badge variant
   const getPriorityBadgeVariant = (priority) => {
     switch (priority) {
-      case 1: return 'low';
-      case 2: return 'medium';
-      case 3: return 'high';
-      default: return 'default';
+      case 1: return 'danger';   // High
+      case 2: return 'warning';  // Medium
+      case 3: return 'success';  // Low
+      default: return 'secondary';
     }
   };
 
-  // Get priority text
   const getPriorityText = (priority) => {
     switch (priority) {
-      case 1: return 'Low';
+      case 1: return 'High';
       case 2: return 'Medium';
-      case 3: return 'High';
+      case 3: return 'Low';
       default: return 'Unknown';
     }
   };
 
-  // Get execution type text
   const getExecutionTypeText = (executionType) => {
-    return executionType === 1 ? 'Manual' : 'Automated';
+    switch (executionType) {
+      case 1: return 'Manual';
+      case 2: return 'Automated';
+      default: return 'Manual';
+    }
   };
 
-  // Handle test case actions
   const handleViewTestCase = (testCase) => {
     navigate(`/testcases/${testCase.id}`);
   };
 
   const handleEditTestCase = (testCase) => {
-    console.log('Edit test case:', testCase);
-    // TODO: Open edit modal or navigate to edit page
+    navigate(`/testcases/${testCase.id}/edit`);
   };
 
   const handleDeleteTestCase = async (testCase) => {
-    if (window.confirm(`Are you sure you want to delete "${testCase.title}"?`)) {
+    if (window.confirm(`Are you sure you want to delete test case "${testCase.title}"?`)) {
       try {
         await testCasesAPI.delete(testCase.id);
-        setTestCases(testCases.filter(tc => tc.id !== testCase.id));
+        await fetchData(); // Refresh data
       } catch (err) {
         console.error('Error deleting test case:', err);
-        alert('Failed to delete test case');
+        alert('Failed to delete test case. Please try again.');
       }
     }
   };
 
-  // Handle suite selection
   const handleSuiteSelect = (suite) => {
-    console.log('Selected suite:', suite);
     setSelectedSuiteId(suite.id);
-    // TODO: Filter test cases by suite
+    setSelectedTestCaseId(null);
   };
 
-  // Handle test case selection from tree
   const handleTestCaseSelect = (testCase) => {
-    console.log('Selected test case from tree:', testCase);
     setSelectedTestCaseId(testCase.id);
-    // TODO: Navigate to test case detail view
   };
 
-  // Handle search from layout
   const handleLayoutSearch = (query) => {
     setSearchQuery(query);
-    // TODO: Implement global search
   };
 
-  // Handle create test case from top nav
   const handleCreateTestCase = () => {
-    console.log('Create test case clicked');
-    // TODO: Open create test case modal or navigate to create form
-    // For now, show a placeholder alert
-    alert('Create Test Case functionality will be implemented here');
+    navigate('/testcases/new');
+  };
+
+  // New handlers for modern design
+  const handleViewChange = (newView) => {
+    setViewMode(newView);
+  };
+
+  const handleSort = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+  };
+
+  const handleSelect = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(selectedId => selectedId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleBulkAction = (action) => {
+    if (selectedIds.length === 0) {
+      alert('Please select test cases first.');
+      return;
+    }
+
+    switch (action) {
+      case 'delete':
+        if (window.confirm(`Are you sure you want to delete ${selectedIds.length} test cases?`)) {
+          // Implement bulk delete
+          console.log('Bulk delete:', selectedIds);
+        }
+        break;
+      case 'export':
+        // Implement bulk export
+        console.log('Bulk export:', selectedIds);
+        break;
+      default:
+        console.log('Bulk action:', action, selectedIds);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-apple-gray-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-apple-blue mx-auto mb-4"></div>
-          <p className="text-apple-gray-5">Loading test cases...</p>
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-apple-gray-4">Loading test cases...</div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-apple-gray-1 flex items-center justify-center">
-        <Card className="max-w-md">
+      <Layout>
+        <Card className="max-w-md mx-auto">
           <Card.Body className="text-center">
-            <p className="text-error mb-4">{error}</p>
-            <Button onClick={fetchData}>Try Again</Button>
+            <h3 className="text-lg font-sf font-semibold text-apple-gray-7 mb-2">Error</h3>
+            <p className="text-apple-gray-5">{error}</p>
           </Card.Body>
         </Card>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <Layout
-      testSuites={testSuites}
-      onSuiteSelect={handleSuiteSelect}
-      onTestCaseSelect={handleTestCaseSelect}
-      selectedSuiteId={selectedSuiteId}
-      selectedTestCaseId={selectedTestCaseId}
-      onSearch={handleLayoutSearch}
-      breadcrumbs={[
-        { label: 'Test Cases', href: '/testcases' }
-      ]}
-      actions={[
-        {
-          label: 'Create Test Case',
-          variant: 'primary',
-          icon: <Plus className="w-4 h-4" />,
-          onClick: () => handleCreateTestCase()
-        }
-      ]}
-      showSearch={false}
-    >
-      {/* Page Header */}
-      <div className="mb-6" data-element="testcases-header">
-        <div className="flex items-center justify-between" data-element="testcases-header-content">
-          <div data-element="testcases-title-section">
-            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7" data-element="testcases-title">
-              Test Cases
-            </h1>
-            <p className="text-apple-gray-5 mt-1" data-element="testcases-subtitle">
+    <Layout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-sf font-bold text-apple-gray-7">Test Cases</h1>
+            <p className="text-apple-gray-5 mt-1">
               {filteredTestCases.length} of {testCases.length} test cases
             </p>
           </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <Card elevation="sm" padding="lg" className="mb-6" data-element="testcases-filters-card">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center" data-element="testcases-filters-content">
-          {/* Search */}
-          <div className="flex-1 min-w-0" data-element="testcases-search-container">
-            <Input
-              placeholder="Search test cases..."
-              icon={<Search className="w-4 h-4" />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              data-element="testcases-search-input"
-            />
-          </div>
-
-          {/* Filter Toggle */}
           <Button
-            variant="secondary"
-            icon={showFilters ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            onClick={() => setShowFilters(!showFilters)}
-            data-element="testcases-filter-toggle"
+            variant="primary"
+            icon={<Plus className="w-4 h-4" />}
+            onClick={handleCreateTestCase}
           >
-            Filters
+            Create Test Case
           </Button>
         </div>
 
-          {/* Filter Options */}
+        {/* Filters and Search */}
+        <Card elevation="sm" padding="lg" className="mb-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+            {/* Search */}
+            <div className="flex-1 min-w-0">
+              <Input
+                placeholder="Search test cases..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                icon={<Search className="w-4 h-4" />}
+                className="w-full"
+              />
+            </div>
+
+            {/* View Toggle */}
+            <ViewToggle
+              currentView={viewMode}
+              onViewChange={handleViewChange}
+              className="flex-shrink-0"
+            />
+
+            {/* Filters Toggle */}
+            <Button
+              variant="ghost"
+              icon={<Filter className="w-4 h-4" />}
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex-shrink-0"
+            >
+              Filters
+            </Button>
+          </div>
+
+          {/* Filters Panel */}
           {showFilters && (
             <div className="mt-4 pt-4 border-t border-apple-gray-2">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-apple-gray-7 mb-2">
+                  <label className="block text-sm font-sf font-medium text-apple-gray-7 mb-1">
                     Project
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-apple-gray-3 rounded-apple focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue"
                     value={selectedProject}
                     onChange={(e) => setSelectedProject(e.target.value)}
+                    className="w-full px-3 py-2 border border-apple-gray-2 rounded-apple-md text-sm font-sf focus:outline-none focus:ring-2 focus:ring-apple-blue/50"
                   >
                     <option value="">All Projects</option>
                     {projects.map(project => (
@@ -312,15 +358,15 @@ const TestCases = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-apple-gray-7 mb-2">
+                  <label className="block text-sm font-sf font-medium text-apple-gray-7 mb-1">
                     Test Suite
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-apple-gray-3 rounded-apple focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue"
                     value={selectedSuite}
                     onChange={(e) => setSelectedSuite(e.target.value)}
+                    className="w-full px-3 py-2 border border-apple-gray-2 rounded-apple-md text-sm font-sf focus:outline-none focus:ring-2 focus:ring-apple-blue/50"
                   >
-                    <option value="">All Suites</option>
+                    <option value="">All Test Suites</option>
                     {testSuites.map(suite => (
                       <option key={suite.id} value={suite.name}>
                         {suite.name}
@@ -330,36 +376,35 @@ const TestCases = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-apple-gray-7 mb-2">
+                  <label className="block text-sm font-sf font-medium text-apple-gray-7 mb-1">
                     Status
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-apple-gray-3 rounded-apple focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-apple-gray-2 rounded-apple-md text-sm font-sf focus:outline-none focus:ring-2 focus:ring-apple-blue/50"
                   >
-                    <option value="">All Status</option>
-                    <option value="1">Pending</option>
-                    <option value="2">Passed</option>
-                    <option value="3">Failed</option>
-                    <option value="4">Blocked</option>
-                    <option value="5">Skipped</option>
+                    <option value="">All Statuses</option>
+                    <option value="1">Pass</option>
+                    <option value="2">Fail</option>
+                    <option value="3">Block</option>
+                    <option value="4">Draft</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-apple-gray-7 mb-2">
+                  <label className="block text-sm font-sf font-medium text-apple-gray-7 mb-1">
                     Priority
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-apple-gray-3 rounded-apple focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue"
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-apple-gray-2 rounded-apple-md text-sm font-sf focus:outline-none focus:ring-2 focus:ring-apple-blue/50"
                   >
                     <option value="">All Priorities</option>
-                    <option value="1">Low</option>
+                    <option value="1">High</option>
                     <option value="2">Medium</option>
-                    <option value="3">High</option>
+                    <option value="3">Low</option>
                   </select>
                 </div>
               </div>
@@ -367,112 +412,85 @@ const TestCases = () => {
           )}
         </Card>
 
-        {/* Test Cases Grid */}
-        <div className="mt-6" data-element="testcases-grid">
-          {filteredTestCases.length === 0 ? (
-            <Card elevation="sm" padding="xl" data-element="testcases-empty-state">
-              <Card.Body className="text-center py-12">
-                <div className="text-apple-gray-4 mb-4" data-element="testcases-empty-icon">
-                  <Search className="w-16 h-16 mx-auto" />
-                </div>
-                <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2" data-element="testcases-empty-title">
-                  No test cases found
-                </h3>
-                <p className="text-apple-gray-5" data-element="testcases-empty-message">
-                  {searchQuery || selectedProject || selectedSuite || statusFilter || priorityFilter
-                    ? 'Try adjusting your search or filters'
-                    : 'Get started by creating your first test case'}
-                </p>
-              </Card.Body>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-element="testcases-cards-container">
-              {filteredTestCases.map(testCase => (
-                <Card 
-                  key={testCase.id} 
-                  elevation="md" 
-                  hover={true}
-                  hoverVariant="subtle"
-                  className="cursor-pointer"
-                  onClick={() => handleViewTestCase(testCase)}
-                  data-element={`testcase-card-${testCase.id}`}
-                >
-                  <Card.Header>
-                    <div className="flex items-start justify-between" data-element={`testcase-header-${testCase.id}`}>
-                      <h3 className="text-lg font-sf font-semibold text-apple-gray-7 line-clamp-2" data-element={`testcase-title-${testCase.id}`}>
-                        {testCase.title}
-                      </h3>
-                      <div className="flex gap-1 ml-2" data-element={`testcase-badges-${testCase.id}`}>
-                        <Badge variant={getStatusBadgeVariant(testCase.status)} size="sm" data-element={`testcase-status-badge-${testCase.id}`}>
-                          {getStatusText(testCase.status)}
-                        </Badge>
-                        <Badge variant={getPriorityBadgeVariant(testCase.priority)} size="sm" data-element={`testcase-priority-badge-${testCase.id}`}>
-                          {getPriorityText(testCase.priority)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </Card.Header>
-                  
-                  <Card.Body>
-                    <p className="text-apple-gray-5 text-sm mb-3 line-clamp-3" data-element={`testcase-description-${testCase.id}`}>
-                      {testCase.description || 'No description available'}
-                    </p>
-                    
-                    <div className="space-y-2 text-xs text-apple-gray-4" data-element={`testcase-metadata-${testCase.id}`}>
-                      <div className="flex items-center justify-between" data-element={`testcase-project-${testCase.id}`}>
-                        <span>Project:</span>
-                        <span className="font-medium">{testCase.project_name || 'Unknown'}</span>
-                      </div>
-                      <div className="flex items-center justify-between" data-element={`testcase-suite-${testCase.id}`}>
-                        <span>Test Suite:</span>
-                        <span className="font-medium">{testCase.test_suite_name || 'No Suite'}</span>
-                      </div>
-                      <div className="flex items-center justify-between" data-element={`testcase-execution-${testCase.id}`}>
-                        <span>Execution:</span>
-                        <span className="font-medium">{getExecutionTypeText(testCase.execution_type)}</span>
-                      </div>
-                      <div className="flex items-center justify-between" data-element={`testcase-id-${testCase.id}`}>
-                        <span>ID:</span>
-                        <span className="font-medium">#{testCase.id}</span>
-                      </div>
-                    </div>
-                  </Card.Body>
-                  
-                  <Card.Footer>
-                    <div className="flex items-center justify-between" data-element={`testcase-footer-${testCase.id}`}>
-                      <div className="text-xs text-apple-gray-4" data-element={`testcase-updated-${testCase.id}`}>
-                        Updated {new Date(testCase.updated_at).toLocaleDateString()}
-                      </div>
-                      <div className="flex gap-1" data-element={`testcase-actions-${testCase.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={<Eye className="w-3 h-3" />}
-                          onClick={() => handleViewTestCase(testCase)}
-                          data-element={`testcase-view-button-${testCase.id}`}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={<Edit className="w-3 h-3" />}
-                          onClick={() => handleEditTestCase(testCase)}
-                          data-element={`testcase-edit-button-${testCase.id}`}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={<Trash2 className="w-3 h-3" />}
-                          onClick={() => handleDeleteTestCase(testCase)}
-                          data-element={`testcase-delete-button-${testCase.id}`}
-                        />
-                      </div>
-                    </div>
-                  </Card.Footer>
-                </Card>
-              ))}
+        {/* Bulk Actions */}
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-2 p-3 bg-apple-blue/5 border border-apple-blue/20 rounded-apple-lg">
+            <span className="text-sm font-sf text-apple-gray-7">
+              {selectedIds.length} test case{selectedIds.length !== 1 ? 's' : ''} selected
+            </span>
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleBulkAction('export')}
+              >
+                Export
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleBulkAction('delete')}
+                className="text-red-600 hover:text-red-700"
+              >
+                Delete
+              </Button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Test Cases Display */}
+        {filteredTestCases.length === 0 ? (
+          <Card elevation="sm" padding="xl">
+            <Card.Body className="text-center py-12">
+              <h3 className="text-lg font-sf font-semibold text-apple-gray-7 mb-2">
+                No test cases found
+              </h3>
+              <p className="text-apple-gray-5">
+                {searchQuery || selectedProject || selectedSuite || statusFilter || priorityFilter
+                  ? 'Try adjusting your search or filters'
+                  : 'Get started by creating your first test case'}
+              </p>
+            </Card.Body>
+          </Card>
+        ) : (
+          <div>
+            {viewMode === 'table' && (
+              <TestCasesTable
+                testCases={sortedTestCases}
+                onView={handleViewTestCase}
+                onEdit={handleEditTestCase}
+                onDelete={handleDeleteTestCase}
+                onSelect={handleSelect}
+                selectedIds={selectedIds}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+            )}
+            
+            {viewMode === 'cards' && (
+              <TestCasesCompactCards
+                testCases={sortedTestCases}
+                onView={handleViewTestCase}
+                onEdit={handleEditTestCase}
+                onDelete={handleDeleteTestCase}
+              />
+            )}
+            
+            {viewMode === 'kanban' && (
+              <div className="text-center py-12">
+                <p className="text-apple-gray-4">Kanban view coming soon...</p>
+              </div>
+            )}
+            
+            {viewMode === 'timeline' && (
+              <div className="text-center py-12">
+                <p className="text-apple-gray-4">Timeline view coming soon...</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </Layout>
   );
 };
