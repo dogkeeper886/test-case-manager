@@ -49,6 +49,7 @@ const TestCases = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [testCases, setTestCases] = useState([]);
+  const [totalTestCases, setTotalTestCases] = useState(0);
   const [testSuites, setTestSuites] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,6 +112,7 @@ const TestCases = () => {
       ]);
 
       setTestCases(testCasesRes.data.data || testCasesRes.data);
+      setTotalTestCases(testCasesRes.data.total || (testCasesRes.data.data || testCasesRes.data).length);
       setTestSuites(testSuitesRes.data.data || testSuitesRes.data);
       setProjects(projectsRes.data.data || projectsRes.data);
 
@@ -150,6 +152,8 @@ const TestCases = () => {
     priority: priorityFilter,
     dates: dateFilters
   });
+
+
 
   // Sort filtered test cases
   const sortedTestCases = [...(filteredTestCases || [])].sort((a, b) => {
@@ -545,7 +549,17 @@ const TestCases = () => {
           <div>
             <h1 className="text-2xl font-sf font-bold text-apple-gray-7" data-testid="test-cases-title">Test Cases</h1>
             <p className="text-apple-gray-5 mt-1" data-testid="test-cases-count">
-              {filteredTestCases.length} of {testCases.length} test cases
+              Showing {filteredTestCases.length} of {totalTestCases} test cases
+              {getActiveFiltersCount() > 0 && (
+                <span className="ml-2 text-apple-blue">
+                  (filtered)
+                </span>
+              )}
+              {filteredTestCases.length !== testCases.length && getActiveFiltersCount() === 0 && (
+                <span className="ml-2 text-apple-orange">
+                  (sorted)
+                </span>
+              )}
             </p>
           </div>
           <Button

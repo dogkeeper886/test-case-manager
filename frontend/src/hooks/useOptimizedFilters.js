@@ -10,7 +10,7 @@ const useOptimizedFilters = (items = [], filters = {}) => {
     let filtered = [...items];
 
     // Search filter
-    if (filters.search?.query) {
+    if (filters.search?.query && filters.search.query.trim() !== '') {
       const query = filters.search.query.toLowerCase();
       const field = filters.search.field || 'all';
       const operator = filters.search.operator || 'AND';
@@ -49,28 +49,28 @@ const useOptimizedFilters = (items = [], filters = {}) => {
     }
 
     // Project filter
-    if (filters.project) {
+    if (filters.project && filters.project.trim() !== '') {
       filtered = filtered.filter(item => 
         item.project_name === filters.project
       );
     }
 
     // Suite filter
-    if (filters.suite) {
+    if (filters.suite && filters.suite.trim() !== '') {
       filtered = filtered.filter(item => 
         item.test_suite_name === filters.suite
       );
     }
 
     // Status filter
-    if (filters.status) {
+    if (filters.status && filters.status.toString().trim() !== '') {
       filtered = filtered.filter(item => 
         item.status === parseInt(filters.status)
       );
     }
 
     // Priority filter
-    if (filters.priority) {
+    if (filters.priority && filters.priority.toString().trim() !== '') {
       filtered = filtered.filter(item => 
         item.priority === parseInt(filters.priority)
       );

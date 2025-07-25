@@ -8,7 +8,43 @@ router.get('/', async (req, res) => {
   try {
     const { projectId, status, priority, limit = 100, offset = 0 } = req.query;
     
-    let sql = `
+    // Build the WHERE clause for both queries
+    let whereClause = 'WHERE 1=1';
+    const params = [];
+    let paramIndex = 1;
+    
+    if (projectId) {
+      whereClause += ` AND ts.project_id = $${paramIndex}`;
+      params.push(projectId);
+      paramIndex++;
+    }
+    
+    if (status) {
+      whereClause += ` AND tc.status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
+    }
+    
+    if (priority) {
+      whereClause += ` AND tc.priority = $${paramIndex}`;
+      params.push(priority);
+      paramIndex++;
+    }
+    
+    // Query 1: Get total count (without LIMIT/OFFSET)
+    const countSql = `
+      SELECT COUNT(*) as total_count
+      FROM test_cases tc
+      LEFT JOIN test_suites ts ON tc.test_suite_id = ts.id
+      LEFT JOIN projects p ON ts.project_id = p.id
+      ${whereClause}
+    `;
+    
+    const countResult = await query(countSql, params);
+    const totalCount = parseInt(countResult.rows[0].total_count);
+    
+    // Query 2: Get paginated data
+    const dataSql = `
       SELECT 
         tc.*,
         ts.name as test_suite_name,
@@ -16,39 +52,18 @@ router.get('/', async (req, res) => {
       FROM test_cases tc
       LEFT JOIN test_suites ts ON tc.test_suite_id = ts.id
       LEFT JOIN projects p ON ts.project_id = p.id
-      WHERE 1=1
+      ${whereClause}
+      ORDER BY tc.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     
-    const params = [];
-    let paramIndex = 1;
-    
-    if (projectId) {
-      sql += ` AND ts.project_id = $${paramIndex}`;
-      params.push(projectId);
-      paramIndex++;
-    }
-    
-    if (status) {
-      sql += ` AND tc.status = $${paramIndex}`;
-      params.push(status);
-      paramIndex++;
-    }
-    
-    if (priority) {
-      sql += ` AND tc.priority = $${paramIndex}`;
-      params.push(priority);
-      paramIndex++;
-    }
-    
-    sql += ` ORDER BY tc.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    params.push(parseInt(limit), parseInt(offset));
-    
-    const result = await query(sql, params);
+    const dataParams = [...params, parseInt(limit), parseInt(offset)];
+    const dataResult = await query(dataSql, dataParams);
     
     res.json({
       success: true,
-      data: result.rows,
-      total: result.rows.length,
+      data: dataResult.rows,
+      total: totalCount,
+      returned: dataResult.rows.length,
       filters: { projectId, status, priority, limit, offset }
     });
   } catch (error) {
