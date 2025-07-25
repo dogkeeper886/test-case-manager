@@ -5,6 +5,8 @@ import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import TestCasesTable from '../components/test-cases/TestCasesTable';
 import TestCasesCompactCards from '../components/test-cases/TestCasesCompactCards';
+import TestCasesKanban from '../components/test-cases/TestCasesKanban';
+import TestCasesTimeline from '../components/test-cases/TestCasesTimeline';
 import ViewToggle from '../components/test-cases/ViewToggle';
 import { testCasesAPI, testSuitesAPI, projectsAPI } from '../services/api';
 import useTestCaseStore from '../stores/testCaseStore';
@@ -260,6 +262,24 @@ const TestCases = () => {
     }
   };
 
+  const handleStatusChange = async (testCaseId, newStatus) => {
+    try {
+      // Find the test case
+      const testCase = testCases.find(tc => tc.id === testCaseId);
+      if (!testCase) return;
+
+      // Update the test case status
+      const updatedTestCase = { ...testCase, status: newStatus };
+      await testCasesAPI.update(testCaseId, updatedTestCase);
+      
+      // Refresh data
+      await fetchData();
+    } catch (err) {
+      console.error('Error updating test case status:', err);
+      alert('Failed to update test case status. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -478,15 +498,22 @@ const TestCases = () => {
             )}
             
             {viewMode === 'kanban' && (
-              <div className="text-center py-12">
-                <p className="text-apple-gray-4">Kanban view coming soon...</p>
-              </div>
+              <TestCasesKanban
+                testCases={sortedTestCases}
+                onView={handleViewTestCase}
+                onEdit={handleEditTestCase}
+                onDelete={handleDeleteTestCase}
+                onStatusChange={handleStatusChange}
+              />
             )}
             
             {viewMode === 'timeline' && (
-              <div className="text-center py-12">
-                <p className="text-apple-gray-4">Timeline view coming soon...</p>
-              </div>
+              <TestCasesTimeline
+                testCases={sortedTestCases}
+                onView={handleViewTestCase}
+                onEdit={handleEditTestCase}
+                onDelete={handleDeleteTestCase}
+              />
             )}
           </div>
         )}
