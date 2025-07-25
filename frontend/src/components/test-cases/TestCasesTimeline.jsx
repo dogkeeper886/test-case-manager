@@ -4,16 +4,13 @@ import {
   Eye, 
   Edit, 
   Trash2, 
-  Calendar,
   Clock,
   User,
   CheckCircle,
   XCircle,
   AlertCircle,
   FileText,
-  Play,
-  Pause,
-  SkipForward
+  Play
 } from 'lucide-react';
 import { Button, Card, Badge } from '../ui';
 
@@ -24,8 +21,41 @@ const TestCasesTimeline = ({
   onDelete,
   className = '' 
 }) => {
-  const [selectedDate, setSelectedDate] = useState(null);
   const [groupBy, setGroupBy] = useState('date'); // 'date', 'project', 'suite'
+
+  // Helper functions
+  const getStatusText = (status) => {
+    switch (status) {
+      case 1: return 'Pass';
+      case 2: return 'Fail';
+      case 3: return 'Block';
+      case 4: return 'Draft';
+      case 5: return 'In Progress';
+      default: return 'Unknown';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 1: return <CheckCircle className="w-4 h-4" />;
+      case 2: return <XCircle className="w-4 h-4" />;
+      case 3: return <AlertCircle className="w-4 h-4" />;
+      case 4: return <FileText className="w-4 h-4" />;
+      case 5: return <Clock className="w-4 h-4" />;
+      default: return <FileText className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 1: return 'text-green-500';
+      case 2: return 'text-red-500';
+      case 3: return 'text-yellow-500';
+      case 4: return 'text-apple-gray-4';
+      case 5: return 'text-apple-blue';
+      default: return 'text-apple-gray-4';
+    }
+  };
 
   // Generate timeline events from test cases
   const timelineEvents = useMemo(() => {
@@ -108,42 +138,6 @@ const TestCasesTimeline = ({
 
     return grouped;
   }, [timelineEvents, groupBy]);
-
-  // Get status text
-  const getStatusText = (status) => {
-    switch (status) {
-      case 1: return 'Pass';
-      case 2: return 'Fail';
-      case 3: return 'Block';
-      case 4: return 'Draft';
-      case 5: return 'In Progress';
-      default: return 'Unknown';
-    }
-  };
-
-  // Get status icon
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 1: return <CheckCircle className="w-4 h-4" />;
-      case 2: return <XCircle className="w-4 h-4" />;
-      case 3: return <AlertCircle className="w-4 h-4" />;
-      case 4: return <FileText className="w-4 h-4" />;
-      case 5: return <Clock className="w-4 h-4" />;
-      default: return <FileText className="w-4 h-4" />;
-    }
-  };
-
-  // Get status color
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 1: return 'text-green-500';
-      case 2: return 'text-red-500';
-      case 3: return 'text-yellow-500';
-      case 4: return 'text-apple-gray-4';
-      case 5: return 'text-apple-blue';
-      default: return 'text-apple-gray-4';
-    }
-  };
 
   // Get priority badge variant
   const getPriorityBadgeVariant = (priority) => {
