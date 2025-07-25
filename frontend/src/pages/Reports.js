@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, PieChart, TrendingUp, Download, Filter, Calendar, Plus } from 'lucide-react';
+import { BarChart3, PieChart, TrendingUp, Download, Filter, Calendar, Plus, FileText, Clock, Eye, Trash2 } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -10,24 +10,35 @@ const Reports = () => {
     {
       id: 'coverage',
       name: 'Test Coverage Report',
-      description: 'Comprehensive test coverage analysis',
+      description: 'Comprehensive test coverage analysis with detailed metrics',
       icon: PieChart,
-      color: 'bg-blue-500',
+      color: 'bg-apple-blue',
+      dataElement: 'report-type-coverage'
     },
     {
       id: 'execution',
       name: 'Execution Summary',
-      description: 'Test execution results and trends',
+      description: 'Test execution results and performance trends',
       icon: BarChart3,
-      color: 'bg-green-500',
+      color: 'bg-success',
+      dataElement: 'report-type-execution'
     },
     {
       id: 'performance',
       name: 'Performance Metrics',
-      description: 'Test performance and efficiency metrics',
+      description: 'Test performance and efficiency analytics',
       icon: TrendingUp,
-      color: 'bg-purple-500',
+      color: 'bg-warning',
+      dataElement: 'report-type-performance'
     },
+    {
+      id: 'defects',
+      name: 'Defect Analysis',
+      description: 'Bug tracking and defect trend analysis',
+      icon: BarChart3,
+      color: 'bg-error',
+      dataElement: 'report-type-defects'
+    }
   ];
 
   const recentReports = [
@@ -38,6 +49,8 @@ const Reports = () => {
       generated: '2024-01-28',
       format: 'PDF',
       size: '2.1 MB',
+      status: 'completed',
+      dataElement: 'recent-report-1'
     },
     {
       id: 2,
@@ -46,6 +59,8 @@ const Reports = () => {
       generated: '2024-01-27',
       format: 'CSV',
       size: '0.8 MB',
+      status: 'completed',
+      dataElement: 'recent-report-2'
     },
     {
       id: 3,
@@ -54,14 +69,39 @@ const Reports = () => {
       generated: '2024-01-26',
       format: 'PDF',
       size: '1.5 MB',
+      status: 'completed',
+      dataElement: 'recent-report-3'
     },
+    {
+      id: 4,
+      name: 'API Testing - Defect Analysis',
+      type: 'Defects',
+      generated: '2024-01-25',
+      format: 'Excel',
+      size: '3.2 MB',
+      status: 'completed',
+      dataElement: 'recent-report-4'
+    }
   ];
 
   const handleCreateReport = () => {
     console.log('Create report clicked');
     // TODO: Open create report modal or navigate to create form
-    // For now, show a placeholder alert
-    alert('Create Report functionality will be implemented here');
+  };
+
+  const handleDownloadReport = (report) => {
+    console.log('Download report:', report);
+    // TODO: Implement download functionality
+  };
+
+  const handleViewReport = (report) => {
+    console.log('View report:', report);
+    // TODO: Open report viewer
+  };
+
+  const handleDeleteReport = (report) => {
+    console.log('Delete report:', report);
+    // TODO: Implement delete functionality
   };
 
   const handleLayoutSearch = (query) => {
@@ -74,202 +114,220 @@ const Reports = () => {
       breadcrumbs={[
         { label: 'Reports', href: '/reports' }
       ]}
-      actions={[
-        {
-          label: 'Create Report',
-          variant: 'primary',
-          icon: <Plus className="w-4 h-4" />,
-          onClick: () => handleCreateReport()
-        }
-      ]}
-      showSearch={false}
+      showSearch={true}
+      onSearch={handleLayoutSearch}
     >
       {/* Page Header */}
-      <div className="mb-6" data-element="reports-header">
+      <div className="mb-8" data-element="reports-header">
         <div className="flex items-center justify-between" data-element="reports-header-content">
           <div data-element="reports-title-section">
-            <h1 className="text-2xl font-sf-display font-semibold text-apple-gray-7" data-element="reports-title">
+            <h1 className="text-3xl font-sf-display font-semibold text-apple-gray-7" data-element="reports-title">
               Reports
             </h1>
-            <p className="text-apple-gray-5 mt-1" data-element="reports-subtitle">
+            <p className="text-apple-gray-5 mt-2" data-element="reports-subtitle">
               Generate and manage test reports and analytics
             </p>
+          </div>
+          <div className="flex items-center gap-3" data-element="reports-actions">
+            <Button
+              variant="primary"
+              onClick={handleCreateReport}
+              data-element="reports-create-button"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Report
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Report Types Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" data-element="reports-types-grid">
-        {reportTypes.map((report) => {
-          const Icon = report.icon;
-          return (
-            <Card key={report.id} elevation="md" className="cursor-pointer" data-element={`report-type-card-${report.id}`}>
-              <Card.Header>
-                <div className="flex items-center" data-element={`report-type-header-${report.id}`}>
-                  <div className={`p-3 rounded-full ${report.color}`} data-element={`report-type-icon-${report.id}`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="ml-4" data-element={`report-type-title-container-${report.id}`}>
-                    <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element={`report-type-title-${report.id}`}>
-                      {report.name}
-                    </h3>
+      <div className="mb-8" data-element="reports-types-section">
+        <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6" data-element="reports-types-title">
+          Report Types
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-element="reports-types-grid">
+          {reportTypes.map((type) => (
+            <Card
+              key={type.id}
+              elevation="sm"
+              hover="lift"
+              className="cursor-pointer"
+              onClick={() => handleCreateReport()}
+              data-element={type.dataElement}
+            >
+              <div className="p-6" data-element={`${type.dataElement}-content`}>
+                <div className="flex items-center justify-between mb-4" data-element={`${type.dataElement}-header`}>
+                  <div className={`p-3 rounded-apple-lg ${type.color} text-white`} data-element={`${type.dataElement}-icon`}>
+                    <type.icon className="w-6 h-6" />
                   </div>
                 </div>
-              </Card.Header>
-              <Card.Body>
-                <p className="text-sm text-apple-gray-5 mb-4" data-element={`report-type-description-${report.id}`}>
-                  {report.description}
+                <h3 className="text-lg font-sf font-semibold text-apple-gray-7 mb-2" data-element={`${type.dataElement}-name`}>
+                  {type.name}
+                </h3>
+                <p className="text-sm text-apple-gray-5" data-element={`${type.dataElement}-description`}>
+                  {type.description}
                 </p>
-                <Button 
-                  variant="primary" 
-                  className="w-full" 
-                  data-element={`report-type-generate-button-${report.id}`}
-                >
-                  Generate Report
-                </Button>
-              </Card.Body>
+              </div>
             </Card>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      {/* Report Filters */}
-      <Card elevation="sm" padding="lg" className="mb-8" data-element="reports-filters-card">
-        <Card.Header>
-          <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="reports-filters-title">
-            Report Filters
-          </h3>
-        </Card.Header>
-        <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-element="reports-filters-content">
-            <div data-element="reports-project-filter">
-              <label className="block text-sm font-medium text-apple-gray-7 mb-2" data-element="reports-project-label">
-                Project
-              </label>
-              <select 
-                className="w-full px-3 py-2 border border-apple-gray-3 rounded-apple focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue"
-                data-element="reports-project-select"
-              >
-                <option value="">All Projects</option>
-                <option value="ecommerce">E-commerce Platform</option>
-                <option value="mobile">Mobile Banking App</option>
-                <option value="crm">CRM System</option>
-              </select>
-            </div>
-            <div data-element="reports-date-filter">
-              <label className="block text-sm font-medium text-apple-gray-7 mb-2" data-element="reports-date-label">
-                Date Range
-              </label>
-              <div className="relative" data-element="reports-date-input-container">
-                <Calendar className="w-5 h-5 absolute left-3 top-3 text-apple-gray-4" />
-                <input
-                  type="date"
-                  className="w-full pl-10 pr-3 py-2 border border-apple-gray-3 rounded-apple focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue"
-                  data-element="reports-date-input"
-                />
-              </div>
-            </div>
-            <div data-element="reports-format-filter">
-              <label className="block text-sm font-medium text-apple-gray-7 mb-2" data-element="reports-format-label">
-                Format
-              </label>
-              <select 
-                className="w-full px-3 py-2 border border-apple-gray-3 rounded-apple focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue"
-                data-element="reports-format-select"
-              >
-                <option value="pdf">PDF</option>
-                <option value="csv">CSV</option>
-                <option value="json">JSON</option>
-                <option value="excel">Excel</option>
-              </select>
-            </div>
-          </div>
-        </Card.Body>
-      </Card>
-
       {/* Recent Reports */}
-      <Card elevation="sm" className="overflow-hidden" data-element="reports-table-card">
-        <Card.Header>
-          <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="reports-table-title">
+      <div data-element="reports-recent-section">
+        <div className="flex items-center justify-between mb-6" data-element="reports-recent-header">
+          <h2 className="text-xl font-sf font-semibold text-apple-gray-7" data-element="reports-recent-title">
             Recent Reports
-          </h3>
-        </Card.Header>
-        <Card.Body className="p-0">
-          <table className="min-w-full divide-y divide-apple-gray-2" data-element="reports-table">
-            <thead className="bg-apple-gray-1" data-element="reports-table-header">
-              <tr data-element="reports-table-header-row">
-                <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-6 uppercase tracking-wider" data-element="reports-table-header-name">
-                  Report Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-6 uppercase tracking-wider" data-element="reports-table-header-type">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-6 uppercase tracking-wider" data-element="reports-table-header-generated">
-                  Generated
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-6 uppercase tracking-wider" data-element="reports-table-header-format">
-                  Format
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-6 uppercase tracking-wider" data-element="reports-table-header-size">
-                  Size
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-6 uppercase tracking-wider" data-element="reports-table-header-actions">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-apple-gray-2" data-element="reports-table-body">
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => console.log('View all reports')}
+            data-element="reports-view-all"
+          >
+            View All
+          </Button>
+        </div>
+
+        <div className="space-y-4" data-element="reports-recent-list">
               {recentReports.map((report) => (
-                <tr key={report.id} className="hover:bg-apple-gray-1" data-element={`reports-table-row-${report.id}`}>
-                  <td className="px-6 py-4 whitespace-nowrap" data-element={`reports-table-name-${report.id}`}>
-                    <div className="text-sm font-medium text-apple-gray-7" data-element={`reports-table-name-text-${report.id}`}>
-                      {report.name}
+            <Card
+              key={report.id}
+              elevation="sm"
+              className="hover:shadow-apple-md transition-all duration-200"
+              data-element={report.dataElement}
+            >
+              <div className="p-6" data-element={`${report.dataElement}-content`}>
+                <div className="flex items-center justify-between" data-element={`${report.dataElement}-header`}>
+                  <div className="flex items-center space-x-4" data-element={`${report.dataElement}-info`}>
+                    <div className={`p-2 rounded-apple ${getReportTypeColor(report.type)} text-white`} data-element={`${report.dataElement}-type-icon`}>
+                      <FileText className="w-4 h-4" />
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-apple-gray-7" data-element={`reports-table-type-${report.id}`}>
+                    <div className="flex-1 min-w-0" data-element={`${report.dataElement}-details`}>
+                      <h3 className="text-lg font-sf font-semibold text-apple-gray-7 truncate" data-element={`${report.dataElement}-name`}>
+                        {report.name}
+                      </h3>
+                      <div className="flex items-center space-x-4 mt-1" data-element={`${report.dataElement}-meta`}>
+                        <span className="text-sm text-apple-gray-5" data-element={`${report.dataElement}-type`}>
                     {report.type}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-apple-gray-7" data-element={`reports-table-generated-${report.id}`}>
-                    {report.generated}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-apple-gray-7" data-element={`reports-table-format-${report.id}`}>
+                        </span>
+                        <span className="text-sm text-apple-gray-5" data-element={`${report.dataElement}-format`}>
                     {report.format}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-apple-gray-7" data-element={`reports-table-size-${report.id}`}>
+                        </span>
+                        <span className="text-sm text-apple-gray-5" data-element={`${report.dataElement}-size`}>
                     {report.size}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" data-element={`reports-table-actions-${report.id}`}>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2" data-element={`${report.dataElement}-actions`}>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      icon={<Download className="w-4 h-4" />}
-                      className="mr-2"
-                      data-element={`reports-table-download-${report.id}`}
-                    />
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="mr-2"
-                      data-element={`reports-table-view-${report.id}`}
+                      onClick={() => handleViewReport(report)}
+                      className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
+                      data-element={`${report.dataElement}-view`}
                     >
-                      View
+                      <Eye className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      data-element={`reports-table-delete-${report.id}`}
+                      onClick={() => handleDownloadReport(report)}
+                      className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
+                      data-element={`${report.dataElement}-download`}
                     >
-                      Delete
+                      <Download className="w-4 h-4" />
                     </Button>
-                  </td>
-                </tr>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDeleteReport(report)}
+                      className="h-8 w-8 p-0 text-apple-gray-5 hover:text-error hover:bg-error/10 transition-all duration-200"
+                      data-element={`${report.dataElement}-delete`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-apple-gray-2" data-element={`${report.dataElement}-footer`}>
+                  <div className="flex items-center space-x-4 text-xs text-apple-gray-4" data-element={`${report.dataElement}-metadata`}>
+                    <div className="flex items-center space-x-1" data-element={`${report.dataElement}-generated`}>
+                      <Calendar className="w-3 h-3" />
+                      <span>Generated {report.generated}</span>
+                    </div>
+                    <div className="flex items-center space-x-1" data-element={`${report.dataElement}-status`}>
+                      <div className={`w-2 h-2 rounded-full ${report.status === 'completed' ? 'bg-success' : 'bg-warning'}`}></div>
+                      <span className="capitalize">{report.status}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
               ))}
-            </tbody>
-          </table>
-        </Card.Body>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="mt-8" data-element="reports-stats-section">
+        <Card elevation="sm" data-element="reports-stats-card">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6" data-element="reports-stats-grid">
+            <div className="text-center" data-element="reports-stats-total">
+              <p className="text-2xl font-sf font-bold text-apple-gray-7" data-element="reports-stats-total-count">
+                {recentReports.length}
+              </p>
+              <p className="text-sm text-apple-gray-5" data-element="reports-stats-total-label">
+                Total Reports
+              </p>
+            </div>
+            <div className="text-center" data-element="reports-stats-this-week">
+              <p className="text-2xl font-sf font-bold text-success" data-element="reports-stats-this-week-count">
+                4
+              </p>
+              <p className="text-sm text-apple-gray-5" data-element="reports-stats-this-week-label">
+                This Week
+              </p>
+            </div>
+            <div className="text-center" data-element="reports-stats-pdf">
+              <p className="text-2xl font-sf font-bold text-apple-blue" data-element="reports-stats-pdf-count">
+                2
+              </p>
+              <p className="text-sm text-apple-gray-5" data-element="reports-stats-pdf-label">
+                PDF Reports
+              </p>
+            </div>
+            <div className="text-center" data-element="reports-stats-csv">
+              <p className="text-2xl font-sf font-bold text-warning" data-element="reports-stats-csv-count">
+                1
+              </p>
+              <p className="text-sm text-apple-gray-5" data-element="reports-stats-csv-label">
+                CSV Reports
+              </p>
+            </div>
+          </div>
       </Card>
+      </div>
     </Layout>
   );
+};
+
+// Helper function to get report type color
+const getReportTypeColor = (type) => {
+  switch (type.toLowerCase()) {
+    case 'coverage':
+      return 'bg-apple-blue';
+    case 'execution':
+      return 'bg-success';
+    case 'performance':
+      return 'bg-warning';
+    case 'defects':
+      return 'bg-error';
+    default:
+      return 'bg-apple-gray-4';
+  }
 };
 
 export default Reports;

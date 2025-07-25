@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query } = require('../services/database');
+const ActivityService = require('../services/ActivityService');
 
 // GET /api/testcases - Get all test cases
 router.get('/', async (req, res) => {
@@ -121,6 +122,14 @@ router.post('/', async (req, res) => {
     
     const result = await query(sql, params);
     
+    // Log activity
+    await ActivityService.logTestCaseActivity(
+      'test_case_create',
+      result.rows[0].id,
+      result.rows[0].title,
+      `Test case "${result.rows[0].title}" was created`
+    );
+    
     res.status(201).json({
       success: true,
       data: result.rows[0],
@@ -181,6 +190,14 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Test case not found' });
     }
     
+    // Log activity
+    await ActivityService.logTestCaseActivity(
+      'test_case_update',
+      result.rows[0].id,
+      result.rows[0].title,
+      `Test case "${result.rows[0].title}" was updated`
+    );
+    
     res.json({
       success: true,
       data: result.rows[0],
@@ -203,6 +220,14 @@ router.delete('/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Test case not found' });
     }
+    
+    // Log activity
+    await ActivityService.logTestCaseActivity(
+      'test_case_delete',
+      result.rows[0].id,
+      result.rows[0].title,
+      `Test case "${result.rows[0].title}" was deleted`
+    );
     
     res.json({
       success: true,

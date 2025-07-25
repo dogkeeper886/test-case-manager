@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const TestLinkImportService = require('../services/TestLinkImportService');
+const ActivityService = require('../services/ActivityService');
 
 const router = express.Router();
 
@@ -81,6 +82,19 @@ router.post('/testlink', upload.single('xmlFile'), async (req, res) => {
     } catch (cleanupError) {
       console.warn('Failed to cleanup uploaded file:', cleanupError);
     }
+
+    // Log activity
+    await ActivityService.logImportActivity(
+      'import_complete',
+      `TestLink XML import completed successfully. Imported ${result.importedTestSuites} test suites and ${result.importedTestCases} test cases.`,
+      {
+        fileName: req.file.originalname,
+        projectId: parseInt(projectId),
+        importedTestSuites: result.importedTestSuites,
+        importedTestCases: result.importedTestCases,
+        strategy: importStrategy
+      }
+    );
 
     res.status(201).json({
       message: 'Import completed successfully',
@@ -183,6 +197,19 @@ router.post('/testlink/content', async (req, res) => {
       importStrategy,
       documentId ? parseInt(documentId) : null,
       fileName || 'uploaded.xml'
+    );
+
+    // Log activity
+    await ActivityService.logImportActivity(
+      'import_complete',
+      `TestLink XML content import completed successfully. Imported ${result.importedTestSuites} test suites and ${result.importedTestCases} test cases.`,
+      {
+        fileName: fileName || 'uploaded.xml',
+        projectId: parseInt(projectId),
+        importedTestSuites: result.importedTestSuites,
+        importedTestCases: result.importedTestCases,
+        strategy: importStrategy
+      }
     );
 
     res.status(201).json({

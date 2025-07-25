@@ -17,6 +17,8 @@ import Import from './pages/Import';
 import Settings from './pages/Settings';
 import Reports from './pages/Reports';
 import ComponentTest from './pages/ComponentTest';
+import Activities from './pages/Activities';
+import ActivityDetail from './pages/ActivityDetail';
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,8 @@ function App() {
             <Route path="/testcases" element={<TestCases />} />
             <Route path="/testcases/:id" element={<TestCaseDetail />} />
             <Route path="/test-suites" element={<TestSuiteBrowser />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/activities/:id" element={<ActivityDetail />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/import" element={<Import />} />
             <Route path="/settings" element={<Settings />} />

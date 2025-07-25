@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query } = require('../services/database');
+const ActivityService = require('../services/ActivityService');
 
 // GET /api/projects - Get all projects
 router.get('/', async (req, res) => {
@@ -44,15 +45,23 @@ router.get('/:id', async (req, res) => {
 // POST /api/projects - Create a new project
 router.post('/', async (req, res) => {
   try {
-    const { name, description, status = 'active' } = req.body;
+    const { name, description } = req.body;
     
     const sql = `
-      INSERT INTO projects (name, description, status)
-      VALUES ($1, $2, $3)
+      INSERT INTO projects (name, description)
+      VALUES ($1, $2)
       RETURNING *
     `;
     
-    const result = await query(sql, [name, description, status]);
+    const result = await query(sql, [name, description]);
+    
+    // Log activity
+    await ActivityService.logProjectActivity(
+      'project_create',
+      result.rows[0].id,
+      result.rows[0].name,
+      `Project "${result.rows[0].name}" was created`
+    );
     
     res.status(201).json({
       success: true,
@@ -69,23 +78,30 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, status } = req.body;
+    const { name, description } = req.body;
     
     const sql = `
       UPDATE projects SET
         name = COALESCE($1, name),
         description = COALESCE($2, description),
-        status = COALESCE($3, status),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $4
+      WHERE id = $3
       RETURNING *
     `;
     
-    const result = await query(sql, [name, description, status, id]);
+    const result = await query(sql, [name, description, id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Project not found' });
     }
+    
+    // Log activity
+    await ActivityService.logProjectActivity(
+      'project_update',
+      result.rows[0].id,
+      result.rows[0].name,
+      `Project "${result.rows[0].name}" was updated`
+    );
     
     res.json({
       success: true,
@@ -109,6 +125,14 @@ router.delete('/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Project not found' });
     }
+    
+    // Log activity
+    await ActivityService.logProjectActivity(
+      'project_delete',
+      result.rows[0].id,
+      result.rows[0].name,
+      `Project "${result.rows[0].name}" was deleted`
+    );
     
     res.json({
       success: true,

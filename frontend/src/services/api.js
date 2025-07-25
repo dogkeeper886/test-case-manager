@@ -201,4 +201,26 @@ export const importAPI = {
   deleteImportLog: (importLogId) => api.delete(`/api/import/logs/${importLogId}`),
 };
 
+export const activitiesAPI = {
+  // Get recent activities
+  getRecent: (limit = 10, offset = 0) => api.get('/api/activities', { params: { limit, offset } }),
+  
+  // Get activity by ID
+  getById: (id) => api.get(`/api/activities/${id}`),
+  
+  // Get activity statistics
+  getStats: () => api.get('/api/activities/stats'),
+  
+  // Get activities by entity
+  getByEntity: (entityType, entityId, limit = 10, offset = 0) => 
+    api.get(`/api/activities/entity/${entityType}/${entityId}`, { params: { limit, offset } }),
+  
+  // Get activities by user
+  getByUser: (userId, limit = 10, offset = 0) => 
+    api.get(`/api/activities/user/${userId}`, { params: { limit, offset } }),
+  
+  // Log a new activity
+  log: (activityData) => api.post('/api/activities/log', activityData),
+};
+
 export default api; 

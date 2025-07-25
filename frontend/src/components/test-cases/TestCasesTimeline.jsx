@@ -291,24 +291,27 @@ const TestCasesTimeline = ({
                                 <Button
                                   variant="ghost"
                                   size="xs"
-                                  icon={<Eye className="w-3 h-3" />}
                                   onClick={() => onView(event.testCase)}
-                                  className="text-apple-gray-4 hover:text-apple-gray-6"
-                                />
+                                  className="h-6 w-6 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="xs"
-                                  icon={<Edit className="w-3 h-3" />}
                                   onClick={() => onEdit(event.testCase)}
-                                  className="text-apple-gray-4 hover:text-apple-gray-6"
-                                />
+                                  className="h-6 w-6 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="xs"
-                                  icon={<Trash2 className="w-3 h-3" />}
                                   onClick={() => onDelete(event.testCase)}
-                                  className="text-apple-gray-4 hover:text-red-500"
-                                />
+                                  className="h-6 w-6 p-0 text-apple-gray-5 hover:text-error hover:bg-error/10 transition-all duration-200"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
                               </div>
                             </div>
                           </div>

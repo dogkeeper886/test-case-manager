@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, MoreHorizontal, Eye, Edit, Trash2, CheckSquare, Square } from 'lucide-react';
+import { ChevronUp, ChevronDown, MoreHorizontal, Eye, Edit, Trash2, CheckSquare, Square, FileText } from 'lucide-react';
 import { Button, Badge } from '../ui';
 
 const TestCasesTable = ({ 
@@ -18,10 +18,10 @@ const TestCasesTable = ({
   const getStatusBadgeVariant = (status) => {
     switch (status) {
       case 1: return 'success'; // Pass
-      case 2: return 'danger';  // Fail
+      case 2: return 'error';  // Fail
       case 3: return 'warning'; // Block
-      case 4: return 'secondary'; // Draft
-      default: return 'secondary';
+      case 4: return 'default'; // Draft
+      default: return 'default';
     }
   };
 
@@ -37,10 +37,10 @@ const TestCasesTable = ({
 
   const getPriorityBadgeVariant = (priority) => {
     switch (priority) {
-      case 1: return 'danger';   // High
+      case 1: return 'error';   // High
       case 2: return 'warning';  // Medium
       case 3: return 'success';  // Low
-      default: return 'secondary';
+      default: return 'default';
     }
   };
 
@@ -92,21 +92,21 @@ const TestCasesTable = ({
   };
 
   return (
-    <div className="bg-white rounded-apple-lg shadow-apple-sm overflow-hidden">
+    <div className="bg-white rounded-apple-lg shadow-apple-sm overflow-hidden border border-apple-gray-2">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-apple-gray-1 border-b border-apple-gray-2">
+          <thead className="bg-apple-gray-1/80 border-b border-apple-gray-2">
             <tr>
               <th className="px-4 py-3 text-left">
                 <div className="flex items-center">
                   <button
                     onClick={handleSelectAll}
-                    className="mr-2 text-apple-gray-4 hover:text-apple-gray-6"
+                    className="flex items-center justify-center w-5 h-5 rounded border-2 border-apple-gray-3 hover:border-apple-blue transition-colors duration-200"
                   >
                     {selectedIds.length === testCases.length ? (
-                      <CheckSquare className="w-4 h-4" />
+                      <CheckSquare className="w-4 h-4 text-apple-blue" />
                     ) : (
-                      <Square className="w-4 h-4" />
+                      <Square className="w-4 h-4 text-apple-gray-5" />
                     )}
                   </button>
                 </div>
@@ -114,7 +114,7 @@ const TestCasesTable = ({
               <th className="px-4 py-3 text-left">
                 <button
                   onClick={() => handleSort('id')}
-                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9"
+                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9 transition-colors duration-200"
                 >
                   <span>ID</span>
                   <SortIcon field="id" />
@@ -123,7 +123,7 @@ const TestCasesTable = ({
               <th className="px-4 py-3 text-left">
                 <button
                   onClick={() => handleSort('title')}
-                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9"
+                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9 transition-colors duration-200"
                 >
                   <span>Title</span>
                   <SortIcon field="title" />
@@ -132,7 +132,7 @@ const TestCasesTable = ({
               <th className="px-4 py-3 text-left">
                 <button
                   onClick={() => handleSort('status')}
-                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9"
+                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9 transition-colors duration-200"
                 >
                   <span>Status</span>
                   <SortIcon field="status" />
@@ -141,7 +141,7 @@ const TestCasesTable = ({
               <th className="px-4 py-3 text-left">
                 <button
                   onClick={() => handleSort('priority')}
-                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9"
+                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9 transition-colors duration-200"
                 >
                   <span>Priority</span>
                   <SortIcon field="priority" />
@@ -150,7 +150,7 @@ const TestCasesTable = ({
               <th className="px-4 py-3 text-left">
                 <button
                   onClick={() => handleSort('project_name')}
-                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9"
+                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9 transition-colors duration-200"
                 >
                   <span>Project</span>
                   <SortIcon field="project_name" />
@@ -159,7 +159,7 @@ const TestCasesTable = ({
               <th className="px-4 py-3 text-left">
                 <button
                   onClick={() => handleSort('test_suite_name')}
-                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9"
+                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9 transition-colors duration-200"
                 >
                   <span>Test Suite</span>
                   <SortIcon field="test_suite_name" />
@@ -168,13 +168,13 @@ const TestCasesTable = ({
               <th className="px-4 py-3 text-left">
                 <button
                   onClick={() => handleSort('updated_at')}
-                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9"
+                  className="flex items-center space-x-1 font-sf font-semibold text-apple-gray-7 hover:text-apple-gray-9 transition-colors duration-200"
                 >
                   <span>Updated</span>
                   <SortIcon field="updated_at" />
                 </button>
               </th>
-              <th className="px-4 py-3 text-left w-16">
+              <th className="px-4 py-3 text-left w-20">
                 <span className="font-sf font-semibold text-apple-gray-7">Actions</span>
               </th>
             </tr>
@@ -183,21 +183,21 @@ const TestCasesTable = ({
             {testCases.map((testCase) => (
               <tr
                 key={testCase.id}
-                className={`border-b border-apple-gray-1 transition-colors duration-200 ${
+                className={`border-b border-apple-gray-1 transition-all duration-200 ${
                   hoveredRow === testCase.id ? 'bg-apple-gray-1/50' : ''
-                } ${selectedIds.includes(testCase.id) ? 'bg-apple-blue/5' : ''}`}
+                } ${selectedIds.includes(testCase.id) ? 'bg-apple-blue/5 border-apple-blue/20' : ''}`}
                 onMouseEnter={() => setHoveredRow(testCase.id)}
                 onMouseLeave={() => setHoveredRow(null)}
               >
                 <td className="px-4 py-3">
                   <button
                     onClick={() => handleSelect(testCase.id)}
-                    className="text-apple-gray-4 hover:text-apple-gray-6"
+                    className="flex items-center justify-center w-5 h-5 rounded border-2 border-apple-gray-3 hover:border-apple-blue transition-colors duration-200"
                   >
                     {selectedIds.includes(testCase.id) ? (
-                      <CheckSquare className="w-4 h-4" />
+                      <CheckSquare className="w-4 h-4 text-apple-blue" />
                     ) : (
-                      <Square className="w-4 h-4" />
+                      <Square className="w-4 h-4 text-apple-gray-5" />
                     )}
                   </button>
                 </td>
@@ -212,7 +212,7 @@ const TestCasesTable = ({
                       {testCase.title}
                     </h3>
                     {testCase.description && (
-                      <p className="text-xs text-apple-gray-4 line-clamp-1 mt-1">
+                      <p className="text-xs text-apple-gray-5 line-clamp-1 mt-1">
                         {testCase.description}
                       </p>
                     )}
@@ -245,7 +245,7 @@ const TestCasesTable = ({
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="font-sf text-sm text-apple-gray-4">
+                  <span className="font-sf text-sm text-apple-gray-5">
                     {new Date(testCase.updated_at).toLocaleDateString()}
                   </span>
                 </td>
@@ -254,24 +254,27 @@ const TestCasesTable = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      icon={<Eye className="w-3 h-3" />}
                       onClick={() => onView(testCase)}
-                      className="text-apple-gray-4 hover:text-apple-gray-6"
-                    />
+                      className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      icon={<Edit className="w-3 h-3" />}
                       onClick={() => onEdit(testCase)}
-                      className="text-apple-gray-4 hover:text-apple-gray-6"
-                    />
+                      className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      icon={<Trash2 className="w-3 h-3" />}
                       onClick={() => onDelete(testCase)}
-                      className="text-apple-gray-4 hover:text-apple-gray-6"
-                    />
+                      className="h-8 w-8 p-0 text-apple-gray-5 hover:text-error hover:bg-error/10 transition-all duration-200"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -281,8 +284,12 @@ const TestCasesTable = ({
       </div>
       
       {testCases.length === 0 && (
-        <div className="px-4 py-8 text-center">
-          <p className="text-apple-gray-4 font-sf">No test cases found</p>
+        <div className="px-4 py-12 text-center">
+          <div className="text-apple-gray-4 mb-2">
+            <FileText className="w-12 h-12 mx-auto" />
+          </div>
+          <p className="text-apple-gray-5 font-sf text-sm">No test cases found</p>
+          <p className="text-apple-gray-4 font-sf text-xs mt-1">Create your first test case to get started</p>
         </div>
       )}
     </div>
