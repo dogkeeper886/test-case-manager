@@ -24,7 +24,9 @@ import {
   BookOpen,
   Layers,
   Target,
-  AlertCircle
+  AlertCircle,
+  X,
+  Save
 } from 'lucide-react';
 import { Button, Card, Badge } from '../components/ui';
 import Layout from '../components/layout/Layout';
@@ -42,6 +44,7 @@ const TestCaseDetail = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [projects, setProjects] = useState([]);
   const [testSuites, setTestSuites] = useState([]);
+  const [formRef, setFormRef] = useState(null);
 
   useEffect(() => {
     fetchTestCase();
@@ -298,26 +301,46 @@ const TestCaseDetail = () => {
         { label: 'Test Cases', href: '/testcases' },
         { label: testCase.title, href: `/testcases/${testCase.id}` }
       ]}
-      actions={[
-        {
-          label: 'Edit',
-          variant: 'secondary',
-          icon: <Edit className="w-4 h-4" />,
-          onClick: handleEdit
-        },
-        {
-          label: 'Duplicate',
-          variant: 'secondary',
-          icon: <Copy className="w-4 h-4" />,
-          onClick: handleDuplicate
-        },
-        {
-          label: 'Delete',
-          variant: 'danger',
-          icon: <Trash2 className="w-4 h-4" />,
-          onClick: handleDelete
-        }
-      ]}
+      actions={
+        isEditMode ? [
+          {
+            label: 'Cancel',
+            variant: 'ghost',
+            icon: <X className="w-4 h-4" />,
+            onClick: handleCancelEdit
+          },
+          {
+            label: 'Save',
+            variant: 'primary',
+            icon: <Save className="w-4 h-4" />,
+            onClick: () => {
+              // Trigger save from the form
+              if (formRef && formRef.handleSave) {
+                formRef.handleSave();
+              }
+            }
+          }
+        ] : [
+          {
+            label: 'Edit',
+            variant: 'secondary',
+            icon: <Edit className="w-4 h-4" />,
+            onClick: handleEdit
+          },
+          {
+            label: 'Duplicate',
+            variant: 'secondary',
+            icon: <Copy className="w-4 h-4" />,
+            onClick: handleDuplicate
+          },
+          {
+            label: 'Delete',
+            variant: 'danger',
+            icon: <Trash2 className="w-4 h-4" />,
+            onClick: handleDelete
+          }
+        ]
+      }
       showSearch={false}
     >
       {/* Enhanced Header with Better Visual Hierarchy */}
@@ -423,6 +446,7 @@ const TestCaseDetail = () => {
       {/* Edit Form */}
       {isEditMode && (
         <TestCaseEditForm
+          ref={setFormRef}
           testCase={testCase}
           onSave={handleSaveEdit}
           onCancel={handleCancelEdit}
