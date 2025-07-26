@@ -29,15 +29,11 @@ const CustomQuillEditor = forwardRef(({
     onChangeRef.current = onChange;
   });
 
-  // Debounced onChange handler with content validation
+  // Debounced onChange handler
   const debouncedOnChange = useCallback((content) => {
     if (onChangeRef.current && content !== valueRef.current) {
-      // Validate content before triggering onChange
-      const isValidContent = content && content.trim() !== '';
-      if (isValidContent) {
-        valueRef.current = content;
-        onChangeRef.current(content);
-      }
+      valueRef.current = content;
+      onChangeRef.current(content);
     }
   }, []);
 
@@ -121,7 +117,6 @@ const CustomQuillEditor = forwardRef(({
       
       // Mark as typing
       isTypingRef.current = true;
-      console.log('🖊️ TEXT_CHANGE event:', { source, hasFocus: hasFocusRef.current, isTyping: isTypingRef.current });
       
       if (changeTimeoutRef.current) {
         clearTimeout(changeTimeoutRef.current);
@@ -129,20 +124,8 @@ const CustomQuillEditor = forwardRef(({
       
       changeTimeoutRef.current = setTimeout(() => {
         const html = quill.root.innerHTML;
-        
-        // Only trigger onChange if content has meaningful changes
-        const currentContent = valueRef.current || '';
-        const newContent = html || '';
-        
-        // Check if content actually changed (not just whitespace)
-        const hasMeaningfulChange = newContent.trim() !== currentContent.trim();
-        
-        if (hasMeaningfulChange) {
-          debouncedOnChange(html);
-        }
-        
+        debouncedOnChange(html);
         isTypingRef.current = false;
-        console.log('✅ Debounced onChange completed, isTyping set to false');
         
         // Restore focus after a short delay if we had focus
         if (hasFocusRef.current) {
@@ -151,23 +134,20 @@ const CustomQuillEditor = forwardRef(({
           }
           focusRestoreTimeoutRef.current = setTimeout(restoreFocus, 10);
         }
-      }, 300); // Increased to 300ms debounce to reduce frequency
+      }, 300); // 300ms debounce
     });
 
     // Handle focus events
     quill.on(Quill.events.FOCUS, () => {
       hasFocusRef.current = true;
       isTypingRef.current = false;
-      console.log('🎯 FOCUS event - hasFocus set to true');
     });
 
     quill.on(Quill.events.BLUR, () => {
       // Only mark as not focused if we're not currently typing
       if (!isTypingRef.current) {
         hasFocusRef.current = false;
-        console.log('👁️ BLUR event - hasFocus set to false (not typing)');
       } else {
-        console.log('⚠️ BLUR event - keeping focus (currently typing)');
         // Try to restore focus immediately
         setTimeout(restoreFocus, 0);
       }
@@ -196,16 +176,7 @@ const CustomQuillEditor = forwardRef(({
 
   // Update value when prop changes (only if not currently focused or typing)
   useEffect(() => {
-    console.log('🔄 Value update effect triggered:', { 
-      value: value?.substring(0, 50), 
-      currentValue: valueRef.current?.substring(0, 50),
-      hasFocus: hasFocusRef.current, 
-      isTyping: isTypingRef.current,
-      hasQuill: !!quillRef.current
-    });
-    
     if (quillRef.current && value !== valueRef.current && !hasFocusRef.current && !isTypingRef.current) {
-      console.log('✅ Updating Quill content (not focused, not typing)');
       isUpdatingRef.current = true;
       valueRef.current = value;
       
@@ -234,13 +205,7 @@ const CustomQuillEditor = forwardRef(({
       // Reset flag after a short delay
       setTimeout(() => {
         isUpdatingRef.current = false;
-        console.log('✅ Update completed, isUpdating set to false');
       }, 50);
-    } else if (quillRef.current && value !== valueRef.current) {
-      console.log('❌ Skipping update:', { 
-        hasFocus: hasFocusRef.current, 
-        isTyping: isTypingRef.current 
-      });
     }
   }, [value]);
 
