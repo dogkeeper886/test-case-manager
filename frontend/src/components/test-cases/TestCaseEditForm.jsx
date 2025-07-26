@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Save, 
   X, 
@@ -20,14 +20,12 @@ import {
 } from 'lucide-react';
 import { Button, Card, Badge, Input, RichTextEditor } from '../ui';
 
-const TestCaseEditForm = forwardRef(({
-  testCase,
-  onSave,
-  onCancel,
-  projects = [],
-  testSuites = [],
-  className = ''
-}, ref) => {
+const TestCaseEditForm = React.memo(({ 
+  testCase = null, 
+  onSave, 
+  onCancel, 
+  loading = false 
+}) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -42,14 +40,10 @@ const TestCaseEditForm = forwardRef(({
     version: '',
     steps: []
   });
-  const [loading, setLoading] = useState(false);
+  // Remove duplicate loading state - it's passed as prop
   const [errors, setErrors] = useState({});
 
-  // Expose handleSave function to parent component
-  useImperativeHandle(ref, () => ({
-    handleSave
-  }));
-
+  // Initialize form data when testCase changes
   useEffect(() => {
     if (testCase) {
       setFormData({
@@ -64,12 +58,13 @@ const TestCaseEditForm = forwardRef(({
         external_id: testCase.external_id || '',
         internal_id: testCase.internal_id || '',
         version: testCase.version || '',
-        steps: testCase.steps ? [...testCase.steps] : []
+        steps: testCase.steps || []
       });
+      setErrors({});
     }
   }, [testCase]);
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = useCallback((field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -82,9 +77,9 @@ const TestCaseEditForm = forwardRef(({
         [field]: null
       }));
     }
-  };
+  }, [errors]);
 
-  const handleStepChange = (index, field, value) => {
+  const handleStepChange = useCallback((index, field, value) => {
     const newSteps = [...formData.steps];
     newSteps[index] = {
       ...newSteps[index],
@@ -94,9 +89,9 @@ const TestCaseEditForm = forwardRef(({
       ...prev,
       steps: newSteps
     }));
-  };
+  }, [formData.steps]);
 
-  const addStep = () => {
+  const addStep = useCallback(() => {
     const newStep = {
       step_number: formData.steps.length + 1,
       action: '',
@@ -107,9 +102,9 @@ const TestCaseEditForm = forwardRef(({
       ...prev,
       steps: [...prev.steps, newStep]
     }));
-  };
+  }, [formData.steps.length]);
 
-  const removeStep = (index) => {
+  const removeStep = useCallback((index) => {
     const newSteps = formData.steps.filter((_, i) => i !== index);
     // Renumber steps
     const renumberedSteps = newSteps.map((step, i) => ({
@@ -120,9 +115,9 @@ const TestCaseEditForm = forwardRef(({
       ...prev,
       steps: renumberedSteps
     }));
-  };
+  }, [formData.steps]);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors = {};
 
     if (!formData.title.trim()) {
@@ -148,58 +143,78 @@ const TestCaseEditForm = forwardRef(({
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!validateForm()) {
       return;
     }
 
-    setLoading(true);
     try {
       await onSave(formData);
     } catch (error) {
       console.error('Error saving test case:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [formData, validateForm, onSave]);
 
-  const getPriorityText = (priority) => {
+  const getPriorityText = useCallback((priority) => {
     switch (priority) {
       case 1: return 'High';
       case 2: return 'Medium';
       case 3: return 'Low';
       default: return 'Medium';
     }
-  };
+  }, []);
 
-  const getImportanceText = (importance) => {
+  const getImportanceText = useCallback((importance) => {
     switch (importance) {
       case 1: return 'Low';
       case 2: return 'Medium';
       case 3: return 'High';
       default: return 'Medium';
     }
-  };
+  }, []);
 
-  const getPriorityBadgeVariant = (priority) => {
+  const getPriorityBadgeVariant = useCallback((priority) => {
     switch (priority) {
       case 1: return 'error';
       case 2: return 'warning';
       case 3: return 'success';
       default: return 'warning';
     }
-  };
+  }, []);
 
-  const getImportanceBadgeVariant = (importance) => {
+  const getImportanceBadgeVariant = useCallback((importance) => {
     switch (importance) {
       case 1: return 'default';
       case 2: return 'warning';
       case 3: return 'error';
       default: return 'warning';
     }
-  };
+  }, []);
+
+  const getExecutionTypeText = useCallback((executionType) => {
+    switch (executionType) {
+      case 1: return 'Manual';
+      case 2: return 'Automated';
+      default: return 'Manual';
+    }
+  }, []);
+
+  const handleSuiteSelect = useCallback((suiteId) => {
+    setFormData(prev => ({
+      ...prev,
+      test_suite_id: suiteId
+    }));
+  }, []);
+
+  const handleTestCaseSelect = useCallback((testCaseId) => {
+    // Handle test case selection if needed
+  }, []);
+
+  const handleLayoutSearch = useCallback((query) => {
+    // Handle layout search if needed
+  }, []);
 
   return (
     <div className={`space-y-8 ${className}`} data-element="test-case-edit-form">
@@ -248,7 +263,7 @@ const TestCaseEditForm = forwardRef(({
               size="sm"
               className="font-semibold"
             >
-              {formData.execution_type === 1 ? 'Manual' : 'Automated'}
+              {getExecutionTypeText(formData.execution_type)}
             </Badge>
           </div>
         </div>

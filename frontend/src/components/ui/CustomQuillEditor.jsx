@@ -20,6 +20,7 @@ const CustomQuillEditor = forwardRef(({
   const onChangeRef = useRef(onChange);
   const isUpdatingRef = useRef(false);
   const hasFocusRef = useRef(false);
+  const changeTimeoutRef = useRef(null);
 
   // Update refs when props change
   useLayoutEffect(() => {
@@ -99,12 +100,14 @@ const CustomQuillEditor = forwardRef(({
     }
 
     // Handle text changes with debouncing
-    let changeTimeout;
     quill.on(Quill.events.TEXT_CHANGE, () => {
       if (isUpdatingRef.current) return; // Skip if we're programmatically updating
       
-      clearTimeout(changeTimeout);
-      changeTimeout = setTimeout(() => {
+      if (changeTimeoutRef.current) {
+        clearTimeout(changeTimeoutRef.current);
+      }
+      
+      changeTimeoutRef.current = setTimeout(() => {
         const html = quill.root.innerHTML;
         debouncedOnChange(html);
       }, 100); // 100ms debounce
@@ -126,14 +129,16 @@ const CustomQuillEditor = forwardRef(({
 
     // Cleanup function
     return () => {
-      clearTimeout(changeTimeout);
+      if (changeTimeoutRef.current) {
+        clearTimeout(changeTimeoutRef.current);
+      }
       if (ref) {
         ref.current = null;
       }
       quillRef.current = null;
       container.innerHTML = '';
     };
-  }, [ref, readOnly, theme, placeholder, modules, formats, debouncedOnChange]);
+  }, [ref, readOnly, theme, placeholder, modules, formats]); // Removed debouncedOnChange from dependencies
 
   // Update value when prop changes (only if not currently focused)
   useEffect(() => {
