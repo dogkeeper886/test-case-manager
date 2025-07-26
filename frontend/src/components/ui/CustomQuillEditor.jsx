@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import React, { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
@@ -18,74 +18,43 @@ const CustomQuillEditor = forwardRef(({
   const quillRef = useRef(null);
   const valueRef = useRef(value);
   const onChangeRef = useRef(onChange);
-  const isUpdatingRef = useRef(false);
-  const hasFocusRef = useRef(false);
-  const changeTimeoutRef = useRef(null);
-  const isTypingRef = useRef(false);
-  const focusRestoreTimeoutRef = useRef(null);
 
   // Update refs when props change
   useLayoutEffect(() => {
     onChangeRef.current = onChange;
-  });
+  }, [onChange]);
 
-  // Debounced onChange handler
-  const debouncedOnChange = useCallback((content) => {
-    if (onChangeRef.current && content !== valueRef.current) {
-      valueRef.current = content;
-      onChangeRef.current(content);
-    }
-  }, []);
-
-  // Function to restore focus if needed
-  const restoreFocus = useCallback(() => {
-    if (quillRef.current && hasFocusRef.current && !quillRef.current.hasFocus()) {
-      console.log('🔧 Restoring focus to Quill editor');
-      quillRef.current.focus();
-    }
-  }, []);
-
-  useEffect(() => {
+  // Initialize Quill
+  useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Create editor container
-    const editorContainer = container.appendChild(
-      container.ownerDocument.createElement('div')
-    );
+    // Clear container
+    container.innerHTML = '';
 
-    // Default modules configuration
+    // Default modules and formats
     const defaultModules = {
       toolbar: [
         [{ 'header': [1, 2, 3, false] }],
         ['bold', 'italic', 'underline', 'strike'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
         [{ 'color': [] }, { 'background': [] }],
-        ['link', 'code-block'],
+        ['link', 'image'],
         ['clean']
-      ],
-      clipboard: {
-        matchVisual: false
-      }
+      ]
     };
 
-    // Merge with custom modules
-    const mergedModules = { ...defaultModules, ...modules };
-
-    // Default formats
     const defaultFormats = [
-      'header',
-      'bold', 'italic', 'underline', 'strike',
-      'list',
-      'color', 'background',
-      'link', 'code-block'
+      'header', 'bold', 'italic', 'underline', 'strike',
+      'list', 'bullet', 'color', 'background', 'link', 'image'
     ];
 
-    // Merge with custom formats
+    // Merge with provided modules and formats
+    const mergedModules = { ...defaultModules, ...modules };
     const mergedFormats = [...defaultFormats, ...formats];
 
-    // Initialize Quill
-    const quill = new Quill(editorContainer, {
+    // Create Quill instance
+    const quill = new Quill(container, {
       theme,
       readOnly,
       placeholder,
@@ -98,58 +67,18 @@ const CustomQuillEditor = forwardRef(({
 
     // Set initial value
     if (valueRef.current) {
-      // Handle HTML content
-      const isHTML = /^<([a-z]+)[^>]*>[\S\s]*<\/\1>$/.test(valueRef.current) || 
-                     valueRef.current.includes('<');
-      
-      if (isHTML) {
-        // Use delta-based update to preserve content structure
-        const delta = quill.clipboard.convert(valueRef.current);
-        quill.setContents(delta);
+      if (valueRef.current.includes('<')) {
+        quill.clipboard.dangerouslyPasteHTML(valueRef.current);
       } else {
         quill.setText(valueRef.current);
       }
     }
 
-    // Handle text changes with debouncing
+    // Handle text changes - only trigger onChange when user finishes typing
     quill.on(Quill.events.TEXT_CHANGE, (delta, oldDelta, source) => {
-      if (isUpdatingRef.current) return; // Skip if we're programmatically updating
-      
-      // Mark as typing
-      isTypingRef.current = true;
-      
-      if (changeTimeoutRef.current) {
-        clearTimeout(changeTimeoutRef.current);
-      }
-      
-      changeTimeoutRef.current = setTimeout(() => {
+      if (source === 'user' && onChangeRef.current) {
         const html = quill.root.innerHTML;
-        debouncedOnChange(html);
-        isTypingRef.current = false;
-        
-        // Restore focus after a short delay if we had focus
-        if (hasFocusRef.current) {
-          if (focusRestoreTimeoutRef.current) {
-            clearTimeout(focusRestoreTimeoutRef.current);
-          }
-          focusRestoreTimeoutRef.current = setTimeout(restoreFocus, 10);
-        }
-      }, 300); // 300ms debounce
-    });
-
-    // Handle focus events
-    quill.on(Quill.events.FOCUS, () => {
-      hasFocusRef.current = true;
-      isTypingRef.current = false;
-    });
-
-    quill.on(Quill.events.BLUR, () => {
-      // Only mark as not focused if we're not currently typing
-      if (!isTypingRef.current) {
-        hasFocusRef.current = false;
-      } else {
-        // Try to restore focus immediately
-        setTimeout(restoreFocus, 0);
+        onChangeRef.current(html);
       }
     });
 
@@ -160,52 +89,28 @@ const CustomQuillEditor = forwardRef(({
 
     // Cleanup function
     return () => {
-      if (changeTimeoutRef.current) {
-        clearTimeout(changeTimeoutRef.current);
-      }
-      if (focusRestoreTimeoutRef.current) {
-        clearTimeout(focusRestoreTimeoutRef.current);
-      }
       if (ref) {
         ref.current = null;
       }
       quillRef.current = null;
       container.innerHTML = '';
     };
-  }, [ref, readOnly, theme, placeholder, modules, formats, restoreFocus]); // Added restoreFocus to dependencies
+  }, [ref, readOnly, theme, placeholder, modules, formats]);
 
-  // Update value when prop changes (only if not currently focused or typing)
+  // Update value when prop changes
   useEffect(() => {
-    if (quillRef.current && value !== valueRef.current && !hasFocusRef.current && !isTypingRef.current) {
-      isUpdatingRef.current = true;
+    if (quillRef.current && value !== valueRef.current) {
       valueRef.current = value;
       
-      // Get current content
-      const currentContent = quillRef.current.root.innerHTML;
-      
-      // Only update if content is different
-      if (value !== currentContent) {
-        if (value) {
-          // Handle HTML content
-          const isHTML = /^<([a-z]+)[^>]*>[\S\s]*<\/\1>$/.test(value) || 
-                         value.includes('<');
-          
-          if (isHTML) {
-            // Use delta-based update to preserve content structure
-            const delta = quillRef.current.clipboard.convert(value);
-            quillRef.current.setContents(delta);
-          } else {
-            quillRef.current.setText(value);
-          }
+      if (value) {
+        if (value.includes('<')) {
+          quillRef.current.clipboard.dangerouslyPasteHTML(value);
         } else {
-          quillRef.current.setText('');
+          quillRef.current.setText(value);
         }
+      } else {
+        quillRef.current.setText('');
       }
-      
-      // Reset flag after a short delay
-      setTimeout(() => {
-        isUpdatingRef.current = false;
-      }, 50);
     }
   }, [value]);
 
