@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -44,7 +44,7 @@ const TestCaseDetail = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [projects, setProjects] = useState([]);
   const [testSuites, setTestSuites] = useState([]);
-  const [formRef, setFormRef] = useState(null);
+  const formRef = useRef(null);
 
   useEffect(() => {
     fetchTestCase();
@@ -315,8 +315,8 @@ const TestCaseDetail = () => {
             icon: <Save className="w-4 h-4" />,
             onClick: () => {
               // Trigger save from the form
-              if (formRef && formRef.handleSave) {
-                formRef.handleSave();
+              if (formRef.current && formRef.current.handleSave) {
+                formRef.current.handleSave();
               }
             }
           }
@@ -446,7 +446,7 @@ const TestCaseDetail = () => {
       {/* Edit Form */}
       {isEditMode && (
         <TestCaseEditForm
-          ref={setFormRef}
+          ref={formRef}
           testCase={testCase}
           onSave={handleSaveEdit}
           onCancel={handleCancelEdit}
