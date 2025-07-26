@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { 
   Save, 
   X, 
@@ -20,12 +20,15 @@ import {
 } from 'lucide-react';
 import { Button, Card, Badge, Input, RichTextEditor } from '../ui';
 
-const TestCaseEditForm = React.memo(({ 
+const TestCaseEditForm = React.memo(forwardRef(({ 
   testCase = null, 
   onSave, 
   onCancel, 
-  loading = false 
-}) => {
+  loading = false,
+  className = '',
+  projects = [],
+  testSuites = []
+}, ref) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -40,8 +43,12 @@ const TestCaseEditForm = React.memo(({
     version: '',
     steps: []
   });
-  // Remove duplicate loading state - it's passed as prop
   const [errors, setErrors] = useState({});
+
+  // Expose handleSave function to parent component
+  useImperativeHandle(ref, () => ({
+    handleSave
+  }));
 
   // Initialize form data when testCase changes
   useEffect(() => {
@@ -613,6 +620,6 @@ const TestCaseEditForm = React.memo(({
       </Card>
     </div>
   );
-});
+}));
 
 export default TestCaseEditForm; 
