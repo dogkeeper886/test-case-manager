@@ -46,7 +46,7 @@ const CustomQuillEditor = forwardRef(({
 
     const defaultFormats = [
       'header', 'bold', 'italic', 'underline', 'strike',
-      'list', 'bullet', 'color', 'background', 'link', 'image'
+      'list', 'color', 'background', 'link', 'image'
     ];
 
     // Merge with provided modules and formats
