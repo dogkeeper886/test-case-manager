@@ -29,11 +29,15 @@ const CustomQuillEditor = forwardRef(({
     onChangeRef.current = onChange;
   });
 
-  // Debounced onChange handler
+  // Debounced onChange handler with content validation
   const debouncedOnChange = useCallback((content) => {
     if (onChangeRef.current && content !== valueRef.current) {
-      valueRef.current = content;
-      onChangeRef.current(content);
+      // Validate content before triggering onChange
+      const isValidContent = content && content.trim() !== '';
+      if (isValidContent) {
+        valueRef.current = content;
+        onChangeRef.current(content);
+      }
     }
   }, []);
 
@@ -103,7 +107,9 @@ const CustomQuillEditor = forwardRef(({
                      valueRef.current.includes('<');
       
       if (isHTML) {
-        quill.clipboard.dangerouslyPasteHTML(valueRef.current);
+        // Use delta-based update to preserve content structure
+        const delta = quill.clipboard.convert(valueRef.current);
+        quill.setContents(delta);
       } else {
         quill.setText(valueRef.current);
       }
@@ -123,7 +129,18 @@ const CustomQuillEditor = forwardRef(({
       
       changeTimeoutRef.current = setTimeout(() => {
         const html = quill.root.innerHTML;
-        debouncedOnChange(html);
+        
+        // Only trigger onChange if content has meaningful changes
+        const currentContent = valueRef.current || '';
+        const newContent = html || '';
+        
+        // Check if content actually changed (not just whitespace)
+        const hasMeaningfulChange = newContent.trim() !== currentContent.trim();
+        
+        if (hasMeaningfulChange) {
+          debouncedOnChange(html);
+        }
+        
         isTypingRef.current = false;
         console.log('✅ Debounced onChange completed, isTyping set to false');
         
@@ -134,7 +151,7 @@ const CustomQuillEditor = forwardRef(({
           }
           focusRestoreTimeoutRef.current = setTimeout(restoreFocus, 10);
         }
-      }, 100); // 100ms debounce
+      }, 300); // Increased to 300ms debounce to reduce frequency
     });
 
     // Handle focus events
@@ -203,7 +220,9 @@ const CustomQuillEditor = forwardRef(({
                          value.includes('<');
           
           if (isHTML) {
-            quillRef.current.clipboard.dangerouslyPasteHTML(value);
+            // Use delta-based update to preserve content structure
+            const delta = quillRef.current.clipboard.convert(value);
+            quillRef.current.setContents(delta);
           } else {
             quillRef.current.setText(value);
           }
