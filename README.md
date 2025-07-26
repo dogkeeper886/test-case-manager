@@ -83,6 +83,50 @@ A comprehensive test case management system that generates test cases from desig
 - **Persistent Volumes** for database data storage
 - **Environment-based Configuration** for different deployment scenarios
 
+## 🎨 Design Guidelines
+
+### Core Design Principles
+
+1. **Element Identification**: Every element should be easily identifiable
+   - Clear visual hierarchy with proper contrast
+   - Consistent spacing and typography
+   - Meaningful labels and descriptive text
+   - Accessible color combinations
+   - Proper focus states for interactive elements
+
+2. **Apple Design Guidelines Compliance**: Design should fit Apple design guidelines
+   - Use Apple's Human Interface Guidelines as reference
+   - Implement SF Pro font stack and typography scale
+   - Follow Apple's color palette (grays, blues, accent colors)
+   - Apply 8px grid system for consistent spacing
+   - Use elevation system with proper shadows and depth
+   - Implement smooth animations and micro-interactions
+   - Ensure touch-friendly target sizes (minimum 44px)
+
+3. **Documentation Workflow**: Document todo before start, update todo after complete
+   - Create detailed todo lists before beginning any work
+   - Break down tasks into specific, actionable items
+   - Update progress as work is completed
+   - Document any deviations or changes from original plan
+   - Maintain clear status tracking for all tasks
+
+4. **Bug Management**: Document bug before fix, update bug after fix
+   - Create comprehensive bug reports with reproduction steps
+   - Document the root cause analysis
+   - Record the solution implemented
+   - Update bug status after resolution
+   - Document any workarounds or temporary fixes
+
+### Design System Components
+
+- **Typography**: SF Pro font stack with proper weight hierarchy
+- **Colors**: Apple-inspired palette with semantic color usage
+- **Spacing**: 8px grid system for consistent layout
+- **Shadows**: Elevation system with proper depth perception
+- **Animations**: Smooth transitions and micro-interactions
+- **Icons**: Lucide React icons (SF Symbols alternative)
+- **Interactive Elements**: Touch-friendly with proper feedback
+
 ## 📊 Current Data Statistics
 
 - **Total Test Cases**: 183 (with real data integration)

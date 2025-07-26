@@ -187,10 +187,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/testcases/:id - Update test case
+// PUT /api/testcases/:id - Update test case with steps
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const { steps, ...testCaseData } = req.body;
+    
+    // Update main test case fields
     const {
       test_suite_id,
       title,
@@ -204,7 +207,7 @@ router.put('/:id', async (req, res) => {
       active,
       status,
       estimated_duration
-    } = req.body;
+    } = testCaseData;
     
     const sql = `
       UPDATE test_cases SET
@@ -236,18 +239,91 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Test case not found' });
     }
     
+    // Update test steps if provided
+    if (steps && Array.isArray(steps)) {
+      try {
+        // Delete existing test steps for this test case
+        await query('DELETE FROM test_steps WHERE test_case_id = $1', [id]);
+        
+        // Insert updated test steps
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i];
+          const stepSql = `
+            INSERT INTO test_steps (
+              test_case_id, step_number, action, expected_result, execution_type
+            ) VALUES ($1, $2, $3, $4, $5)
+          `;
+          
+          await query(stepSql, [
+            id,
+            step.step_number || (i + 1),
+            step.actions || step.action || '',
+            step.expected_results || step.expected_result || '',
+            step.execution_type || 1
+          ]);
+        }
+      } catch (stepError) {
+        console.error('Error updating test steps:', stepError);
+        // Continue with the response even if step update fails
+        // The main test case was updated successfully
+      }
+    }
+    
+    // Get updated test case with steps
+    const updatedTestCaseSql = `
+      SELECT 
+        tc.*,
+        ts.name as test_suite_name,
+        p.name as project_name
+      FROM test_cases tc
+      LEFT JOIN test_suites ts ON tc.test_suite_id = ts.id
+      LEFT JOIN projects p ON ts.project_id = p.id
+      WHERE tc.id = $1
+    `;
+    
+    const updatedTestCaseResult = await query(updatedTestCaseSql, [id]);
+    const updatedTestCase = updatedTestCaseResult.rows[0];
+    
+    // Get test steps for this test case
+    const stepsSql = `
+      SELECT 
+        id, step_number, action, expected_result, execution_type
+      FROM test_steps 
+      WHERE test_case_id = $1 
+      ORDER BY step_number ASC
+    `;
+    
+    const stepsResult = await query(stepsSql, [id]);
+    
+    // Get custom fields for this test case
+    const customFieldsSql = `
+      SELECT 
+        id, field_name, field_value
+      FROM custom_fields 
+      WHERE test_case_id = $1
+    `;
+    
+    const customFieldsResult = await query(customFieldsSql, [id]);
+    
+    // Combine all data
+    const enrichedTestCase = {
+      ...updatedTestCase,
+      steps: stepsResult.rows,
+      custom_fields: customFieldsResult.rows
+    };
+    
     // Log activity
     await ActivityService.logTestCaseActivity(
       'test_case_update',
-      result.rows[0].id,
-      result.rows[0].title,
-      `Test case "${result.rows[0].title}" was updated`
+      enrichedTestCase.id,
+      enrichedTestCase.title,
+      `Test case "${enrichedTestCase.title}" was updated${steps && steps.length > 0 ? ' with test steps' : ''}`
     );
     
     res.json({
       success: true,
-      data: result.rows[0],
-      message: 'Test case updated successfully'
+      data: enrichedTestCase,
+      message: `Test case updated successfully${steps && steps.length > 0 ? ' with test steps' : ''}`
     });
   } catch (error) {
     console.error('Error updating test case:', error);

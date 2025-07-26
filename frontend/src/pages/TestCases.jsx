@@ -27,7 +27,9 @@ import {
   Monitor,
   Activity,
   CheckCircle,
-  XCircle
+  XCircle,
+  FileDown,
+  Trash
 } from 'lucide-react';
 import { Button, Badge, Card, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
@@ -240,7 +242,7 @@ const TestCases = () => {
   };
 
   const handleEditTestCase = (testCase) => {
-    navigate(`/testcases/${testCase.id}/edit`);
+    navigate(`/testcases/${testCase.id}`);
   };
 
   const handleUpdateTestCase = async (testCaseId, updates) => {
@@ -753,7 +755,9 @@ const TestCases = () => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    icon={<FileDown className="w-4 h-4" />}
                     onClick={() => handleBulkAction('export')}
+                    className="text-apple-gray-6 hover:text-apple-gray-7 hover:bg-apple-gray-1"
                     data-testid="bulk-export-button"
                   >
                     Export
@@ -761,8 +765,9 @@ const TestCases = () => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    icon={<Trash className="w-4 h-4" />}
                     onClick={() => handleBulkAction('delete')}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     data-testid="bulk-delete-button"
                   >
                     Delete
