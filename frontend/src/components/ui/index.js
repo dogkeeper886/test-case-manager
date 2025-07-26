@@ -5,4 +5,5 @@ export { default as Input } from './Input';
 export { default as VirtualList } from './VirtualList';
 export { default as PerformanceMonitor } from './PerformanceMonitor';
 export { default as PerformanceAnalytics } from './PerformanceAnalytics';
-export { default as HtmlEditor } from './HtmlEditor'; 
+export { default as HtmlEditor } from './HtmlEditor';
+export { default as RichTextEditor } from './RichTextEditor'; 

@@ -25,6 +25,43 @@ const HtmlEditor = ({
     onChange?.(newContent);
   };
 
+  // Auto-format common text patterns
+  const autoFormatText = (text) => {
+    // Auto-detect and format common patterns
+    let formattedText = text;
+    
+    // Auto-format URLs to links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    formattedText = formattedText.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    
+    // Auto-format email addresses
+    const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+    formattedText = formattedText.replace(emailRegex, '<a href="mailto:$1">$1</a>');
+    
+    // Auto-format line breaks for better readability
+    formattedText = formattedText.replace(/\n\n/g, '</p><p>');
+    formattedText = formattedText.replace(/\n/g, '<br>');
+    
+    // Wrap in paragraph tags if not already wrapped
+    if (!formattedText.startsWith('<')) {
+      formattedText = `<p>${formattedText}</p>`;
+    }
+    
+    return formattedText;
+  };
+
+  const handleTextareaChange = (e) => {
+    const newContent = e.target.value;
+    
+    // Only auto-format if user is typing plain text (not HTML)
+    if (!newContent.includes('<') || newContent.match(/^[^<]*$/)) {
+      const autoFormatted = autoFormatText(newContent);
+      handleContentChange(autoFormatted);
+    } else {
+      handleContentChange(newContent);
+    }
+  };
+
   const insertTag = (tag, attributes = '') => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -166,7 +203,7 @@ const HtmlEditor = ({
           <textarea
             ref={textareaRef}
             value={htmlContent}
-            onChange={(e) => handleContentChange(e.target.value)}
+            onChange={handleTextareaChange}
             placeholder={placeholder}
             className="w-full p-4 border border-apple-gray-2 rounded-apple font-sf text-sm text-apple-gray-7 bg-white resize-y focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue"
             style={{ minHeight: '120px', maxHeight }}
@@ -177,9 +214,9 @@ const HtmlEditor = ({
       </div>
 
       <div className="text-xs text-apple-gray-5">
-        <p>Use the toolbar above to format your content. You can also type HTML directly.</p>
+        <p>Use the toolbar above to format your content. The system will automatically handle formatting for you.</p>
         <p className="mt-1">
-          <strong>Tip:</strong> Select text and click a formatting button to wrap the selection.
+          <strong>Tip:</strong> Select text and click a formatting button to apply formatting.
         </p>
       </div>
     </div>

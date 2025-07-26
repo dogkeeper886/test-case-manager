@@ -397,12 +397,12 @@ const TestCases = () => {
     }
 
     switch (action) {
-      case 'edit':
-        // Handle single test case edit
+      case 'view':
+        // Handle single test case view
         if (selectedIds.length === 1) {
           const testCase = testCases.find(tc => tc.id === selectedIds[0]);
           if (testCase) {
-            handleEditTestCase(testCase);
+            handleViewTestCase(testCase);
           }
         }
         break;
@@ -739,17 +739,17 @@ const TestCases = () => {
                   {selectedIds.length} test case{selectedIds.length !== 1 ? 's' : ''} selected
                 </span>
                 <div className="flex items-center gap-2 ml-auto" data-testid="bulk-action-buttons">
-                  {/* Edit Button - Show only when single test case is selected */}
+                  {/* View Button - Show only when single test case is selected */}
                   {selectedIds.length === 1 && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      icon={<Edit className="w-4 h-4" />}
-                      onClick={() => handleBulkAction('edit')}
+                      icon={<Eye className="w-4 h-4" />}
+                      onClick={() => handleBulkAction('view')}
                       className="text-apple-blue hover:text-apple-blue/80 hover:bg-apple-blue/10"
-                      data-testid="bulk-edit-button"
+                      data-testid="bulk-view-button"
                     >
-                      Edit
+                      View
                     </Button>
                   )}
                   <Button

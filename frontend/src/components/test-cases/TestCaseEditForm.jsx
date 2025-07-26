@@ -18,7 +18,7 @@ import {
   AlertTriangle,
   Clock
 } from 'lucide-react';
-import { Button, Card, Badge, Input, HtmlEditor } from '../ui';
+import { Button, Card, Badge, Input, RichTextEditor } from '../ui';
 
 const TestCaseEditForm = forwardRef(({
   testCase,
@@ -286,16 +286,15 @@ const TestCaseEditForm = forwardRef(({
               />
             </div>
 
-            {/* Description Field - Enhanced HTML Editor */}
+            {/* Description Field - Enhanced Rich Text Editor */}
             <div data-element="test-case-description-field">
-              <HtmlEditor
+              <RichTextEditor
                 label="Test Case Summary"
                 value={formData.description}
                 onChange={(value) => handleInputChange('description', value)}
                 placeholder="Provide a comprehensive description of what this test case covers..."
                 maxHeight="200px"
                 showPreview={true}
-                showToolbar={true}
               />
               {errors.description && (
                 <p className="text-red-600 text-sm mt-2 flex items-center gap-1" data-element="test-case-description-error">
@@ -307,14 +306,13 @@ const TestCaseEditForm = forwardRef(({
 
             {/* Prerequisites Field */}
             <div data-element="test-case-prerequisites-field">
-              <HtmlEditor
+              <RichTextEditor
                 label="Prerequisites"
                 value={formData.prerequisites}
                 onChange={(value) => handleInputChange('prerequisites', value)}
                 placeholder="List any requirements or conditions that must be met before executing this test..."
                 maxHeight="150px"
                 showPreview={true}
-                showToolbar={true}
               />
             </div>
 
@@ -559,14 +557,13 @@ const TestCaseEditForm = forwardRef(({
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" data-element={`test-case-step-content-${index + 1}`}>
                     <div data-element={`test-case-step-action-${index + 1}`}>
-                      <HtmlEditor
+                      <RichTextEditor
                         label="Action"
                         value={step.action}
                         onChange={(value) => handleStepChange(index, 'action', value)}
                         placeholder="Describe the action to perform in this step..."
                         maxHeight="150px"
                         showPreview={true}
-                        showToolbar={true}
                       />
                       {errors[`step_${index}_action`] && (
                         <p className="text-red-600 text-sm mt-2 flex items-center gap-1" data-element={`test-case-step-action-error-${index + 1}`}>
@@ -577,14 +574,13 @@ const TestCaseEditForm = forwardRef(({
                     </div>
 
                     <div data-element={`test-case-step-expected-${index + 1}`}>
-                      <HtmlEditor
+                      <RichTextEditor
                         label="Expected Result"
                         value={step.expected_result}
                         onChange={(value) => handleStepChange(index, 'expected_result', value)}
                         placeholder="Describe what should happen when this step is executed..."
                         maxHeight="150px"
                         showPreview={true}
-                        showToolbar={true}
                       />
                       {errors[`step_${index}_expected`] && (
                         <p className="text-red-600 text-sm mt-2 flex items-center gap-1" data-element={`test-case-step-expected-error-${index + 1}`}>

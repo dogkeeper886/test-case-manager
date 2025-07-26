@@ -285,11 +285,63 @@ Following the README.md Apple-style design guidelines, this document outlines th
 
 ## Current Workarounds
 - **Edit Functionality**: Currently accessible through inline edit mode on detail page (`/testcases/:id`)
-- **Bulk Actions**: Edit button in bulk actions bar currently broken due to missing route
-- **Navigation**: Users can manually navigate to detail page and click edit button there
+- **Bulk Actions**: Edit button in bulk actions bar now works correctly - navigates to detail page
+- **Navigation**: Users can access edit functionality through detail page edit button
 
 ## Bug Fixes
 - ✅ **JSX Syntax Error**: Fixed conditional rendering structure in TestCaseDetail.jsx
 - ✅ **Build Failure**: Resolved compilation errors, application now builds successfully
 - ✅ **Phase 3 Features**: All edit functionality and HTML editor features now accessible
-- 🔴 **Missing Edit Route**: Navigation to `/testcases/:id/edit` fails - route not defined 
+- ✅ **Missing Edit Route**: Fixed navigation to use detail page instead of non-existent edit route
+
+## New Enhancement Requests
+
+### 1. Bulk Edit Button Text Change
+**Priority**: Medium
+**Status**: 🔄 PENDING
+- [ ] **Replace "Edit" with "View" in bulk actions bar**:
+  - [ ] Change button text from "Edit" to "View" for single selection
+  - [ ] Update button functionality to navigate to detail page
+  - [ ] Maintain existing styling and Apple design guidelines
+  - [ ] Update tooltips and accessibility labels
+  - [ ] Test navigation functionality
+
+**Rationale**: The button currently says "Edit" but navigates to the detail page where users can view and then choose to edit. "View" is more accurate.
+
+### 2. HTML Content Handling Enhancement ✅ COMPLETED
+**Priority**: High
+**Status**: ✅ COMPLETED
+- [x] **Improve HTML content handling in test case description field**:
+  - [x] **Remove HTML input instructions**: Don't tell users to input HTML
+  - [x] **Rich text editor**: Provide formatting buttons (bold, italic, lists, etc.)
+  - [x] **Preview functionality**: Show formatted content preview
+  - [x] **HTML sanitization**: Ensure security while allowing formatting
+  - [x] **User-friendly interface**: Make it intuitive for non-technical users
+
+**Rationale**: Users shouldn't need to know HTML to format their test case descriptions. The system should handle formatting automatically.
+
+**Implementation Completed**:
+1. **✅ Replaced HTML Editor with Rich Text Editor**:
+   - Installed and integrated React Quill WYSIWYG editor
+   - Removed HTML instruction text completely
+   - Provided intuitive formatting toolbar with common options
+   - Implemented preview mode for formatted content
+   - Applied Apple design guidelines to editor styling
+
+2. **✅ Enhanced User Experience**:
+   - Made formatting intuitive and visual with toolbar buttons
+   - Added help text: "No HTML knowledge required"
+   - Provided comprehensive formatting options (headers, bold, italic, lists, colors, links, code)
+   - Ensured mobile-friendly interface with responsive design
+
+3. **✅ Technical Improvements**:
+   - Implemented proper HTML sanitization through React Quill
+   - Added Apple-style custom CSS for consistent design
+   - Optimized performance with efficient rendering
+   - Ensured accessibility compliance with proper ARIA support
+
+**Files Modified**:
+- `frontend/src/components/ui/RichTextEditor.jsx` - New WYSIWYG editor component
+- `frontend/src/components/ui/index.js` - Added RichTextEditor export
+- `frontend/src/components/test-cases/TestCaseEditForm.jsx` - Replaced HtmlEditor with RichTextEditor
+- `package.json` - Added react-quill dependency 
