@@ -55,7 +55,7 @@ const CustomQuillEditor = forwardRef(({
     const defaultFormats = [
       'header',
       'bold', 'italic', 'underline', 'strike',
-      'list', 'bullet',
+      'list',
       'color', 'background',
       'link', 'code-block'
     ];
