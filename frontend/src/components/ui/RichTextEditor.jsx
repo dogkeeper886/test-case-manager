@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import CustomQuillEditor from './CustomQuillEditor';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from './index';
 
@@ -22,10 +21,9 @@ const RichTextEditor = ({
     setHtmlContent(value);
   }, [value]);
 
-  const handleContentChange = (content, delta, source, editor) => {
-    const html = editor.getHTML();
-    setHtmlContent(html);
-    onChange?.(html);
+  const handleContentChange = (content) => {
+    setHtmlContent(content);
+    onChange?.(content);
   };
 
   // Quill modules configuration
@@ -159,7 +157,7 @@ const RichTextEditor = ({
       <div className="space-y-3">
         {!isPreview && (
           <div className="rich-text-editor-container">
-            <ReactQuill
+            <CustomQuillEditor
               ref={quillRef}
               value={htmlContent}
               onChange={handleContentChange}
