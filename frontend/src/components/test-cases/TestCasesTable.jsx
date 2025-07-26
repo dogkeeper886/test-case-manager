@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronUp, ChevronDown, MoreHorizontal, CheckSquare, Square, FileText, CheckCircle, Minus } from 'lucide-react';
 import { Button, Badge } from '../ui';
+import { htmlToText, getHtmlPreview, containsHtml } from '../../utils/htmlToText';
 
 const TestCasesTable = ({ 
   testCases, 
@@ -252,8 +253,17 @@ const TestCasesTable = ({
                     {testCase.title}
                   </h3>
                   {testCase.description && (
-                    <p className="text-xs text-apple-gray-5 line-clamp-1 mt-1">
-                      {testCase.description}
+                    <p 
+                      className="text-xs text-apple-gray-5 line-clamp-1 mt-1"
+                      title={containsHtml(testCase.description) ? getHtmlPreview(testCase.description) : testCase.description}
+                      data-testid={`test-case-description-${testCase.id}`}
+                    >
+                      {containsHtml(testCase.description) 
+                        ? htmlToText(testCase.description, 80) 
+                        : testCase.description.length > 80 
+                          ? testCase.description.substring(0, 80) + '...' 
+                          : testCase.description
+                      }
                     </p>
                   )}
                 </div>

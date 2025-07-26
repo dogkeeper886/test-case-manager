@@ -4,4 +4,5 @@ export { default as Badge } from './Badge';
 export { default as Input } from './Input';
 export { default as VirtualList } from './VirtualList';
 export { default as PerformanceMonitor } from './PerformanceMonitor';
-export { default as PerformanceAnalytics } from './PerformanceAnalytics'; 
+export { default as PerformanceAnalytics } from './PerformanceAnalytics';
+export { default as HtmlEditor } from './HtmlEditor'; 

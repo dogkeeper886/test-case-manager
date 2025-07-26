@@ -361,6 +361,16 @@ const TestCases = () => {
     }
 
     switch (action) {
+      case 'edit':
+        // Handle single test case edit
+        if (selectedIds.length === 1) {
+          const testCase = testCases.find(tc => tc.id === selectedIds[0]);
+          if (testCase) {
+            handleEditTestCase(testCase);
+          }
+        }
+        break;
+        
       case 'delete':
         const confirmMessage = `Are you sure you want to delete ${selectedIds.length} test case${selectedIds.length > 1 ? 's' : ''}?\n\nThis action cannot be undone and will permanently remove all selected test cases.`;
         
@@ -693,6 +703,19 @@ const TestCases = () => {
                   {selectedIds.length} test case{selectedIds.length !== 1 ? 's' : ''} selected
                 </span>
                 <div className="flex items-center gap-2 ml-auto" data-testid="bulk-action-buttons">
+                  {/* Edit Button - Show only when single test case is selected */}
+                  {selectedIds.length === 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<Edit className="w-4 h-4" />}
+                      onClick={() => handleBulkAction('edit')}
+                      className="text-apple-blue hover:text-apple-blue/80 hover:bg-apple-blue/10"
+                      data-testid="bulk-edit-button"
+                    >
+                      Edit
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"

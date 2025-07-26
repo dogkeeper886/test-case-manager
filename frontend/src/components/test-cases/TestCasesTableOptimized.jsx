@@ -3,6 +3,7 @@ import { ChevronUp, ChevronDown, CheckSquare, Square, FileText, CheckCircle, Min
 import { Button, Badge } from '../ui';
 import VirtualList from '../ui/VirtualList';
 import FilterCache, { debounce, throttle, memoize } from '../../utils/filterCache';
+import { htmlToText, getHtmlPreview, containsHtml } from '../../utils/htmlToText';
 
 const TestCasesTableOptimized = ({
   testCases = [],
@@ -186,8 +187,17 @@ const TestCasesTableOptimized = ({
             {testCase.title}
           </div>
           {testCase.description && (
-            <div className="text-xs text-apple-gray-5 truncate mt-1">
-              {testCase.description}
+            <div 
+              className="text-xs text-apple-gray-5 truncate mt-1"
+              title={containsHtml(testCase.description) ? getHtmlPreview(testCase.description) : testCase.description}
+              data-testid={`test-case-description-optimized-${testCase.id}`}
+            >
+              {containsHtml(testCase.description) 
+                ? htmlToText(testCase.description, 80) 
+                : testCase.description.length > 80 
+                  ? testCase.description.substring(0, 80) + '...' 
+                  : testCase.description
+              }
             </div>
           )}
         </div>
