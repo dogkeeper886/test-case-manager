@@ -221,14 +221,7 @@ const RichTextEditor = memo(({
       </div>
 
       {showPreview && (
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-apple-gray-5">
-            <p>Use the toolbar above to format your content. No HTML knowledge required.</p>
-            <p className="mt-1">
-              <strong>Tip:</strong> Select text and use the formatting buttons to style your content.
-            </p>
-          </div>
-          
+        <div className="flex items-center justify-end">
           <Button
             variant="ghost"
             size="sm"

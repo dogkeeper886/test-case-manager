@@ -289,10 +289,10 @@ const TestCaseDetail = () => {
     );
   }
 
-  // Updated tab structure: Overview and Details
+  // Updated tab structure: Content and Meta Data
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: <FileText className="w-4 h-4" /> },
-    { id: 'details', label: 'Details', icon: <Info className="w-4 h-4" /> },
+    { id: 'overview', label: 'Content', icon: <FileText className="w-4 h-4" /> },
+    { id: 'details', label: 'Meta Data', icon: <Info className="w-4 h-4" /> },
   ];
 
   return (
