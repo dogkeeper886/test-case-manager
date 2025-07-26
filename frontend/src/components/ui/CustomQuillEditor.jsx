@@ -18,18 +18,26 @@ const CustomQuillEditor = forwardRef(({
   const quillRef = useRef(null);
   const valueRef = useRef(value);
   const onChangeRef = useRef(onChange);
+  const isInitializedRef = useRef(false);
+  const isUserTypingRef = useRef(false);
+  const lastCursorPositionRef = useRef(null);
 
   // Update refs when props change
   useLayoutEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  // Initialize Quill
+  // Initialize Quill - with empty dependency array to prevent re-initialization
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Clear container
+    // Prevent multiple initializations
+    if (isInitializedRef.current) {
+      return;
+    }
+
+    // Clear container completely
     container.innerHTML = '';
 
     // Default modules and formats
@@ -39,14 +47,14 @@ const CustomQuillEditor = forwardRef(({
         ['bold', 'italic', 'underline', 'strike'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
         [{ 'color': [] }, { 'background': [] }],
-        ['link', 'image'],
+        ['link', 'code-block'],
         ['clean']
       ]
     };
 
     const defaultFormats = [
       'header', 'bold', 'italic', 'underline', 'strike',
-      'list', 'color', 'background', 'link', 'image'
+      'list', 'color', 'background', 'link', 'code-block'
     ];
 
     // Merge with provided modules and formats
@@ -64,6 +72,7 @@ const CustomQuillEditor = forwardRef(({
 
     // Store Quill instance
     quillRef.current = quill;
+    isInitializedRef.current = true;
 
     // Set initial value
     if (valueRef.current) {
@@ -74,33 +83,71 @@ const CustomQuillEditor = forwardRef(({
       }
     }
 
-    // Handle text changes - only trigger onChange when user finishes typing
+    // Handle text changes with improved cursor position management
     quill.on(Quill.events.TEXT_CHANGE, (delta, oldDelta, source) => {
-      if (source === 'user' && onChangeRef.current) {
-        const html = quill.root.innerHTML;
-        onChangeRef.current(html);
+      if (source === 'user') {
+        isUserTypingRef.current = true;
+        
+        // Store cursor position before change
+        const range = quill.getSelection();
+        if (range) {
+          lastCursorPositionRef.current = range.index;
+        }
+        
+        // Trigger onChange with a small delay to ensure cursor position is stable
+        setTimeout(() => {
+          if (onChangeRef.current) {
+            const html = quill.root.innerHTML;
+            onChangeRef.current(html);
+          }
+          isUserTypingRef.current = false;
+        }, 10);
+      }
+    });
+
+    // Handle selection changes to track cursor position
+    quill.on(Quill.events.SELECTION_CHANGE, (range, oldRange, source) => {
+      if (source === 'user' && range) {
+        lastCursorPositionRef.current = range.index;
       }
     });
 
     // Expose Quill instance via ref
     if (ref) {
-      ref.current = quill;
+      if (typeof ref === 'function') {
+        ref(quill);
+      } else {
+        ref.current = quill;
+      }
     }
 
     // Cleanup function
     return () => {
-      if (ref) {
-        ref.current = null;
+      if (quillRef.current) {
+        // Remove all event listeners
+        quillRef.current.off('text-change');
+        quillRef.current.off('selection-change');
+        quillRef.current = null;
       }
-      quillRef.current = null;
-      container.innerHTML = '';
+      if (ref) {
+        if (typeof ref === 'function') {
+          ref(null);
+        } else {
+          ref.current = null;
+        }
+      }
+      isInitializedRef.current = false;
     };
-  }, [ref, readOnly, theme, placeholder, modules, formats]);
+  }, []); // Empty dependency array to prevent re-initialization
 
-  // Update value when prop changes
+  // Update value when prop changes - with cursor position preservation
   useEffect(() => {
-    if (quillRef.current && value !== valueRef.current) {
+    if (quillRef.current && value !== valueRef.current && !isUserTypingRef.current) {
       valueRef.current = value;
+      
+      // Store current cursor position
+      const currentRange = quillRef.current.getSelection();
+      const cursorPosition = currentRange ? currentRange.index : 0;
       
       if (value) {
         if (value.includes('<')) {
@@ -111,6 +158,19 @@ const CustomQuillEditor = forwardRef(({
       } else {
         quillRef.current.setText('');
       }
+      
+      // Restore cursor position after content update
+      if (currentRange) {
+        setTimeout(() => {
+          try {
+            quillRef.current.setSelection(cursorPosition, 0);
+          } catch (error) {
+            // If cursor position is invalid, set to end of content
+            const length = quillRef.current.getLength();
+            quillRef.current.setSelection(length - 1, 0);
+          }
+        }, 0);
+      }
     }
   }, [value]);
 
@@ -120,6 +180,13 @@ const CustomQuillEditor = forwardRef(({
       quillRef.current.enable(!readOnly);
     }
   }, [readOnly]);
+
+  // Update placeholder when prop changes
+  useEffect(() => {
+    if (quillRef.current) {
+      quillRef.current.root.setAttribute('data-placeholder', placeholder);
+    }
+  }, [placeholder]);
 
   return (
     <div 

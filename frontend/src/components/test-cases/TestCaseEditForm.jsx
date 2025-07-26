@@ -311,6 +311,7 @@ const TestCaseEditForm = React.memo(forwardRef(({
             {/* Description Field - Enhanced Rich Text Editor */}
             <div data-element="test-case-description-field">
               <RichTextEditor
+                key="test-case-description"
                 label="Test Case Summary"
                 value={formData.description}
                 onChange={(value) => handleInputChange('description', value)}
@@ -329,6 +330,7 @@ const TestCaseEditForm = React.memo(forwardRef(({
             {/* Prerequisites Field */}
             <div data-element="test-case-prerequisites-field">
               <RichTextEditor
+                key="test-case-prerequisites"
                 label="Prerequisites"
                 value={formData.prerequisites}
                 onChange={(value) => handleInputChange('prerequisites', value)}
@@ -580,6 +582,7 @@ const TestCaseEditForm = React.memo(forwardRef(({
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" data-element={`test-case-step-content-${index + 1}`}>
                     <div data-element={`test-case-step-action-${index + 1}`}>
                       <RichTextEditor
+                        key={`step-${index}-action`}
                         label="Action"
                         value={step.action}
                         onChange={(value) => handleStepChange(index, 'action', value)}
@@ -597,6 +600,7 @@ const TestCaseEditForm = React.memo(forwardRef(({
 
                     <div data-element={`test-case-step-expected-${index + 1}`}>
                       <RichTextEditor
+                        key={`step-${index}-expected`}
                         label="Expected Result"
                         value={step.expected_result}
                         onChange={(value) => handleStepChange(index, 'expected_result', value)}

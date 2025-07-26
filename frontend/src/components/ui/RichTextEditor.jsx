@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
 import CustomQuillEditor from './CustomQuillEditor';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from './index';
@@ -13,21 +13,48 @@ const RichTextEditor = memo(({
   maxHeight = '300px',
   readOnly = false
 }) => {
+  // Generate a stable key for the CustomQuillEditor
+  const editorKey = useMemo(() => `quill-${label || 'editor'}`, [label]);
   const [isPreview, setIsPreview] = useState(false);
   const [htmlContent, setHtmlContent] = useState(value);
+  const [isTyping, setIsTyping] = useState(false);
   const quillRef = useRef(null);
+  const debounceTimeoutRef = useRef(null);
 
   useEffect(() => {
-    setHtmlContent(value);
-  }, [value]);
+    // Only update content if not currently typing to prevent cursor position issues
+    if (!isTyping) {
+      setHtmlContent(value);
+    }
+  }, [value, isTyping]);
 
   const handleContentChange = useCallback((content) => {
+    setIsTyping(true);
     setHtmlContent(content);
-    onChange?.(content);
+    
+    // Clear existing timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    // Debounce the onChange callback to prevent rapid updates
+    debounceTimeoutRef.current = setTimeout(() => {
+      onChange?.(content);
+      setIsTyping(false);
+    }, 50); // 50ms debounce
   }, [onChange]);
 
-  // Quill modules configuration
-  const modules = {
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Quill modules configuration - memoized to prevent re-renders
+  const modules = useMemo(() => ({
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
@@ -38,17 +65,36 @@ const RichTextEditor = memo(({
     ],
     clipboard: {
       matchVisual: false
+    },
+    keyboard: {
+      bindings: {
+        // Ensure proper cursor behavior for common keys
+        'enter': {
+          key: 13,
+          handler: function(range, context) {
+            // Default enter behavior
+            return true;
+          }
+        },
+        'backspace': {
+          key: 8,
+          handler: function(range, context) {
+            // Default backspace behavior
+            return true;
+          }
+        }
+      }
     }
-  };
+  }), []);
 
-  // Quill formats configuration
-  const formats = [
+  // Quill formats configuration - memoized to prevent re-renders
+  const formats = useMemo(() => [
     'header',
     'bold', 'italic', 'underline', 'strike',
     'list',
     'color', 'background',
     'link', 'code-block'
-  ];
+  ], []);
 
   const renderPreview = () => {
     return (
@@ -158,6 +204,7 @@ const RichTextEditor = memo(({
         {!isPreview && (
           <div className="rich-text-editor-container">
             <CustomQuillEditor
+              key={editorKey}
               ref={quillRef}
               value={htmlContent}
               onChange={handleContentChange}
