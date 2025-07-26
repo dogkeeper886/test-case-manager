@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import CustomQuillEditor from './CustomQuillEditor';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from './index';
 
-const RichTextEditor = ({
+const RichTextEditor = memo(({
   value = '',
   onChange,
   placeholder = 'Enter content...',
@@ -21,10 +21,10 @@ const RichTextEditor = ({
     setHtmlContent(value);
   }, [value]);
 
-  const handleContentChange = (content) => {
+  const handleContentChange = useCallback((content) => {
     setHtmlContent(content);
     onChange?.(content);
-  };
+  }, [onChange]);
 
   // Quill modules configuration
   const modules = {
@@ -196,6 +196,8 @@ const RichTextEditor = ({
       )}
     </div>
   );
-};
+});
+
+RichTextEditor.displayName = 'RichTextEditor';
 
 export default RichTextEditor; 

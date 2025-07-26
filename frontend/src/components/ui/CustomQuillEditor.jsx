@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { forwardRef, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
@@ -18,11 +18,21 @@ const CustomQuillEditor = forwardRef(({
   const quillRef = useRef(null);
   const valueRef = useRef(value);
   const onChangeRef = useRef(onChange);
+  const isUpdatingRef = useRef(false);
+  const hasFocusRef = useRef(false);
 
   // Update refs when props change
   useLayoutEffect(() => {
     onChangeRef.current = onChange;
   });
+
+  // Debounced onChange handler
+  const debouncedOnChange = useCallback((content) => {
+    if (onChangeRef.current && content !== valueRef.current) {
+      valueRef.current = content;
+      onChangeRef.current(content);
+    }
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -88,14 +98,25 @@ const CustomQuillEditor = forwardRef(({
       }
     }
 
-    // Handle text changes
+    // Handle text changes with debouncing
+    let changeTimeout;
     quill.on(Quill.events.TEXT_CHANGE, () => {
-      const html = quill.root.innerHTML;
-      // Only trigger onChange if content actually changed
-      if (html !== valueRef.current) {
-        valueRef.current = html;
-        onChangeRef.current?.(html);
-      }
+      if (isUpdatingRef.current) return; // Skip if we're programmatically updating
+      
+      clearTimeout(changeTimeout);
+      changeTimeout = setTimeout(() => {
+        const html = quill.root.innerHTML;
+        debouncedOnChange(html);
+      }, 100); // 100ms debounce
+    });
+
+    // Handle focus events
+    quill.on(Quill.events.FOCUS, () => {
+      hasFocusRef.current = true;
+    });
+
+    quill.on(Quill.events.BLUR, () => {
+      hasFocusRef.current = false;
     });
 
     // Expose Quill instance via ref
@@ -105,17 +126,19 @@ const CustomQuillEditor = forwardRef(({
 
     // Cleanup function
     return () => {
+      clearTimeout(changeTimeout);
       if (ref) {
         ref.current = null;
       }
       quillRef.current = null;
       container.innerHTML = '';
     };
-  }, [ref, readOnly, theme, placeholder, modules, formats]);
+  }, [ref, readOnly, theme, placeholder, modules, formats, debouncedOnChange]);
 
-  // Update value when prop changes
+  // Update value when prop changes (only if not currently focused)
   useEffect(() => {
-    if (quillRef.current && value !== valueRef.current) {
+    if (quillRef.current && value !== valueRef.current && !hasFocusRef.current) {
+      isUpdatingRef.current = true;
       valueRef.current = value;
       
       // Get current content
@@ -137,6 +160,11 @@ const CustomQuillEditor = forwardRef(({
           quillRef.current.setText('');
         }
       }
+      
+      // Reset flag after a short delay
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 50);
     }
   }, [value]);
 
