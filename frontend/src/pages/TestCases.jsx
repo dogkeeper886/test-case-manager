@@ -243,6 +243,40 @@ const TestCases = () => {
     navigate(`/testcases/${testCase.id}/edit`);
   };
 
+  const handleUpdateTestCase = async (testCaseId, updates) => {
+    try {
+      // Show loading state
+      const loadingToastId = showWarning('Updating test case...', { autoClose: false });
+      
+      // Update the test case
+      await testCasesAPI.update(testCaseId, updates);
+      
+      // Dismiss loading toast and show success
+      dismissToast(loadingToastId);
+      showSuccess('Test case updated successfully');
+      
+      // Refresh data
+      await fetchData();
+      
+    } catch (err) {
+      console.error('Error updating test case:', err);
+      
+      // Show specific error message based on error type
+      let errorMessage = 'Failed to update test case. Please try again.';
+      
+      if (err.response?.status === 404) {
+        errorMessage = 'Test case not found. It may have been deleted.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'You do not have permission to update this test case.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      showError(errorMessage);
+      throw err; // Re-throw to let the inline edit component handle it
+    }
+  };
+
   const handleDeleteTestCase = async (testCase) => {
     // Enhanced confirmation dialog with more details
     const confirmMessage = `Are you sure you want to delete the test case "${testCase.title}"?\n\nThis action cannot be undone and will permanently remove:\n• Test case: ${testCase.title}\n• ID: ${testCase.id}\n• All associated data`;
@@ -774,6 +808,9 @@ const TestCases = () => {
                   sortBy={sortBy}
                   sortOrder={sortOrder}
                   onSort={handleSort}
+                  onUpdateTestCase={handleUpdateTestCase}
+                  projects={projects}
+                  testSuites={testSuites}
                   data-testid="test-cases-table"
                 />
               )

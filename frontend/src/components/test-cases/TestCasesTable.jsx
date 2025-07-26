@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, MoreHorizontal, CheckSquare, Square, FileText, CheckCircle, Minus } from 'lucide-react';
+import { ChevronUp, ChevronDown, MoreHorizontal, CheckSquare, Square, FileText, CheckCircle, Minus, Edit, X } from 'lucide-react';
 import { Button, Badge } from '../ui';
 import { htmlToText, getHtmlPreview, containsHtml } from '../../utils/htmlToText';
+import { InlineEditInput, InlineEditSelect, InlineEditTextarea, InlineEditBadge } from './index';
 
 const TestCasesTable = ({ 
   testCases, 
@@ -9,9 +10,13 @@ const TestCasesTable = ({
   selectedIds = [],
   sortBy = 'id',
   sortOrder = 'asc',
-  onSort
+  onSort,
+  onUpdateTestCase,
+  projects = [],
+  testSuites = []
 }) => {
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [editingTestCaseId, setEditingTestCaseId] = useState(null);
 
   // Select all functionality
   const isAllSelected = selectedIds.length === testCases.length && testCases.length > 0;
@@ -89,6 +94,51 @@ const TestCasesTable = ({
   const handleSelect = (id) => {
     onSelect(id);
   };
+
+  const handleStartEdit = (testCaseId) => {
+    setEditingTestCaseId(testCaseId);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTestCaseId(null);
+  };
+
+  const handleSaveEdit = async (field, value) => {
+    if (!onUpdateTestCase) return;
+    
+    try {
+      await onUpdateTestCase(editingTestCaseId, { [field]: value });
+      setEditingTestCaseId(null);
+    } catch (error) {
+      console.error('Failed to update test case:', error);
+      throw error;
+    }
+  };
+
+  const isEditing = (testCaseId) => editingTestCaseId === testCaseId;
+
+  const statusOptions = [
+    { value: 1, label: 'Pass', variant: 'success' },
+    { value: 2, label: 'Fail', variant: 'error' },
+    { value: 3, label: 'Block', variant: 'warning' },
+    { value: 4, label: 'Draft', variant: 'default' }
+  ];
+
+  const priorityOptions = [
+    { value: 1, label: 'High', variant: 'error' },
+    { value: 2, label: 'Medium', variant: 'warning' },
+    { value: 3, label: 'Low', variant: 'success' }
+  ];
+
+  const projectOptions = projects.map(project => ({
+    value: project.id,
+    label: project.name
+  }));
+
+  const testSuiteOptions = testSuites.map(suite => ({
+    value: suite.id,
+    label: suite.name
+  }));
 
   const SortIcon = ({ field }) => {
     if (sortBy !== field) return <ChevronUp className="w-4 h-4 text-apple-gray-4" />;
@@ -206,6 +256,10 @@ const TestCasesTable = ({
                 <SortIcon field="updated_at" />
               </button>
             </th>
+            {/* Actions Header */}
+            <th className="px-4 py-3 text-left" data-testid="actions-header">
+              <span className="font-sf font-semibold text-apple-gray-7">Actions</span>
+            </th>
 
           </tr>
         </thead>
@@ -249,9 +303,21 @@ const TestCasesTable = ({
               </td>
               <td className="px-4 py-3" data-testid={`test-case-title-${testCase.id}`}>
                 <div className="max-w-xs">
-                  <h3 className="font-sf font-semibold text-apple-gray-7 text-sm line-clamp-1">
-                    {testCase.title}
-                  </h3>
+                  {isEditing(testCase.id) ? (
+                    <InlineEditInput
+                      value={testCase.title}
+                      onSave={(value) => handleSaveEdit('title', value)}
+                      onCancel={handleCancelEdit}
+                      placeholder="Enter title..."
+                      required
+                      maxLength={255}
+                      dataTestId={`title-edit-${testCase.id}`}
+                    />
+                  ) : (
+                    <h3 className="font-sf font-semibold text-apple-gray-7 text-sm line-clamp-1">
+                      {testCase.title}
+                    </h3>
+                  )}
                   {testCase.description && (
                     <p 
                       className="text-xs text-apple-gray-5 line-clamp-1 mt-1"
@@ -269,37 +335,109 @@ const TestCasesTable = ({
                 </div>
               </td>
               <td className="px-4 py-3" data-testid={`test-case-status-${testCase.id}`}>
-                <Badge 
-                  variant={getStatusBadgeVariant(testCase.status)} 
-                  size="sm"
-                  data-testid={`status-badge-${testCase.id}`}
-                >
-                  {getStatusText(testCase.status)}
-                </Badge>
+                {isEditing(testCase.id) ? (
+                  <InlineEditBadge
+                    value={testCase.status}
+                    options={statusOptions}
+                    onSave={(value) => handleSaveEdit('status', value)}
+                    onCancel={handleCancelEdit}
+                    placeholder="Select status..."
+                    dataTestId={`status-edit-${testCase.id}`}
+                  />
+                ) : (
+                  <Badge 
+                    variant={getStatusBadgeVariant(testCase.status)} 
+                    size="sm"
+                    data-testid={`status-badge-${testCase.id}`}
+                  >
+                    {getStatusText(testCase.status)}
+                  </Badge>
+                )}
               </td>
               <td className="px-4 py-3" data-testid={`test-case-priority-${testCase.id}`}>
-                <Badge 
-                  variant={getPriorityBadgeVariant(testCase.priority)} 
-                  size="sm"
-                  data-testid={`priority-badge-${testCase.id}`}
-                >
-                  {getPriorityText(testCase.priority)}
-                </Badge>
+                {isEditing(testCase.id) ? (
+                  <InlineEditBadge
+                    value={testCase.priority}
+                    options={priorityOptions}
+                    onSave={(value) => handleSaveEdit('priority', value)}
+                    onCancel={handleCancelEdit}
+                    placeholder="Select priority..."
+                    dataTestId={`priority-edit-${testCase.id}`}
+                  />
+                ) : (
+                  <Badge 
+                    variant={getPriorityBadgeVariant(testCase.priority)} 
+                    size="sm"
+                    data-testid={`priority-badge-${testCase.id}`}
+                  >
+                    {getPriorityText(testCase.priority)}
+                  </Badge>
+                )}
               </td>
               <td className="px-4 py-3" data-testid={`test-case-project-${testCase.id}`}>
-                <span className="font-sf text-sm text-apple-gray-6">
-                  {testCase.project_name || 'Unknown'}
-                </span>
+                {isEditing(testCase.id) ? (
+                  <InlineEditSelect
+                    value={testCase.project_id}
+                    options={projectOptions}
+                    onSave={(value) => handleSaveEdit('project_id', value)}
+                    onCancel={handleCancelEdit}
+                    placeholder="Select project..."
+                    dataTestId={`project-edit-${testCase.id}`}
+                  />
+                ) : (
+                  <span className="font-sf text-sm text-apple-gray-6">
+                    {testCase.project_name || 'Unknown'}
+                  </span>
+                )}
               </td>
               <td className="px-4 py-3" data-testid={`test-case-suite-${testCase.id}`}>
-                <span className="font-sf text-sm text-apple-gray-6">
-                  {testCase.test_suite_name || 'No Suite'}
-                </span>
+                {isEditing(testCase.id) ? (
+                  <InlineEditSelect
+                    value={testCase.test_suite_id}
+                    options={testSuiteOptions}
+                    onSave={(value) => handleSaveEdit('test_suite_id', value)}
+                    onCancel={handleCancelEdit}
+                    placeholder="Select test suite..."
+                    dataTestId={`suite-edit-${testCase.id}`}
+                  />
+                ) : (
+                  <span className="font-sf text-sm text-apple-gray-6">
+                    {testCase.test_suite_name || 'No Suite'}
+                  </span>
+                )}
               </td>
               <td className="px-4 py-3" data-testid={`test-case-updated-${testCase.id}`}>
                 <span className="font-sf text-sm text-apple-gray-5">
                   {new Date(testCase.updated_at).toLocaleDateString()}
                 </span>
+              </td>
+              <td className="px-4 py-3" data-testid={`test-case-actions-${testCase.id}`}>
+                {isEditing(testCase.id) ? (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleCancelEdit()}
+                      className="p-1 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      data-testid={`cancel-edit-${testCase.id}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartEdit(testCase.id);
+                    }}
+                    className="p-1 h-8 w-8 text-apple-blue hover:text-apple-blue-dark hover:bg-apple-blue/10"
+                    data-testid={`edit-button-${testCase.id}`}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                )}
               </td>
 
             </tr>
