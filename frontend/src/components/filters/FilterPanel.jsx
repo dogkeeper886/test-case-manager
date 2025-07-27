@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, ChevronDown, X, Save, Bookmark } from 'lucide-react';
 import { Button, Card } from '../ui';
 import AdvancedSearch from './AdvancedSearch';
@@ -121,26 +120,37 @@ const FilterPanel = ({
   const activeFilters = getActiveFilters();
 
   return (
-    <Card elevation="sm" padding="lg" className={className}>
+    <Card 
+      elevation="sm" 
+      padding="lg" 
+      className={`bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 hover:shadow-apple-md hover:-translate-y-0.5 transition-all duration-200 ${className}`}
+      data-testid="advanced-filter-panel"
+    >
       {/* Filter Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-apple-gray-5" />
-          <h3 className="text-sm font-sf font-semibold text-apple-gray-7">Filters</h3>
+      <div className="flex items-center justify-between mb-6" data-testid="filter-panel-header">
+        <div className="flex items-center gap-3" data-testid="filter-panel-title">
+          <div className="w-8 h-8 bg-apple-blue/10 rounded-full flex items-center justify-center hover:bg-apple-blue/20 transition-colors duration-200" data-testid="filter-panel-icon">
+            <Filter className="w-4 h-4 text-apple-blue" />
+          </div>
+          <div>
+            <h3 className="text-lg font-sf font-bold text-apple-gray-7" data-testid="filter-panel-title-text">Advanced Filters</h3>
+            <p className="text-sm text-apple-gray-5" data-testid="filter-panel-subtitle">Refine your test case search</p>
+          </div>
           {activeFilters.length > 0 && (
-            <span className="px-2 py-1 text-xs font-sf font-medium bg-apple-blue/10 text-apple-blue rounded-full">
+            <div className="ml-3 px-3 py-1 bg-apple-blue/10 text-apple-blue rounded-full text-sm font-semibold hover:bg-apple-blue/20 transition-colors duration-200" data-testid="active-filters-count">
               {activeFilters.length}
-            </span>
+            </div>
           )}
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-testid="filter-panel-actions">
           {activeFilters.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onClearFilters}
-              className="text-xs text-apple-gray-5 hover:text-apple-gray-7"
+              className="text-sm text-apple-gray-5 hover:text-apple-gray-7 hover:bg-apple-gray-2 transition-all duration-200"
+              data-testid="clear-all-filters-button"
             >
               Clear All
             </Button>
@@ -149,9 +159,10 @@ const FilterPanel = ({
             variant="ghost"
             size="sm"
             onClick={() => setShowPresetManager(true)}
-            className="text-xs text-apple-gray-5 hover:text-apple-gray-7"
+            className="text-sm text-apple-gray-5 hover:text-apple-gray-7 hover:bg-apple-gray-2 transition-all duration-200"
+            data-testid="preset-manager-button"
           >
-            <Bookmark className="w-3 h-3 mr-1" />
+            <Bookmark className="w-4 h-4 mr-2" />
             Presets
           </Button>
         </div>
@@ -159,244 +170,276 @@ const FilterPanel = ({
 
       {/* Active Filter Chips */}
       {activeFilters.length > 0 && (
-        <div className="mb-4 p-3 bg-apple-gray-1/50 rounded-apple-lg">
-          <div className="flex flex-wrap gap-2">
-            <AnimatePresence>
-              {activeFilters.map((filter) => (
-                <FilterChip
-                  key={filter.type}
-                  label={filter.label}
-                  value={filter.value}
-                  variant={filter.variant}
-                  onRemove={() => handleRemoveFilter(filter.type, filter.value)}
-                />
-              ))}
-            </AnimatePresence>
+        <div className="mb-6 p-4 bg-apple-gray-1/50 rounded-apple-lg border border-apple-gray-2/50 hover:bg-apple-gray-1/70 transition-colors duration-200" data-testid="active-filters-section">
+          <div className="flex flex-wrap gap-2" data-testid="active-filters-chips">
+            {activeFilters.map((filter) => (
+              <FilterChip
+                key={filter.type}
+                label={filter.label}
+                value={filter.value}
+                variant={filter.variant}
+                onRemove={() => handleRemoveFilter(filter.type, filter.value)}
+                data-testid={`filter-chip-${filter.type}`}
+              />
+            ))}
           </div>
         </div>
       )}
 
       {/* Quick Presets */}
-      <div className="mb-4">
+      <div className="mb-6" data-testid="quick-presets-section">
         <QuickPresetSelector
           onPresetSelect={onApplyPreset}
+          data-testid="quick-preset-selector"
         />
       </div>
 
       {/* Filter Sections */}
-      <div className="space-y-4">
+      <div className="space-y-6" data-testid="filter-sections">
         {/* Search Section */}
-        <div>
+        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-sm hover:-translate-y-0.5 transition-all duration-200" data-testid="search-section">
           <button
             onClick={() => toggleSection('search')}
-            className="flex items-center justify-between w-full text-left"
+            className="flex items-center justify-between w-full text-left mb-3"
+            data-testid="search-section-toggle"
           >
-            <h4 className="text-sm font-sf font-medium text-apple-gray-7">Search</h4>
-            <ChevronDown className={`w-4 h-4 text-apple-gray-4 transition-transform ${expandedSections.search ? 'rotate-180' : ''}`} />
+            <div className="flex items-center gap-3" data-testid="search-section-header">
+              <div className="w-6 h-6 bg-apple-blue/10 rounded-full flex items-center justify-center" data-testid="search-section-icon">
+                <Filter className="w-3 h-3 text-apple-blue" />
+              </div>
+              <h4 className="text-base font-sf font-semibold text-apple-gray-7" data-testid="search-section-title">Search</h4>
+            </div>
+            <ChevronDown 
+              className={`w-4 h-4 text-apple-gray-4 transition-transform duration-200 ${expandedSections.search ? 'rotate-180' : ''}`} 
+              data-testid="search-section-chevron"
+            />
           </button>
           
-          <AnimatePresence>
-            {expandedSections.search && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="mt-3"
-              >
-                <AdvancedSearch
-                  onSearch={handleSearchChange}
-                  placeholder="Search test cases..."
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div 
+            className={`overflow-hidden transition-all duration-200 ease-out ${
+              expandedSections.search ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}
+            data-testid="search-section-content"
+          >
+            <div className="pt-2" data-testid="search-section-inner">
+              <AdvancedSearch
+                onSearch={handleSearchChange}
+                placeholder="Search test cases..."
+                data-testid="advanced-search-component"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Basic Filters Section */}
-        <div>
+        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-sm hover:-translate-y-0.5 transition-all duration-200" data-testid="basic-filters-section">
           <button
             onClick={() => toggleSection('basic')}
-            className="flex items-center justify-between w-full text-left"
+            className="flex items-center justify-between w-full text-left mb-3"
+            data-testid="basic-filters-toggle"
           >
-            <h4 className="text-sm font-sf font-medium text-apple-gray-7">Basic Filters</h4>
-            <ChevronDown className={`w-4 h-4 text-apple-gray-4 transition-transform ${expandedSections.basic ? 'rotate-180' : ''}`} />
+            <div className="flex items-center gap-3" data-testid="basic-filters-header">
+              <div className="w-6 h-6 bg-success/10 rounded-full flex items-center justify-center" data-testid="basic-filters-icon">
+                <Filter className="w-3 h-3 text-success" />
+              </div>
+              <h4 className="text-base font-sf font-semibold text-apple-gray-7" data-testid="basic-filters-title">Basic Filters</h4>
+            </div>
+            <ChevronDown 
+              className={`w-4 h-4 text-apple-gray-4 transition-transform duration-200 ${expandedSections.basic ? 'rotate-180' : ''}`} 
+              data-testid="basic-filters-chevron"
+            />
           </button>
           
-          <AnimatePresence>
-            {expandedSections.basic && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="mt-3 space-y-3"
-              >
-                {/* Project Filter */}
-                <div>
-                  <label className="block text-xs font-medium text-apple-gray-6 mb-1">
-                    Project
-                  </label>
-                  <select
-                    value={filters.project || ''}
-                    onChange={(e) => handleBasicFilterChange('project', e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50"
-                  >
-                    <option value="">All Projects</option>
-                    {projects.map(project => (
-                      <option key={project.id} value={project.name}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          <div 
+            className={`overflow-hidden transition-all duration-200 ease-out ${
+              expandedSections.basic ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}
+            data-testid="basic-filters-content"
+          >
+            <div className="pt-2 space-y-4" data-testid="basic-filters-inner">
+              {/* Project Filter */}
+              <div className="space-y-2" data-testid="project-filter-container">
+                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="project-filter-label">
+                  Project
+                </label>
+                <select
+                  value={filters.project || ''}
+                  onChange={(e) => handleBasicFilterChange('project', e.target.value)}
+                  className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white"
+                  data-testid="project-filter-select"
+                >
+                  <option value="">All Projects</option>
+                  {projects.map(project => (
+                    <option key={project.id} value={project.name} data-testid={`project-option-${project.id}`}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                {/* Test Suite Filter */}
-                <div>
-                  <label className="block text-xs font-medium text-apple-gray-6 mb-1">
-                    Test Suite
-                  </label>
-                  <select
-                    value={filters.suite || ''}
-                    onChange={(e) => handleBasicFilterChange('suite', e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50"
-                  >
-                    <option value="">All Test Suites</option>
-                    {testSuites.map(suite => (
-                      <option key={suite.id} value={suite.name}>
-                        {suite.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Test Suite Filter */}
+              <div className="space-y-2" data-testid="suite-filter-container">
+                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="suite-filter-label">
+                  Test Suite
+                </label>
+                <select
+                  value={filters.suite || ''}
+                  onChange={(e) => handleBasicFilterChange('suite', e.target.value)}
+                  className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white"
+                  data-testid="suite-filter-select"
+                >
+                  <option value="">All Test Suites</option>
+                  {testSuites.map(suite => (
+                    <option key={suite.id} value={suite.name} data-testid={`suite-option-${suite.id}`}>
+                      {suite.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                {/* Status Filter */}
-                <div>
-                  <label className="block text-xs font-medium text-apple-gray-6 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={filters.status || ''}
-                    onChange={(e) => handleBasicFilterChange('status', e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50"
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="1">Pass</option>
-                    <option value="2">Fail</option>
-                    <option value="3">Block</option>
-                    <option value="4">Draft</option>
-                    <option value="5">In Progress</option>
-                  </select>
-                </div>
+              {/* Status Filter */}
+              <div className="space-y-2" data-testid="status-filter-container">
+                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="status-filter-label">
+                  Status
+                </label>
+                <select
+                  value={filters.status || ''}
+                  onChange={(e) => handleBasicFilterChange('status', e.target.value)}
+                  className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white"
+                  data-testid="status-filter-select"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="1" data-testid="status-option-pass">Pass</option>
+                  <option value="2" data-testid="status-option-fail">Fail</option>
+                  <option value="3" data-testid="status-option-block">Block</option>
+                  <option value="4" data-testid="status-option-draft">Draft</option>
+                  <option value="5" data-testid="status-option-in-progress">In Progress</option>
+                </select>
+              </div>
 
-                {/* Priority Filter */}
-                <div>
-                  <label className="block text-xs font-medium text-apple-gray-6 mb-1">
-                    Priority
-                  </label>
-                  <select
-                    value={filters.priority || ''}
-                    onChange={(e) => handleBasicFilterChange('priority', e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50"
-                  >
-                    <option value="">All Priorities</option>
-                    <option value="1">High</option>
-                    <option value="2">Medium</option>
-                    <option value="3">Low</option>
-                  </select>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              {/* Priority Filter */}
+              <div className="space-y-2" data-testid="priority-filter-container">
+                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="priority-filter-label">
+                  Priority
+                </label>
+                <select
+                  value={filters.priority || ''}
+                  onChange={(e) => handleBasicFilterChange('priority', e.target.value)}
+                  className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white"
+                  data-testid="priority-filter-select"
+                >
+                  <option value="">All Priorities</option>
+                  <option value="1" data-testid="priority-option-high">High</option>
+                  <option value="2" data-testid="priority-option-medium">Medium</option>
+                  <option value="3" data-testid="priority-option-low">Low</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Date Filters Section */}
-        <div>
+        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-sm hover:-translate-y-0.5 transition-all duration-200" data-testid="date-filters-section">
           <button
             onClick={() => toggleSection('dates')}
-            className="flex items-center justify-between w-full text-left"
+            className="flex items-center justify-between w-full text-left mb-3"
+            data-testid="date-filters-toggle"
           >
-            <h4 className="text-sm font-sf font-medium text-apple-gray-7">Date Filters</h4>
-            <ChevronDown className={`w-4 h-4 text-apple-gray-4 transition-transform ${expandedSections.dates ? 'rotate-180' : ''}`} />
+            <div className="flex items-center gap-3" data-testid="date-filters-header">
+              <div className="w-6 h-6 bg-warning/10 rounded-full flex items-center justify-center" data-testid="date-filters-icon">
+                <Filter className="w-3 h-3 text-warning" />
+              </div>
+              <h4 className="text-base font-sf font-semibold text-apple-gray-7" data-testid="date-filters-title">Date Filters</h4>
+            </div>
+            <ChevronDown 
+              className={`w-4 h-4 text-apple-gray-4 transition-transform duration-200 ${expandedSections.dates ? 'rotate-180' : ''}`} 
+              data-testid="date-filters-chevron"
+            />
           </button>
           
-          <AnimatePresence>
-            {expandedSections.dates && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="mt-3 space-y-3"
-              >
-                {/* Created Date Filter */}
-                <div>
-                  <label className="block text-xs font-medium text-apple-gray-6 mb-1">
-                    Created Date
-                  </label>
-                  <DateRangePicker
-                    startDate={filters.dates?.created?.start}
-                    endDate={filters.dates?.created?.end}
-                    onDateChange={(start, end) => handleDateChange('created', start, end)}
-                    placeholder="Select created date range"
-                  />
-                </div>
+          <div 
+            className={`overflow-hidden transition-all duration-200 ease-out ${
+              expandedSections.dates ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}
+            data-testid="date-filters-content"
+          >
+            <div className="pt-2 space-y-4" data-testid="date-filters-inner">
+              {/* Created Date Filter */}
+              <div className="space-y-2" data-testid="created-date-filter-container">
+                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="created-date-filter-label">
+                  Created Date
+                </label>
+                <DateRangePicker
+                  startDate={filters.dates?.created?.start}
+                  endDate={filters.dates?.created?.end}
+                  onDateChange={(start, end) => handleDateChange('created', start, end)}
+                  placeholder="Select created date range"
+                  data-testid="created-date-picker"
+                />
+              </div>
 
-                {/* Updated Date Filter */}
-                <div>
-                  <label className="block text-xs font-medium text-apple-gray-6 mb-1">
-                    Updated Date
-                  </label>
-                  <DateRangePicker
-                    startDate={filters.dates?.updated?.start}
-                    endDate={filters.dates?.updated?.end}
-                    onDateChange={(start, end) => handleDateChange('updated', start, end)}
-                    placeholder="Select updated date range"
-                  />
-                </div>
+              {/* Updated Date Filter */}
+              <div className="space-y-2" data-testid="updated-date-filter-container">
+                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="updated-date-filter-label">
+                  Updated Date
+                </label>
+                <DateRangePicker
+                  startDate={filters.dates?.updated?.start}
+                  endDate={filters.dates?.updated?.end}
+                  onDateChange={(start, end) => handleDateChange('updated', start, end)}
+                  placeholder="Select updated date range"
+                  data-testid="updated-date-picker"
+                />
+              </div>
 
-                {/* Execution Date Filter */}
-                <div>
-                  <label className="block text-xs font-medium text-apple-gray-6 mb-1">
-                    Execution Date
-                  </label>
-                  <DateRangePicker
-                    startDate={filters.dates?.executed?.start}
-                    endDate={filters.dates?.executed?.end}
-                    onDateChange={(start, end) => handleDateChange('executed', start, end)}
-                    placeholder="Select execution date range"
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              {/* Execution Date Filter */}
+              <div className="space-y-2" data-testid="execution-date-filter-container">
+                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="execution-date-filter-label">
+                  Execution Date
+                </label>
+                <DateRangePicker
+                  startDate={filters.dates?.executed?.start}
+                  endDate={filters.dates?.executed?.end}
+                  onDateChange={(start, end) => handleDateChange('executed', start, end)}
+                  placeholder="Select execution date range"
+                  data-testid="execution-date-picker"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Advanced Filters Section */}
-        <div>
+        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-sm hover:-translate-y-0.5 transition-all duration-200" data-testid="advanced-filters-section">
           <button
             onClick={() => toggleSection('advanced')}
-            className="flex items-center justify-between w-full text-left"
+            className="flex items-center justify-between w-full text-left mb-3"
+            data-testid="advanced-filters-toggle"
           >
-            <h4 className="text-sm font-sf font-medium text-apple-gray-7">Advanced Filters</h4>
-            <ChevronDown className={`w-4 h-4 text-apple-gray-4 transition-transform ${expandedSections.advanced ? 'rotate-180' : ''}`} />
+            <div className="flex items-center gap-3" data-testid="advanced-filters-header">
+              <div className="w-6 h-6 bg-info/10 rounded-full flex items-center justify-center" data-testid="advanced-filters-icon">
+                <Filter className="w-3 h-3 text-info" />
+              </div>
+              <h4 className="text-base font-sf font-semibold text-apple-gray-7" data-testid="advanced-filters-title">Advanced Filters</h4>
+            </div>
+            <ChevronDown 
+              className={`w-4 h-4 text-apple-gray-4 transition-transform duration-200 ${expandedSections.advanced ? 'rotate-180' : ''}`} 
+              data-testid="advanced-filters-chevron"
+            />
           </button>
           
-          <AnimatePresence>
-            {expandedSections.advanced && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="mt-3 p-3 bg-apple-gray-1/30 rounded-apple-lg"
-              >
-                <p className="text-xs text-apple-gray-5">
-                  Advanced filters including custom fields, execution types, and more will be available here.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div 
+            className={`overflow-hidden transition-all duration-200 ease-out ${
+              expandedSections.advanced ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}
+            data-testid="advanced-filters-content"
+          >
+            <div className="pt-2 p-4 bg-apple-gray-1/30 rounded-apple-lg border border-apple-gray-2/50" data-testid="advanced-filters-inner">
+              <p className="text-sm text-apple-gray-5 font-sf" data-testid="advanced-filters-placeholder">
+                Advanced filters including custom fields, execution types, and more will be available here.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -409,6 +452,7 @@ const FilterPanel = ({
         onSavePreset={onSavePreset}
         onLoadPreset={onLoadPreset}
         onDeletePreset={onDeletePreset}
+        data-testid="filter-preset-manager"
       />
     </Card>
   );
