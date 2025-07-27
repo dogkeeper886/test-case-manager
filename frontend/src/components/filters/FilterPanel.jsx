@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Filter, ChevronDown, X, Save, Bookmark } from 'lucide-react';
 import { Button, Card } from '../ui';
 import AdvancedSearch from './AdvancedSearch';
@@ -18,7 +18,8 @@ const FilterPanel = ({
   savedPresets = [],
   projects = [],
   testSuites = [],
-  className = ''
+  className = '',
+  onClose
 }) => {
   const [expandedSections, setExpandedSections] = useState({
     search: true,
@@ -27,6 +28,50 @@ const FilterPanel = ({
     advanced: false
   });
   const [showPresetManager, setShowPresetManager] = useState(false);
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  const [showSuiteDropdown, setShowSuiteDropdown] = useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
+  
+  const panelRef = useRef(null);
+  const projectDropdownRef = useRef(null);
+  const suiteDropdownRef = useRef(null);
+  const statusDropdownRef = useRef(null);
+  const priorityDropdownRef = useRef(null);
+
+  // Handle click outside to close dropdowns and panel
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Close dropdowns
+      if (projectDropdownRef.current && !projectDropdownRef.current.contains(event.target)) {
+        setShowProjectDropdown(false);
+      }
+      if (suiteDropdownRef.current && !suiteDropdownRef.current.contains(event.target)) {
+        setShowSuiteDropdown(false);
+      }
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
+        setShowStatusDropdown(false);
+      }
+      if (priorityDropdownRef.current && !priorityDropdownRef.current.contains(event.target)) {
+        setShowPriorityDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Handle escape key to close panel
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' && onClose) {
+        handleClosePanel();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [onClose]);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -49,6 +94,14 @@ const FilterPanel = ({
 
   const handleRemoveFilter = (filterType, value) => {
     onFilterChange('remove', { filterType, value });
+  };
+
+  const handleClosePanel = () => {
+    if (onClose) {
+      // Trigger search before closing
+      onFilterChange('search', { query: '', field: 'all', operator: 'AND' });
+      onClose();
+    }
   };
 
   const getActiveFilters = () => {
@@ -119,12 +172,74 @@ const FilterPanel = ({
 
   const activeFilters = getActiveFilters();
 
+  // Custom Dropdown Component - Following test case table design patterns
+  const CustomDropdown = ({ 
+    label, 
+    value, 
+    options, 
+    onChange, 
+    placeholder = "Select option...",
+    isOpen,
+    onToggle,
+    dropdownRef,
+    dataTestId
+  }) => {
+    const selectedOption = options.find(option => option.value === value);
+    
+    return (
+      <div className="space-y-2" ref={dropdownRef}>
+        <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid={`${dataTestId}-label`}>
+          {label}
+        </label>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={onToggle}
+            className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white text-left flex items-center justify-between"
+            data-testid={`${dataTestId}-button`}
+          >
+            <span className={selectedOption ? 'text-apple-gray-7' : 'text-apple-gray-4'}>
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+            <ChevronDown 
+              className={`w-4 h-4 text-apple-gray-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+            />
+          </button>
+          
+          <div 
+            className={`absolute top-full left-0 right-0 mt-1 bg-white border border-apple-gray-2 rounded-apple-lg shadow-apple-lg z-50 transition-all duration-200 ${
+              isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
+            }`}
+            data-testid={`${dataTestId}-dropdown`}
+          >
+            {options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  onChange(option.value);
+                  onToggle();
+                }}
+                className={`w-full px-4 py-3 text-left text-sm font-sf hover:bg-apple-gray-1 first:rounded-t-apple-lg last:rounded-b-apple-lg transition-colors duration-200 ${
+                  value === option.value ? 'bg-apple-blue/10 text-apple-blue' : 'text-apple-gray-7'
+                }`}
+                data-testid={`${dataTestId}-option-${option.value}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Card 
       elevation="sm" 
       padding="lg" 
-      className={`bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 hover:shadow-apple-md hover:-translate-y-0.5 transition-all duration-200 ${className}`}
+      className={`bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 ${className}`}
       data-testid="advanced-filter-panel"
+      ref={panelRef}
     >
       {/* Filter Header */}
       <div className="flex items-center justify-between mb-6" data-testid="filter-panel-header">
@@ -137,7 +252,7 @@ const FilterPanel = ({
             <p className="text-sm text-apple-gray-5" data-testid="filter-panel-subtitle">Refine your test case search</p>
           </div>
           {activeFilters.length > 0 && (
-            <div className="ml-3 px-3 py-1 bg-apple-blue/10 text-apple-blue rounded-full text-sm font-semibold hover:bg-apple-blue/20 transition-colors duration-200" data-testid="active-filters-count">
+            <div className="ml-3 px-3 py-1 bg-apple-blue/10 text-apple-blue rounded-full text-sm font-semibold" data-testid="active-filters-count">
               {activeFilters.length}
             </div>
           )}
@@ -165,12 +280,23 @@ const FilterPanel = ({
             <Bookmark className="w-4 h-4 mr-2" />
             Presets
           </Button>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClosePanel}
+              className="text-sm text-apple-gray-5 hover:text-apple-gray-7 hover:bg-apple-gray-2 transition-all duration-200"
+              data-testid="close-filter-panel-button"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Active Filter Chips */}
       {activeFilters.length > 0 && (
-        <div className="mb-6 p-4 bg-apple-gray-1/50 rounded-apple-lg border border-apple-gray-2/50 hover:bg-apple-gray-1/70 transition-colors duration-200" data-testid="active-filters-section">
+        <div className="mb-6 p-4 bg-apple-gray-1/50 rounded-apple-lg border border-apple-gray-2/50" data-testid="active-filters-section">
           <div className="flex flex-wrap gap-2" data-testid="active-filters-chips">
             {activeFilters.map((filter) => (
               <FilterChip
@@ -194,10 +320,10 @@ const FilterPanel = ({
         />
       </div>
 
-      {/* Filter Sections */}
+      {/* Filter Sections - Following test case table design patterns */}
       <div className="space-y-6" data-testid="filter-sections">
         {/* Search Section */}
-        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-sm hover:-translate-y-0.5 transition-all duration-200" data-testid="search-section">
+        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4" data-testid="search-section">
           <button
             onClick={() => toggleSection('search')}
             className="flex items-center justify-between w-full text-left mb-3"
@@ -232,7 +358,7 @@ const FilterPanel = ({
         </div>
 
         {/* Basic Filters Section */}
-        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-sm hover:-translate-y-0.5 transition-all duration-200" data-testid="basic-filters-section">
+        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4" data-testid="basic-filters-section">
           <button
             onClick={() => toggleSection('basic')}
             className="flex items-center justify-between w-full text-left mb-3"
@@ -258,88 +384,80 @@ const FilterPanel = ({
           >
             <div className="pt-2 space-y-4" data-testid="basic-filters-inner">
               {/* Project Filter */}
-              <div className="space-y-2" data-testid="project-filter-container">
-                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="project-filter-label">
-                  Project
-                </label>
-                <select
-                  value={filters.project || ''}
-                  onChange={(e) => handleBasicFilterChange('project', e.target.value)}
-                  className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white"
-                  data-testid="project-filter-select"
-                >
-                  <option value="">All Projects</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.name} data-testid={`project-option-${project.id}`}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CustomDropdown
+                label="Project"
+                value={filters.project || ''}
+                options={[
+                  { value: '', label: 'All Projects' },
+                  ...projects.map(project => ({ value: project.name, label: project.name }))
+                ]}
+                onChange={(value) => handleBasicFilterChange('project', value)}
+                placeholder="Select project..."
+                isOpen={showProjectDropdown}
+                onToggle={() => setShowProjectDropdown(!showProjectDropdown)}
+                dropdownRef={projectDropdownRef}
+                dataTestId="project-filter"
+              />
 
               {/* Test Suite Filter */}
-              <div className="space-y-2" data-testid="suite-filter-container">
-                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="suite-filter-label">
-                  Test Suite
-                </label>
-                <select
-                  value={filters.suite || ''}
-                  onChange={(e) => handleBasicFilterChange('suite', e.target.value)}
-                  className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white"
-                  data-testid="suite-filter-select"
-                >
-                  <option value="">All Test Suites</option>
-                  {testSuites.map(suite => (
-                    <option key={suite.id} value={suite.name} data-testid={`suite-option-${suite.id}`}>
-                      {suite.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CustomDropdown
+                label="Test Suite"
+                value={filters.suite || ''}
+                options={[
+                  { value: '', label: 'All Test Suites' },
+                  ...testSuites.map(suite => ({ value: suite.name, label: suite.name }))
+                ]}
+                onChange={(value) => handleBasicFilterChange('suite', value)}
+                placeholder="Select test suite..."
+                isOpen={showSuiteDropdown}
+                onToggle={() => setShowSuiteDropdown(!showSuiteDropdown)}
+                dropdownRef={suiteDropdownRef}
+                dataTestId="suite-filter"
+              />
 
               {/* Status Filter */}
-              <div className="space-y-2" data-testid="status-filter-container">
-                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="status-filter-label">
-                  Status
-                </label>
-                <select
-                  value={filters.status || ''}
-                  onChange={(e) => handleBasicFilterChange('status', e.target.value)}
-                  className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white"
-                  data-testid="status-filter-select"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="1" data-testid="status-option-pass">Pass</option>
-                  <option value="2" data-testid="status-option-fail">Fail</option>
-                  <option value="3" data-testid="status-option-block">Block</option>
-                  <option value="4" data-testid="status-option-draft">Draft</option>
-                  <option value="5" data-testid="status-option-in-progress">In Progress</option>
-                </select>
-              </div>
+              <CustomDropdown
+                label="Status"
+                value={filters.status || ''}
+                options={[
+                  { value: '', label: 'All Statuses' },
+                  { value: '1', label: 'Pass' },
+                  { value: '2', label: 'Fail' },
+                  { value: '3', label: 'Block' },
+                  { value: '4', label: 'Draft' },
+                  { value: '5', label: 'In Progress' }
+                ]}
+                onChange={(value) => handleBasicFilterChange('status', value)}
+                placeholder="Select status..."
+                isOpen={showStatusDropdown}
+                onToggle={() => setShowStatusDropdown(!showStatusDropdown)}
+                dropdownRef={statusDropdownRef}
+                dataTestId="status-filter"
+              />
 
               {/* Priority Filter */}
-              <div className="space-y-2" data-testid="priority-filter-container">
-                <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="priority-filter-label">
-                  Priority
-                </label>
-                <select
-                  value={filters.priority || ''}
-                  onChange={(e) => handleBasicFilterChange('priority', e.target.value)}
-                  className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white"
-                  data-testid="priority-filter-select"
-                >
-                  <option value="">All Priorities</option>
-                  <option value="1" data-testid="priority-option-high">High</option>
-                  <option value="2" data-testid="priority-option-medium">Medium</option>
-                  <option value="3" data-testid="priority-option-low">Low</option>
-                </select>
-              </div>
+              <CustomDropdown
+                label="Priority"
+                value={filters.priority || ''}
+                options={[
+                  { value: '', label: 'All Priorities' },
+                  { value: '1', label: 'High' },
+                  { value: '2', label: 'Medium' },
+                  { value: '3', label: 'Low' }
+                ]}
+                onChange={(value) => handleBasicFilterChange('priority', value)}
+                placeholder="Select priority..."
+                isOpen={showPriorityDropdown}
+                onToggle={() => setShowPriorityDropdown(!showPriorityDropdown)}
+                dropdownRef={priorityDropdownRef}
+                dataTestId="priority-filter"
+              />
             </div>
           </div>
         </div>
 
         {/* Date Filters Section */}
-        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-sm hover:-translate-y-0.5 transition-all duration-200" data-testid="date-filters-section">
+        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4" data-testid="date-filters-section">
           <button
             onClick={() => toggleSection('dates')}
             className="flex items-center justify-between w-full text-left mb-3"
@@ -410,7 +528,7 @@ const FilterPanel = ({
         </div>
 
         {/* Advanced Filters Section */}
-        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-sm hover:-translate-y-0.5 transition-all duration-200" data-testid="advanced-filters-section">
+        <div className="bg-white border border-apple-gray-2 rounded-apple-lg p-4" data-testid="advanced-filters-section">
           <button
             onClick={() => toggleSection('advanced')}
             className="flex items-center justify-between w-full text-left mb-3"

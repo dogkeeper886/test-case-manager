@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Plus, 
@@ -70,6 +70,9 @@ const TestCases = () => {
   const [useOptimizedTable, setUseOptimizedTable] = useState(true);
   const [showBulkActions, setShowBulkActions] = useState(false);
 
+  // Refs for click outside functionality
+  const filterPanelRef = useRef(null);
+
   const { setTestCases: setStoreTestCases, setTestSuites: setStoreTestSuites } = useTestCaseStore();
   
   // Filter store
@@ -100,6 +103,18 @@ const TestCases = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle click outside to close filter panel
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showFilters && filterPanelRef.current && !filterPanelRef.current.contains(event.target)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showFilters]);
 
   const fetchData = async () => {
     try {
@@ -738,7 +753,7 @@ const TestCases = () => {
 
         {/* Advanced Filter Panel */}
         {showFilters && (
-          <div className="mb-6" data-testid="advanced-filter-panel">
+          <div className="mb-6" data-testid="advanced-filter-panel" ref={filterPanelRef}>
             <FilterPanel
               filters={{
                 search: { query: searchQuery, field: searchField, operator: searchOperator },
@@ -757,6 +772,7 @@ const TestCases = () => {
               savedPresets={savedPresets}
               projects={projects}
               testSuites={testSuites}
+              onClose={() => setShowFilters(false)}
               data-testid="filter-panel"
             />
           </div>
