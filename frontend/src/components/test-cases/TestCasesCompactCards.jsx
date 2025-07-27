@@ -1,13 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Edit, Trash2 } from 'lucide-react';
-import { Button, Badge } from '../ui';
+import { CheckSquare, Square } from 'lucide-react';
+import { Badge } from '../ui';
+import { htmlToText, getHtmlPreview, containsHtml } from '../../utils/htmlToText';
 
 const TestCasesCompactCards = ({ 
   testCases = [],
   onView, 
-  onEdit, 
-  onDelete,
   onSelect,
   selectedIds = [],
   className = ''
@@ -55,15 +54,43 @@ const TestCasesCompactCards = ({
       {testCases.map((testCase, index) => (
         <motion.div
           key={testCase.id}
-          className="group bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-md transition-all duration-200 cursor-pointer"
-          onClick={() => onView?.(testCase)}
+          className={`group bg-white border rounded-apple-lg p-4 hover:shadow-apple-md transition-all duration-200 cursor-pointer ${
+            selectedIds.includes(testCase.id) 
+              ? 'border-apple-blue bg-apple-blue/5 shadow-apple-md' 
+              : 'border-apple-gray-2 hover:border-apple-blue/50'
+          }`}
+          onClick={(e) => {
+            // Don't trigger card click if clicking on selection checkbox
+            if (e.target.closest('[data-testid*="select"]')) {
+              return;
+            }
+            onView?.(testCase);
+          }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
           whileHover={{ y: -2 }}
+          data-testid={`test-case-card-${testCase.id}`}
         >
           {/* Header */}
           <div className="flex items-start justify-between mb-3">
+            {/* Selection Checkbox */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect?.(testCase.id);
+              }}
+              className="flex items-center justify-center w-5 h-5 rounded border-2 border-apple-gray-3 hover:border-apple-blue transition-colors duration-200 mr-3 mt-1"
+              data-testid={`select-checkbox-${testCase.id}`}
+              aria-label={`Select test case ${testCase.id}`}
+            >
+              {selectedIds.includes(testCase.id) ? (
+                <CheckSquare className="w-4 h-4 text-apple-blue" />
+              ) : (
+                <Square className="w-4 h-4 text-apple-gray-5" />
+              )}
+            </button>
+            
             <div className="flex-1 min-w-0">
               <h3 className="font-sf font-semibold text-apple-gray-7 text-sm line-clamp-2 mb-1">
                 {testCase.title}
@@ -72,49 +99,21 @@ const TestCasesCompactCards = ({
                 #{testCase.id}
               </p>
             </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onView(testCase);
-                }}
-                className="h-7 w-7 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
-              >
-                <Eye className="w-3 h-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(testCase);
-                }}
-                className="h-7 w-7 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
-              >
-                <Edit className="w-3 h-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(testCase);
-                }}
-                className="h-7 w-7 p-0 text-apple-gray-5 hover:text-error hover:bg-error/10 transition-all duration-200"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </div>
           </div>
 
           {/* Description */}
           {testCase.description && (
-            <p className="text-xs text-apple-gray-5 line-clamp-2 mb-3">
-              {testCase.description}
+            <p 
+              className="text-xs text-apple-gray-5 line-clamp-2 mb-3"
+              title={containsHtml(testCase.description) ? getHtmlPreview(testCase.description) : testCase.description}
+              data-testid={`test-case-description-${testCase.id}`}
+            >
+              {containsHtml(testCase.description) 
+                ? htmlToText(testCase.description, 80) 
+                : testCase.description.length > 80 
+                  ? testCase.description.substring(0, 80) + '...' 
+                  : testCase.description
+              }
             </p>
           )}
 

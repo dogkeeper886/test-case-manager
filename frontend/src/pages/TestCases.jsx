@@ -568,7 +568,6 @@ const TestCases = () => {
     return (
       <Layout
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
           { label: 'Test Cases', href: '/testcases' }
         ]}
         showSearch={false}
@@ -592,7 +591,6 @@ const TestCases = () => {
     return (
       <Layout
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
           { label: 'Test Cases', href: '/testcases' }
         ]}
         showSearch={false}
@@ -618,7 +616,6 @@ const TestCases = () => {
   return (
     <Layout
       breadcrumbs={[
-        { label: 'Dashboard', href: '/' },
         { label: 'Test Cases', href: '/testcases' }
       ]}
       showSearch={false}
@@ -702,35 +699,41 @@ const TestCases = () => {
             )}
           </Button>
 
-          {/* Performance Toggle */}
-          <Button
-            variant="ghost"
-            onClick={() => setUseOptimizedTable(!useOptimizedTable)}
-            className="flex-shrink-0"
-            data-testid="table-optimization-toggle"
-          >
-            {useOptimizedTable ? 'Optimized' : 'Standard'} Table
-          </Button>
+          {/* Performance Toggle - Only show in table mode */}
+          {viewMode === 'table' && (
+            <Button
+              variant="ghost"
+              onClick={() => setUseOptimizedTable(!useOptimizedTable)}
+              className="flex-shrink-0"
+              data-testid="table-optimization-toggle"
+            >
+              {useOptimizedTable ? 'Optimized' : 'Standard'} Table
+            </Button>
+          )}
 
-          {/* Performance Monitor Toggle */}
-          <Button
-            variant="ghost"
-            onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
-            className="flex-shrink-0"
-            data-testid="performance-monitor-toggle"
-          >
-            Performance
-          </Button>
+          {/* Performance Monitor Toggle - Only show in table mode */}
+          {viewMode === 'table' && (
+            <Button
+              variant="ghost"
+              onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
+              className="flex-shrink-0"
+              data-testid="performance-monitor-toggle"
+            >
+              Performance
+            </Button>
+          )}
 
-          {/* Performance Analytics Toggle */}
-          <Button
-            variant="ghost"
-            onClick={() => setShowPerformanceAnalytics(!showPerformanceAnalytics)}
-            className="flex-shrink-0"
-            data-testid="performance-analytics-toggle"
-          >
-            Analytics
-          </Button>
+          {/* Performance Analytics Toggle - Only show in table mode */}
+          {viewMode === 'table' && (
+            <Button
+              variant="ghost"
+              onClick={() => setShowPerformanceAnalytics(!showPerformanceAnalytics)}
+              className="flex-shrink-0"
+              data-testid="performance-analytics-toggle"
+            >
+              Analytics
+            </Button>
+          )}
         </div>
 
         {/* Advanced Filter Panel */}
@@ -859,8 +862,8 @@ const TestCases = () => {
               <TestCasesCompactCards
                 testCases={sortedTestCases}
                 onView={handleViewTestCase}
-                onEdit={handleEditTestCase}
-                onDelete={handleDeleteTestCase}
+                onSelect={handleSelect}
+                selectedIds={selectedIds}
                 data-testid="test-cases-cards"
               />
             )}
@@ -872,6 +875,8 @@ const TestCases = () => {
                 onEdit={handleEditTestCase}
                 onDelete={handleDeleteTestCase}
                 onStatusChange={handleStatusChange}
+                onSelect={handleSelect}
+                selectedIds={selectedIds}
                 data-testid="test-cases-kanban"
               />
             )}
@@ -882,6 +887,8 @@ const TestCases = () => {
                 onView={handleViewTestCase}
                 onEdit={handleEditTestCase}
                 onDelete={handleDeleteTestCase}
+                onSelect={handleSelect}
+                selectedIds={selectedIds}
                 data-testid="test-cases-timeline"
               />
             )}

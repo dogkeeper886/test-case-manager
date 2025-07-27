@@ -10,7 +10,9 @@ import {
   XCircle,
   AlertCircle,
   FileText,
-  Play
+  Play,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { Button, Card, Badge } from '../ui';
 
@@ -19,6 +21,8 @@ const TestCasesTimeline = ({
   onView, 
   onEdit, 
   onDelete,
+  onSelect,
+  selectedIds = [],
   className = '' 
 }) => {
   const [groupBy, setGroupBy] = useState('date'); // 'date', 'project', 'suite'
@@ -232,14 +236,17 @@ const TestCasesTimeline = ({
                     <Card 
                       elevation="sm" 
                       padding="md" 
-                      className="hover:shadow-apple-md transition-shadow cursor-pointer"
+                      className={`hover:shadow-apple-md transition-shadow cursor-pointer ${
+                        selectedIds.includes(event.testCase.id) ? 'ring-2 ring-apple-blue bg-apple-blue/5' : ''
+                      }`}
                       onClick={(e) => {
-                        // Don't trigger card click if clicking on action buttons
+                        // Don't trigger card click if clicking on action buttons or selection checkbox
                         if (e.target.closest('button')) {
                           return;
                         }
                         onView(event.testCase);
                       }}
+                      data-testid={`test-case-timeline-card-${event.testCase.id}`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3 flex-1">
@@ -251,6 +258,23 @@ const TestCasesTimeline = ({
                           {/* Event Content */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
+                              {/* Selection Checkbox */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSelect?.(event.testCase.id);
+                                }}
+                                className="flex items-center justify-center w-4 h-4 rounded border-2 border-apple-gray-3 hover:border-apple-blue transition-colors duration-200"
+                                data-testid={`select-checkbox-${event.testCase.id}`}
+                                aria-label={`Select test case ${event.testCase.id}`}
+                              >
+                                {selectedIds.includes(event.testCase.id) ? (
+                                  <CheckSquare className="w-3 h-3 text-apple-blue" />
+                                ) : (
+                                  <Square className="w-3 h-3 text-apple-gray-5" />
+                                )}
+                              </button>
+                              
                               <h5 className="font-sf font-medium text-apple-gray-7">{event.title}</h5>
                               <Badge variant={getPriorityBadgeVariant(event.testCase.priority)} size="xs">
                                 {getPriorityText(event.testCase.priority)}

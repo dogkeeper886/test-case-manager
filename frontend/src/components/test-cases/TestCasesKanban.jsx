@@ -10,9 +10,12 @@ import {
   XCircle,
   Clock,
   AlertCircle,
-  FileText
+  FileText,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { Button, Card, Badge } from '../ui';
+import { htmlToText, getHtmlPreview, containsHtml } from '../../utils/htmlToText';
 
 const TestCasesKanban = ({ 
   testCases, 
@@ -20,6 +23,8 @@ const TestCasesKanban = ({
   onEdit, 
   onDelete,
   onStatusChange,
+  onSelect,
+  selectedIds = [],
   className = '' 
 }) => {
   const [draggedItem, setDraggedItem] = useState(null);
@@ -200,20 +205,39 @@ const TestCasesKanban = ({
                       hover:shadow-apple-md hover:-translate-y-1
                       transition-all duration-200
                       ${draggedItem?.id === testCase.id ? 'opacity-50' : ''}
+                      ${selectedIds.includes(testCase.id) ? 'ring-2 ring-apple-blue bg-apple-blue/5' : ''}
                     `}
                     draggable
                     onDragStart={(e) => handleDragStart(e, testCase)}
                     onDragEnd={handleDragEnd}
                     onClick={(e) => {
-                      // Don't trigger card click if clicking on action buttons
+                      // Don't trigger card click if clicking on action buttons or selection checkbox
                       if (e.target.closest('button')) {
                         return;
                       }
                       onView(testCase);
                     }}
+                    data-testid={`test-case-kanban-card-${testCase.id}`}
                   >
                     {/* Card Header */}
                     <div className="flex items-start justify-between mb-2">
+                      {/* Selection Checkbox */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelect?.(testCase.id);
+                        }}
+                        className="flex items-center justify-center w-4 h-4 rounded border-2 border-apple-gray-3 hover:border-apple-blue transition-colors duration-200 mr-2 mt-0.5"
+                        data-testid={`select-checkbox-${testCase.id}`}
+                        aria-label={`Select test case ${testCase.id}`}
+                      >
+                        {selectedIds.includes(testCase.id) ? (
+                          <CheckSquare className="w-3 h-3 text-apple-blue" />
+                        ) : (
+                          <Square className="w-3 h-3 text-apple-gray-5" />
+                        )}
+                      </button>
+                      
                       <h4 className="font-sf font-medium text-apple-gray-7 text-sm line-clamp-2 flex-1">
                         {testCase.title}
                       </h4>
@@ -228,8 +252,17 @@ const TestCasesKanban = ({
                     <div className="space-y-2">
                       {/* Description */}
                       {testCase.description && (
-                        <p className="text-xs text-apple-gray-5 line-clamp-2">
-                          {testCase.description}
+                        <p 
+                          className="text-xs text-apple-gray-5 line-clamp-2"
+                          title={containsHtml(testCase.description) ? getHtmlPreview(testCase.description) : testCase.description}
+                          data-testid={`test-case-description-${testCase.id}`}
+                        >
+                          {containsHtml(testCase.description) 
+                            ? htmlToText(testCase.description, 60) 
+                            : testCase.description.length > 60 
+                              ? testCase.description.substring(0, 60) + '...' 
+                              : testCase.description
+                          }
                         </p>
                       )}
 

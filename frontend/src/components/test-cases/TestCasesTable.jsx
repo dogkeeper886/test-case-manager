@@ -256,10 +256,7 @@ const TestCasesTable = ({
                 <SortIcon field="updated_at" />
               </button>
             </th>
-            {/* Actions Header */}
-            <th className="px-4 py-3 text-left" data-testid="actions-header">
-              <span className="font-sf font-semibold text-apple-gray-7">Actions</span>
-            </th>
+
 
           </tr>
         </thead>
@@ -411,34 +408,7 @@ const TestCasesTable = ({
                   {new Date(testCase.updated_at).toLocaleDateString()}
                 </span>
               </td>
-              <td className="px-4 py-3" data-testid={`test-case-actions-${testCase.id}`}>
-                {isEditing(testCase.id) ? (
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleCancelEdit()}
-                      className="p-1 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      data-testid={`cancel-edit-${testCase.id}`}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStartEdit(testCase.id);
-                    }}
-                    className="p-1 h-8 w-8 text-apple-blue hover:text-apple-blue-dark hover:bg-apple-blue/10"
-                    data-testid={`edit-button-${testCase.id}`}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                )}
-              </td>
+
 
             </tr>
           ))}
