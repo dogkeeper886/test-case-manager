@@ -200,12 +200,13 @@ const TestCasesKanban = ({
                   <Card
                     elevation="sm"
                     padding="md"
+                    hover={false}
                     className={`
                       cursor-grab active:cursor-grabbing
                       hover:shadow-apple-md hover:-translate-y-1
                       transition-all duration-200
                       ${draggedItem?.id === testCase.id ? 'opacity-50' : ''}
-                      ${selectedIds.includes(testCase.id) ? 'ring-2 ring-apple-blue bg-apple-blue/5' : ''}
+                      ${selectedIds.includes(testCase.id) ? 'border-apple-blue bg-apple-blue/5 shadow-apple-md' : 'border-apple-gray-2'}
                     `}
                     draggable
                     onDragStart={(e) => handleDragStart(e, testCase)}

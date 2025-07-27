@@ -127,6 +127,38 @@ A comprehensive test case management system that generates test cases from desig
 - **Icons**: Lucide React icons (SF Symbols alternative)
 - **Interactive Elements**: Touch-friendly with proper feedback
 
+### 🎨 Unified Test Case Views Design System
+
+Our application features a **unified design system** across all test case views (Table, Card, Kanban, Timeline) that ensures consistent user experience and visual hierarchy.
+
+#### **Design Philosophy**
+- **Consistency First**: All views follow the same interaction patterns and visual language
+- **Apple-Inspired Aesthetics**: Clean, minimal design with subtle shadows and smooth transitions
+- **Performance Optimized**: Smooth animations and efficient rendering across all view modes
+- **Accessibility Focused**: Clear visual states and keyboard navigation support
+
+#### **View-Specific Implementations**
+
+**Table View**: Card-like effects applied to table rows with enhanced elevation, shadow, and subtle lift on hover
+**Card View**: Traditional card-based layout with Apple-inspired hover effects and group interactions
+**Kanban View**: Drag-and-drop cards with minimal hover effects optimized for drag interactions
+**Timeline View**: Rich timeline cards with enhanced visual hierarchy, color coding, and gradient containers
+
+#### **Unified Interaction Patterns**
+- **Hover Effects**: Consistent shadow (`shadow-apple-md`) and lift effects across all views
+- **Selection States**: Unified blue border (`border-apple-blue`) and background tint (`bg-apple-blue/5`)
+- **Transitions**: Standardized 200ms duration with `ease-out` timing for natural feel
+- **No Background Change**: Maintains clean white background for optimal readability
+
+#### **Design Tokens**
+Our design system uses consistent tokens defined in `tailwind.config.js`:
+- **Colors**: Apple blue (`#007AFF`) and gray scale (`#F5F5F7` to `#48484A`)
+- **Shadows**: Apple-inspired shadow system (`shadow-apple-sm`, `shadow-apple-md`, `shadow-apple-lg`)
+- **Border Radius**: Consistent rounding (`rounded-apple-sm`, `rounded-apple-md`, `rounded-apple-lg`)
+- **Transitions**: Standardized timing (`duration-200`, `duration-300`)
+
+📖 **Detailed Design Documentation**: See [`docs/design-documents/test-case-views-design-system.md`](docs/design-documents/test-case-views-design-system.md) for comprehensive design system documentation.
+
 ## 📊 Current Data Statistics
 
 - **Total Test Cases**: 183 (with real data integration)

@@ -230,14 +230,15 @@ const TestCasesTimeline = ({
                     className="relative"
                   >
                     {/* Timeline Dot */}
-                    <div className={`absolute -left-8 top-2 w-3 h-3 rounded-full border-2 border-white ${event.color.replace('text-', 'bg-')}`}></div>
+                    <div className={`absolute -left-8 top-2 w-4 h-4 rounded-full border-3 border-white shadow-sm ${event.color.replace('text-', 'bg-')}`}></div>
 
                     {/* Event Card */}
                     <Card 
                       elevation="sm" 
                       padding="md" 
-                      className={`hover:shadow-apple-md transition-shadow cursor-pointer ${
-                        selectedIds.includes(event.testCase.id) ? 'ring-2 ring-apple-blue bg-apple-blue/5' : ''
+                      hover={false}
+                      className={`hover:shadow-apple-md hover:-translate-y-1 transition-all duration-200 cursor-pointer group ${
+                        selectedIds.includes(event.testCase.id) ? 'border-apple-blue bg-apple-blue/5 shadow-apple-md' : 'border-apple-gray-2'
                       }`}
                       onClick={(e) => {
                         // Don't trigger card click if clicking on action buttons or selection checkbox
@@ -251,13 +252,13 @@ const TestCasesTimeline = ({
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3 flex-1">
                           {/* Event Icon */}
-                          <div className={`p-2 rounded-apple-md bg-apple-gray-1 ${event.color}`}>
+                          <div className={`p-2.5 rounded-apple-lg ${event.color.replace('text-', 'bg-')} bg-opacity-10 ${event.color} shadow-sm`}>
                             {event.icon}
                           </div>
 
                           {/* Event Content */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-2">
                               {/* Selection Checkbox */}
                               <button
                                 onClick={(e) => {
@@ -275,47 +276,47 @@ const TestCasesTimeline = ({
                                 )}
                               </button>
                               
-                              <h5 className="font-sf font-medium text-apple-gray-7">{event.title}</h5>
+                              <h5 className="font-sf font-semibold text-apple-gray-8">{event.title}</h5>
                               <Badge variant={getPriorityBadgeVariant(event.testCase.priority)} size="xs">
                                 {getPriorityText(event.testCase.priority)}
                               </Badge>
                             </div>
                             
-                            <p className="text-sm text-apple-gray-5 mb-2">{event.description}</p>
+                            <p className="text-sm text-apple-gray-6 mb-3 leading-relaxed">{event.description}</p>
                             
                             {/* Test Case Info */}
-                            <div className="bg-apple-gray-1 rounded-apple-md p-3 mb-3">
+                            <div className="bg-gradient-to-r from-apple-gray-1/50 to-apple-gray-1/30 rounded-apple-lg p-4 mb-3 border border-apple-gray-2/50">
                               <div className="flex items-center justify-between mb-2">
-                                <h6 className="font-sf font-medium text-apple-gray-7 text-sm">
+                                <h6 className="font-sf font-semibold text-apple-gray-8 text-sm">
                                   {event.testCase.title}
                                 </h6>
-                                <span className="text-xs text-apple-gray-4">#{event.testCase.id}</span>
+                                <span className="text-xs font-medium text-apple-blue bg-apple-blue/10 px-2 py-1 rounded-full">#{event.testCase.id}</span>
                               </div>
                               
-                              <div className="grid grid-cols-2 gap-2 text-xs text-apple-gray-4">
+                              <div className="grid grid-cols-2 gap-3 text-xs">
                                 {event.testCase.project_name && (
-                                  <div>
-                                    <span>Project:</span>
-                                    <span className="font-medium ml-1">{event.testCase.project_name}</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-apple-gray-5">Project:</span>
+                                    <span className="font-medium text-apple-gray-7">{event.testCase.project_name}</span>
                                   </div>
                                 )}
                                 {event.testCase.test_suite_name && (
-                                  <div>
-                                    <span>Suite:</span>
-                                    <span className="font-medium ml-1">{event.testCase.test_suite_name}</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-apple-gray-5">Suite:</span>
+                                    <span className="font-medium text-apple-gray-7">{event.testCase.test_suite_name}</span>
                                   </div>
                                 )}
                               </div>
                             </div>
 
                             {/* Event Metadata */}
-                            <div className="flex items-center justify-between text-xs text-apple-gray-4">
+                            <div className="flex items-center justify-between text-xs">
                               <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 text-apple-gray-5">
                                   <User className="w-3 h-3" />
                                   <span>{event.user}</span>
                                 </div>
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 text-apple-gray-5">
                                   <Clock className="w-3 h-3" />
                                   <span>{formatTimestamp(event.timestamp)}</span>
                                 </div>
