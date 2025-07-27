@@ -566,7 +566,13 @@ const TestCases = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <Layout
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/' },
+          { label: 'Test Cases', href: '/testcases' }
+        ]}
+        showSearch={false}
+      >
         <div className="flex items-center justify-center h-64">
           <div className="text-apple-gray-4">Loading test cases...</div>
         </div>
@@ -576,7 +582,13 @@ const TestCases = () => {
 
   if (error) {
     return (
-      <Layout>
+      <Layout
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/' },
+          { label: 'Test Cases', href: '/testcases' }
+        ]}
+        showSearch={false}
+      >
         <Card className="max-w-md mx-auto">
           <Card.Body className="text-center">
             <h3 className="text-lg font-sf font-semibold text-apple-gray-7 mb-2">Error</h3>
@@ -588,7 +600,13 @@ const TestCases = () => {
   }
 
   return (
-    <Layout>
+    <Layout
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/' },
+        { label: 'Test Cases', href: '/testcases' }
+      ]}
+      showSearch={false}
+    >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between" data-testid="test-cases-header">
