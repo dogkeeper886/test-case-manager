@@ -236,7 +236,7 @@ const TestCaseEditForm = React.memo(forwardRef(({
 
       {/* Enhanced Tabs Navigation */}
       <div className="mb-8" data-element="test-case-edit-tabs">
-        <div className="bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 p-2" data-element="test-case-edit-tabs-container">
+        <div className="bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 p-2 hover:shadow-apple-md hover:-translate-y-0.5 transition-all duration-200" data-element="test-case-edit-tabs-container">
           <div className="flex space-x-1" data-element="test-case-edit-tabs-list">
             {tabs.map(tab => (
               <button
@@ -265,7 +265,7 @@ const TestCaseEditForm = React.memo(forwardRef(({
       {activeTab === 'content' && (
         <div className="space-y-8" data-element="test-case-edit-content-tab">
           {/* Enhanced Basic Information Section */}
-          <Card elevation="lg" className="border-l-4 border-l-apple-blue" data-element="test-case-basic-info-card">
+          <Card elevation="none" hover={false} className="bg-white rounded-apple-lg shadow-apple-sm border-l-4 border-l-apple-blue hover:shadow-apple-md hover:-translate-y-1 transition-all duration-200" data-element="test-case-basic-info-card">
             <Card.Header>
               <div className="flex items-center gap-3" data-element="test-case-basic-info-header">
                 <div className="w-10 h-10 bg-apple-blue/10 rounded-full flex items-center justify-center" data-element="test-case-basic-info-icon">
@@ -332,7 +332,7 @@ const TestCaseEditForm = React.memo(forwardRef(({
           </Card>
 
           {/* Enhanced Test Steps Section */}
-          <Card elevation="lg" className="border-l-4 border-l-success" data-element="test-case-steps-card">
+          <Card elevation="none" hover={false} className="bg-white rounded-apple-lg shadow-apple-sm border-l-4 border-l-success hover:shadow-apple-md hover:-translate-y-1 transition-all duration-200" data-element="test-case-steps-card">
             <Card.Header>
               <div className="flex items-center justify-between" data-element="test-case-steps-header">
                 <div className="flex items-center gap-3" data-element="test-case-steps-header-left">
@@ -478,7 +478,7 @@ const TestCaseEditForm = React.memo(forwardRef(({
       {activeTab === 'metadata' && (
         <div className="space-y-8" data-element="test-case-edit-metadata-tab">
           {/* Enhanced Metadata Configuration Section */}
-          <Card elevation="lg" className="border-l-4 border-l-info" data-element="test-case-metadata-card">
+          <Card elevation="none" hover={false} className="bg-white rounded-apple-lg shadow-apple-sm border-l-4 border-l-info hover:shadow-apple-md hover:-translate-y-1 transition-all duration-200" data-element="test-case-metadata-card">
             <Card.Header>
               <div className="flex items-center gap-3" data-element="test-case-metadata-header">
                 <div className="w-10 h-10 bg-info/10 rounded-full flex items-center justify-center" data-element="test-case-metadata-icon">

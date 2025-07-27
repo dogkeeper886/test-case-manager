@@ -344,7 +344,7 @@ const TestCaseDetail = () => {
       showSearch={false}
     >
       {/* Enhanced Header with Better Visual Hierarchy */}
-      <div className="mb-8 bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 p-6" data-element="test-case-header">
+      <div className="mb-8 bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 p-6 hover:shadow-apple-md hover:-translate-y-0.5 transition-all duration-200" data-element="test-case-header">
         {/* Navigation and Status Row */}
         <div className="flex items-center justify-between mb-6" data-element="test-case-header-top">
           <div className="flex items-center gap-4" data-element="test-case-navigation">
@@ -352,7 +352,7 @@ const TestCaseDetail = () => {
               variant="ghost"
               icon={<ArrowLeft className="w-4 h-4" />}
               onClick={handleBack}
-              className="hover:bg-apple-gray-2 focus:ring-2 focus:ring-apple-blue/50"
+              className="hover:bg-apple-gray-2 hover:shadow-apple-sm hover:-translate-y-0.5 focus:ring-2 focus:ring-apple-blue/50 transition-all duration-200"
               data-element="test-case-back-button"
               aria-label="Go back to test cases list"
             >
@@ -363,7 +363,7 @@ const TestCaseDetail = () => {
           
           {/* Enhanced Status Badges with Better Visual Separation */}
           <div className="flex items-center gap-3" data-element="test-case-status-section">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-apple-gray-1 rounded-full" data-element="test-case-status-container">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-apple-gray-1 rounded-full hover:bg-apple-gray-2 transition-colors duration-200" data-element="test-case-status-container">
               {getStatusIcon(testCase.status)}
               <Badge 
                 variant={getStatusBadgeVariant(testCase.status)} 
@@ -379,7 +379,7 @@ const TestCaseDetail = () => {
               <Badge 
                 variant={getPriorityBadgeVariant(testCase.priority)} 
                 size="sm"
-                className="font-semibold"
+                className="font-semibold hover:shadow-apple-sm transition-all duration-200"
                 data-element="test-case-priority-badge"
               >
                 Priority: {getPriorityText(testCase.priority)}
@@ -387,7 +387,7 @@ const TestCaseDetail = () => {
               <Badge 
                 variant={getImportanceBadgeVariant(testCase.importance)} 
                 size="sm"
-                className="font-semibold"
+                className="font-semibold hover:shadow-apple-sm transition-all duration-200"
                 data-element="test-case-importance-badge"
               >
                 {getImportanceText(testCase.importance)} Importance
@@ -398,7 +398,7 @@ const TestCaseDetail = () => {
               <Badge 
                 variant="success" 
                 size="sm"
-                className="font-semibold"
+                className="font-semibold hover:shadow-apple-sm transition-all duration-200"
                 data-element="test-case-automated-badge"
               >
                 <Target className="w-3 h-3 mr-1" />
@@ -416,26 +416,26 @@ const TestCaseDetail = () => {
           
           {/* Enhanced Meta Information with Icons */}
           <div className="flex items-center gap-6 text-apple-gray-5" data-element="test-case-meta">
-            <div className="flex items-center gap-2" data-element="test-case-id">
+            <div className="flex items-center gap-2 hover:text-apple-gray-6 transition-colors duration-200" data-element="test-case-id">
               <Hash className="w-4 h-4" />
               <span className="font-mono font-semibold text-apple-gray-6">#{testCase.id}</span>
             </div>
             
             {testCase.external_id && (
-              <div className="flex items-center gap-2" data-element="test-case-external-id-header">
+              <div className="flex items-center gap-2 hover:text-apple-gray-6 transition-colors duration-200" data-element="test-case-external-id-header">
                 <Tag className="w-4 h-4" />
                 <span className="font-mono text-sm">External: {testCase.external_id}</span>
               </div>
             )}
             
             {testCase.version && (
-              <div className="flex items-center gap-2" data-element="test-case-version-header">
+              <div className="flex items-center gap-2 hover:text-apple-gray-6 transition-colors duration-200" data-element="test-case-version-header">
                 <Layers className="w-4 h-4" />
                 <span className="text-sm font-medium">v{testCase.version}</span>
               </div>
             )}
             
-            <div className="flex items-center gap-2" data-element="test-case-created-date">
+            <div className="flex items-center gap-2 hover:text-apple-gray-6 transition-colors duration-200" data-element="test-case-created-date">
               <Calendar className="w-4 h-4" />
               <span className="text-sm">Created {new Date(testCase.created_at).toLocaleDateString()}</span>
             </div>
@@ -460,7 +460,7 @@ const TestCaseDetail = () => {
         <>
           {/* Enhanced Tabs with Better Visual Design */}
           <div className="mb-8" data-element="test-case-tabs">
-            <div className="bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 p-2" data-element="test-case-tabs-container">
+            <div className="bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 p-2 hover:shadow-apple-md hover:-translate-y-0.5 transition-all duration-200" data-element="test-case-tabs-container">
               <div className="flex space-x-1" data-element="test-case-tabs-list">
                 {tabs.map(tab => (
                   <button
@@ -470,8 +470,8 @@ const TestCaseDetail = () => {
                       flex items-center gap-3 px-6 py-3 rounded-apple text-sm font-semibold transition-all duration-200
                       focus:outline-none focus:ring-2 focus:ring-apple-blue/50
                       ${activeTab === tab.id
-                        ? 'bg-apple-blue text-white shadow-apple-sm'
-                        : 'text-apple-gray-6 hover:text-apple-gray-7 hover:bg-apple-gray-1'
+                        ? 'bg-apple-blue text-white shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5'
+                        : 'text-apple-gray-6 hover:text-apple-gray-7 hover:bg-apple-gray-1 hover:shadow-apple-sm hover:-translate-y-0.5'
                       }
                     `}
                     data-element={`test-case-tab-${tab.id}`}
@@ -490,10 +490,10 @@ const TestCaseDetail = () => {
             {activeTab === 'overview' && (
               <div className="space-y-8">
                 {/* Enhanced Summary Section */}
-                <Card elevation="lg" className="border-l-4 border-l-apple-blue" data-element="test-case-summary-card">
+                <Card elevation="lg" hover={false} className="border-l-4 border-l-apple-blue hover:shadow-apple-md hover:-translate-y-1 transition-all duration-200" data-element="test-case-summary-card">
                   <Card.Header>
                     <div className="flex items-center gap-3" data-element="test-case-summary-header">
-                      <div className="w-10 h-10 bg-apple-blue/10 rounded-full flex items-center justify-center" data-element="test-case-summary-icon">
+                      <div className="w-10 h-10 bg-apple-blue/10 rounded-full flex items-center justify-center hover:bg-apple-blue/20 transition-colors duration-200" data-element="test-case-summary-icon">
                         <BookOpen className="w-5 h-5 text-apple-blue" />
                       </div>
                       <div>
@@ -517,10 +517,10 @@ const TestCaseDetail = () => {
 
                 {/* Enhanced Preconditions Section */}
                 {testCase.prerequisites && (
-                  <Card elevation="lg" className="border-l-4 border-l-warning" data-element="test-case-prerequisites-card">
+                  <Card elevation="lg" hover={false} className="border-l-4 border-l-warning hover:shadow-apple-md hover:-translate-y-1 transition-all duration-200" data-element="test-case-prerequisites-card">
                     <Card.Header>
                       <div className="flex items-center gap-3" data-element="test-case-prerequisites-header">
-                        <div className="w-10 h-10 bg-warning/10 rounded-full flex items-center justify-center" data-element="test-case-prerequisites-icon">
+                        <div className="w-10 h-10 bg-warning/10 rounded-full flex items-center justify-center hover:bg-warning/20 transition-colors duration-200" data-element="test-case-prerequisites-icon">
                           <AlertCircle className="w-5 h-5 text-warning" />
                         </div>
                         <div>
@@ -544,11 +544,11 @@ const TestCaseDetail = () => {
                 )}
 
                 {/* Enhanced Test Steps Section */}
-                <Card elevation="lg" className="border-l-4 border-l-success" data-element="test-case-steps-card">
+                <Card elevation="lg" hover={false} className="border-l-4 border-l-success hover:shadow-apple-md hover:-translate-y-1 transition-all duration-200" data-element="test-case-steps-card">
                   <Card.Header>
                     <div className="flex items-center justify-between" data-element="test-case-steps-header">
                       <div className="flex items-center gap-3" data-element="test-case-steps-header-left">
-                        <div className="w-10 h-10 bg-success/10 rounded-full flex items-center justify-center" data-element="test-case-steps-icon">
+                        <div className="w-10 h-10 bg-success/10 rounded-full flex items-center justify-center hover:bg-success/20 transition-colors duration-200" data-element="test-case-steps-icon">
                           <List className="w-5 h-5 text-success" />
                         </div>
                         <div>
@@ -560,7 +560,7 @@ const TestCaseDetail = () => {
                           </p>
                         </div>
                       </div>
-                      <Badge variant="default" size="lg" className="font-semibold" data-element="test-case-steps-count">
+                      <Badge variant="default" size="lg" className="font-semibold hover:shadow-apple-sm transition-all duration-200" data-element="test-case-steps-count">
                         {testCase.steps?.length || 0} Steps
                       </Badge>
                     </div>
@@ -589,19 +589,19 @@ const TestCaseDetail = () => {
                                 {testCase.steps.map((step, index) => (
                                   <tr 
                                     key={step.id || index} 
-                                    className="hover:bg-apple-gray-1/50 transition-colors duration-200"
+                                    className="hover:shadow-apple-md hover:border-apple-blue/50 hover:-translate-y-0.5 transition-all duration-200 ease-out cursor-pointer"
                                     data-element={`test-case-step-row-${index + 1}`}
                                   >
                                     <td className="py-6 px-6 align-top" data-element={`test-case-step-number-cell-${index + 1}`}>
                                       <div className="flex items-center gap-3" data-element={`test-case-step-number-container-${index + 1}`}>
                                         <div 
-                                          className="flex-shrink-0 w-10 h-10 bg-apple-blue text-white rounded-full flex items-center justify-center text-sm font-bold shadow-apple-sm"
+                                          className="flex-shrink-0 w-10 h-10 bg-apple-blue text-white rounded-full flex items-center justify-center text-sm font-bold shadow-apple-sm hover:shadow-apple-md transition-all duration-200"
                                           data-element={`test-case-step-number-${index + 1}`}
                                         >
                                           {step.step_number || index + 1}
                                         </div>
                                         {step.execution_type === 2 && (
-                                          <Badge variant="success" size="sm" className="font-semibold" data-element={`test-case-step-automated-${index + 1}`}>
+                                          <Badge variant="success" size="sm" className="font-semibold hover:shadow-apple-sm transition-all duration-200" data-element={`test-case-step-automated-${index + 1}`}>
                                             <Target className="w-3 h-3 mr-1" />
                                             Auto
                                           </Badge>
@@ -644,12 +644,12 @@ const TestCaseDetail = () => {
                           {testCase.steps.map((step, index) => (
                             <div 
                               key={step.id || index} 
-                              className="bg-white border border-apple-gray-2 rounded-apple-lg p-6 hover:border-apple-gray-3 hover:shadow-apple-sm transition-all duration-200"
+                              className="bg-white border border-apple-gray-2 rounded-apple-lg p-6 hover:shadow-apple-md hover:border-apple-blue/50 hover:-translate-y-1 transition-all duration-200 cursor-pointer"
                               data-element={`test-case-step-card-${index + 1}`}
                             >
                               <div className="flex items-start gap-4" data-element={`test-case-step-card-content-${index + 1}`}>
                                 <div 
-                                  className="flex-shrink-0 w-12 h-12 bg-apple-blue text-white rounded-full flex items-center justify-center text-sm font-bold shadow-apple-sm"
+                                  className="flex-shrink-0 w-12 h-12 bg-apple-blue text-white rounded-full flex items-center justify-center text-sm font-bold shadow-apple-sm hover:shadow-apple-md transition-all duration-200"
                                   data-element={`test-case-step-number-mobile-${index + 1}`}
                                 >
                                   {step.step_number || index + 1}
@@ -660,7 +660,7 @@ const TestCaseDetail = () => {
                                       Action
                                     </h4>
                                     {step.execution_type === 2 && (
-                                      <Badge variant="success" size="sm" className="font-semibold" data-element={`test-case-step-automated-mobile-${index + 1}`}>
+                                      <Badge variant="success" size="sm" className="font-semibold hover:shadow-apple-sm transition-all duration-200" data-element={`test-case-step-automated-mobile-${index + 1}`}>
                                         <Target className="w-3 h-3 mr-1" />
                                         Automated
                                       </Badge>
@@ -708,7 +708,7 @@ const TestCaseDetail = () => {
             {activeTab === 'details' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Enhanced Basic Details */}
-                <Card elevation="lg" className="border-l-4 border-l-info" data-element="test-case-details-card">
+                <Card elevation="none" hover={false} className="bg-white rounded-apple-lg shadow-apple-sm border-l-4 border-l-info hover:shadow-apple-md hover:-translate-y-1 transition-all duration-200" data-element="test-case-details-card">
                   <Card.Header>
                     <div className="flex items-center gap-3" data-element="test-case-details-header">
                       <div className="w-10 h-10 bg-info/10 rounded-full flex items-center justify-center" data-element="test-case-details-icon">
@@ -836,7 +836,7 @@ const TestCaseDetail = () => {
                 </Card>
 
                 {/* Enhanced Custom Fields */}
-                <Card elevation="lg" className="border-l-4 border-l-warning" data-element="test-case-custom-fields-card">
+                <Card elevation="none" hover={false} className="bg-white rounded-apple-lg shadow-apple-sm border-l-4 border-l-warning hover:shadow-apple-md hover:-translate-y-1 transition-all duration-200" data-element="test-case-custom-fields-card">
                   <Card.Header>
                     <div className="flex items-center justify-between" data-element="test-case-custom-fields-header">
                       <div className="flex items-center gap-3" data-element="test-case-custom-fields-header-left">
@@ -863,19 +863,23 @@ const TestCaseDetail = () => {
                         {testCase.custom_fields.map((field, index) => (
                           <div 
                             key={field.id} 
-                            className="bg-apple-gray-1 border border-apple-gray-2 rounded-apple p-4 hover:border-apple-gray-3 hover:bg-apple-gray-2/50 transition-all duration-200"
+                            className="bg-white border border-apple-gray-2 rounded-apple-lg p-4 hover:shadow-apple-md hover:border-apple-blue/50 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                             data-element={`test-case-custom-field-${index + 1}`}
                           >
                             <div className="space-y-3" data-element={`test-case-custom-field-content-${index + 1}`}>
-                              <div className="flex items-center gap-2" data-element={`test-case-custom-field-header-${index + 1}`}>
-                                <Tag className="w-4 h-4 text-apple-gray-4" />
+                              <div className="flex items-center gap-3" data-element={`test-case-custom-field-header-${index + 1}`}>
+                                <div className="w-8 h-8 bg-apple-blue/10 rounded-full flex items-center justify-center hover:bg-apple-blue/20 transition-colors duration-200">
+                                  <Tag className="w-4 h-4 text-apple-blue" />
+                                </div>
                                 <h4 className="font-bold text-apple-gray-7 text-sm uppercase tracking-wide" data-element={`test-case-custom-field-name-${index + 1}`}>
                                   {field.field_name}
                                 </h4>
                               </div>
-                              <p className="text-apple-gray-6 font-sf pl-6" data-element={`test-case-custom-field-value-${index + 1}`}>
-                                {field.field_value || 'No value'}
-                              </p>
+                              <div className="bg-apple-gray-1/50 border border-apple-gray-2/50 rounded-apple p-3 ml-11" data-element={`test-case-custom-field-value-container-${index + 1}`}>
+                                <p className="text-apple-gray-6 font-sf text-sm leading-relaxed" data-element={`test-case-custom-field-value-${index + 1}`}>
+                                  {field.field_value || 'No value'}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         ))}
