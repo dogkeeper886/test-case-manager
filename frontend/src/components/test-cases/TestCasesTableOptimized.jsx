@@ -142,10 +142,10 @@ const TestCasesTableOptimized = ({
                 <div
             key={testCase.id}
             data-testid={`test-case-row-optimized-${testCase.id}`}
-            className={`flex items-center gap-4 px-4 py-3 border-b border-apple-gray-2 transition-all duration-200 ease-out h-12 cursor-pointer ${
-              isSelected ? 'bg-apple-blue/5 border-apple-blue/20' : ''
+            className={`flex items-center gap-4 px-4 py-3 border-b transition-all duration-200 ease-out h-12 cursor-pointer ${
+              isSelected ? 'bg-apple-blue/5 border-apple-blue/20' : 'border-apple-gray-2'
             } ${
-              isHovered ? 'bg-apple-gray-1/50 shadow-apple-sm' : 'hover:bg-apple-gray-1/40'
+              isHovered ? 'shadow-apple-md border-apple-blue/50 -translate-y-0.5' : ''
             }`}
             onMouseEnter={() => setHoveredRow(testCase.id)}
             onMouseLeave={() => setHoveredRow(null)}
