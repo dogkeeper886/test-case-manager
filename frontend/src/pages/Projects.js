@@ -112,8 +112,15 @@ const Projects = () => {
         breadcrumbs={[
           { label: 'Projects', href: '/projects' }
         ]}
-        showSearch={true}
-        onSearch={handleLayoutSearch}
+        showSearch={false}
+        actions={[
+          {
+            label: 'Create Project',
+            variant: 'primary',
+            icon: <Plus className="w-4 h-4" />,
+            onClick: handleCreateProject
+          }
+        ]}
       >
         <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -131,8 +138,15 @@ const Projects = () => {
         breadcrumbs={[
           { label: 'Projects', href: '/projects' }
         ]}
-        showSearch={true}
-        onSearch={handleLayoutSearch}
+        showSearch={false}
+        actions={[
+          {
+            label: 'Create Project',
+            variant: 'primary',
+            icon: <Plus className="w-4 h-4" />,
+            onClick: handleCreateProject
+          }
+        ]}
       >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
@@ -153,8 +167,15 @@ const Projects = () => {
       breadcrumbs={[
         { label: 'Projects', href: '/projects' }
       ]}
-      showSearch={true}
-      onSearch={handleLayoutSearch}
+      showSearch={false}
+      actions={[
+        {
+          label: 'Create Project',
+          variant: 'primary',
+          icon: <Plus className="w-4 h-4" />,
+          onClick: handleCreateProject
+        }
+      ]}
     >
       {/* Page Header */}
       <div className="mb-8" data-element="projects-header">
@@ -166,16 +187,6 @@ const Projects = () => {
             <p className="text-apple-gray-5 mt-2" data-element="projects-subtitle">
               Manage and organize your test case projects
             </p>
-          </div>
-          <div className="flex items-center gap-3" data-element="projects-actions">
-            <Button
-              variant="primary"
-              onClick={handleCreateProject}
-              data-element="projects-create-button"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Project
-            </Button>
           </div>
         </div>
       </div>

@@ -572,6 +572,14 @@ const TestCases = () => {
           { label: 'Test Cases', href: '/testcases' }
         ]}
         showSearch={false}
+        actions={[
+          {
+            label: 'Create Test Case',
+            variant: 'primary',
+            icon: <Plus className="w-4 h-4" />,
+            onClick: handleCreateTestCase
+          }
+        ]}
       >
         <div className="flex items-center justify-center h-64">
           <div className="text-apple-gray-4">Loading test cases...</div>
@@ -588,6 +596,14 @@ const TestCases = () => {
           { label: 'Test Cases', href: '/testcases' }
         ]}
         showSearch={false}
+        actions={[
+          {
+            label: 'Create Test Case',
+            variant: 'primary',
+            icon: <Plus className="w-4 h-4" />,
+            onClick: handleCreateTestCase
+          }
+        ]}
       >
         <Card className="max-w-md mx-auto">
           <Card.Body className="text-center">
@@ -606,6 +622,14 @@ const TestCases = () => {
         { label: 'Test Cases', href: '/testcases' }
       ]}
       showSearch={false}
+      actions={[
+        {
+          label: 'Create Test Case',
+          variant: 'primary',
+          icon: <Plus className="w-4 h-4" />,
+          onClick: handleCreateTestCase
+        }
+      ]}
     >
       <div className="space-y-6">
         {/* Header */}
@@ -626,14 +650,6 @@ const TestCases = () => {
               )}
             </p>
           </div>
-          <Button
-            variant="primary"
-            icon={<Plus className="w-4 h-4" />}
-            onClick={handleCreateTestCase}
-            data-testid="create-test-case-button"
-          >
-            Create Test Case
-          </Button>
         </div>
 
         {/* Filters and Search */}
