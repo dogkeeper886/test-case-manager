@@ -1,6 +1,7 @@
 const TestLinkXMLParser = require('../utils/TestLinkXMLParser');
 const ProjectService = require('./ProjectService');
 const fs = require('fs').promises;
+const path = require('path');
 
 class TestLinkImportService {
   constructor(db) {
@@ -294,7 +295,7 @@ class TestLinkImportService {
     const fileStats = await fs.stat(filePath);
     const fileSize = fileStats.size;
     
-    const importLogId = await this.createImportLog(projectId, documentId, 'testlink', filePath, fileSize);
+    const importLogId = await this.createImportLog(projectId, documentId, 'testlink', path.basename(filePath), fileSize, filePath);
     
     try {
       // Parse XML file
@@ -795,15 +796,27 @@ class TestLinkImportService {
    * @param {number} fileSize - File size in bytes
    * @returns {Promise<number>} Import log ID
    */
-  async createImportLog(projectId, documentId, importType, fileName, fileSize = 0) {
+  async createImportLog(projectId, documentId, importType, fileName, fileSize = 0, filePath = null) {
+    // Set retry window to 48 hours from now
+    const retryUntil = new Date();
+    retryUntil.setHours(retryUntil.getHours() + 48);
+    
     const query = `
       INSERT INTO import_logs (
-        project_id, document_id, import_type, file_name, file_size, status
-      ) VALUES ($1, $2, $3, $4, $5, 'processing')
+        project_id, document_id, import_type, file_name, file_size, file_path, retry_until, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'processing')
       RETURNING id
     `;
 
-    const result = await this.db.query(query, [projectId, documentId, importType, fileName, fileSize]);
+    const result = await this.db.query(query, [
+      projectId, 
+      documentId, 
+      importType, 
+      fileName, 
+      fileSize, 
+      filePath,
+      retryUntil
+    ]);
     return result.rows[0].id;
   }
 
@@ -911,6 +924,44 @@ class TestLinkImportService {
   }
 
   /**
+   * Get all import logs across all projects
+   * @returns {Promise<Array>} Import logs array with project information
+   */
+  async getAllImportLogs() {
+    const query = `
+      SELECT il.*, p.name as project_name 
+      FROM import_logs il
+      LEFT JOIN projects p ON il.project_id = p.id
+      ORDER BY il.started_at DESC
+    `;
+    
+    const result = await this.db.query(query);
+    
+    // Calculate duration and format data for frontend
+    return result.rows.map(log => {
+      let duration = '--';
+      if (log.completed_at && log.started_at) {
+        const startTime = new Date(log.started_at);
+        const endTime = new Date(log.completed_at);
+        const durationMs = endTime.getTime() - startTime.getTime();
+        const durationSeconds = Math.round(durationMs / 1000);
+        if (durationSeconds < 60) {
+          duration = `${durationSeconds}s`;
+        } else {
+          const minutes = Math.floor(durationSeconds / 60);
+          const seconds = durationSeconds % 60;
+          duration = `${minutes}m ${seconds}s`;
+        }
+      }
+      
+      return {
+        ...log,
+        duration: duration
+      };
+    });
+  }
+
+  /**
    * Delete import log by ID
    * @param {number} importLogId - Import log ID
    * @returns {Promise<boolean>} Success status
@@ -922,6 +973,83 @@ class TestLinkImportService {
     
     const result = await this.db.query(query, [importLogId]);
     return result.rowCount > 0;
+  }
+
+  /**
+   * Check if retry is allowed for an import
+   * @param {number} importLogId - Import log ID
+   * @returns {Promise<boolean>} Whether retry is allowed
+   */
+  async isRetryAllowed(importLogId) {
+    const query = `
+      SELECT retry_until, status FROM import_logs WHERE id = $1
+    `;
+    
+    const result = await this.db.query(query, [importLogId]);
+    if (result.rows.length === 0) {
+      return false;
+    }
+    
+    const log = result.rows[0];
+    const now = new Date();
+    const retryUntil = new Date(log.retry_until);
+    
+    return log.status === 'failed' && now < retryUntil;
+  }
+
+  /**
+   * Clean up expired files (files past retry window)
+   * @returns {Promise<number>} Number of files cleaned up
+   */
+  async cleanupExpiredFiles() {
+    const query = `
+      SELECT id, file_path FROM import_logs 
+      WHERE retry_until < NOW() 
+      AND file_path IS NOT NULL 
+      AND cleanup_scheduled = FALSE
+    `;
+    
+    const result = await this.db.query(query);
+    let cleanedCount = 0;
+    
+    for (const log of result.rows) {
+      try {
+        // Delete the file if it exists
+        if (log.file_path && fs.existsSync(log.file_path)) {
+          await fs.unlink(log.file_path);
+        }
+        
+        // Mark as cleaned up
+        await this.db.query(
+          'UPDATE import_logs SET cleanup_scheduled = TRUE WHERE id = $1',
+          [log.id]
+        );
+        
+        cleanedCount++;
+      } catch (error) {
+        console.warn(`Failed to cleanup file for import log ${log.id}:`, error);
+      }
+    }
+    
+    return cleanedCount;
+  }
+
+  /**
+   * Get import logs that need cleanup
+   * @returns {Promise<Array>} Array of import logs past retry window
+   */
+  async getExpiredImportLogs() {
+    const query = `
+      SELECT id, file_name, retry_until, status 
+      FROM import_logs 
+      WHERE retry_until < NOW() 
+      AND file_path IS NOT NULL 
+      AND cleanup_scheduled = FALSE
+      ORDER BY retry_until ASC
+    `;
+    
+    const result = await this.db.query(query);
+    return result.rows;
   }
 }
 

@@ -95,12 +95,8 @@ router.post('/testlink', upload.single('xmlFile'), async (req, res) => {
       documentId ? parseInt(documentId) : null
     );
 
-    // Clean up uploaded file
-    try {
-      await fs.unlink(req.file.path);
-    } catch (cleanupError) {
-      console.warn('Failed to cleanup uploaded file:', cleanupError);
-    }
+    // Note: File is kept for 48 hours for potential retry functionality
+    // Files will be automatically cleaned up after the retry window expires
 
     // Log activity
     await ActivityService.logImportActivity(
@@ -371,6 +367,29 @@ router.get('/logs/:projectId', async (req, res) => {
   }
 });
 
+// GET /api/import/logs - Get all import logs across all projects
+router.get('/logs', async (req, res) => {
+  try {
+    // Initialize import service
+    const service = initializeImportService(req.app.locals.db);
+    
+    // Get all import logs
+    const importLogs = await service.getAllImportLogs();
+    
+    res.json({
+      message: 'All import logs retrieved',
+      data: importLogs
+    });
+
+  } catch (error) {
+    console.error('Get all import logs error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get all import logs', 
+      details: error.message 
+    });
+  }
+});
+
 // POST /api/import/retry/:importLogId - Retry failed import
 router.post('/retry/:importLogId', async (req, res) => {
   try {
@@ -389,6 +408,14 @@ router.post('/retry/:importLogId', async (req, res) => {
     
     if (originalLog.status !== 'failed') {
       return res.status(400).json({ error: 'Can only retry failed imports' });
+    }
+    
+    // Check if retry is still allowed (within retry window)
+    const isRetryAllowed = await service.isRetryAllowed(parseInt(importLogId));
+    if (!isRetryAllowed) {
+      return res.status(400).json({ 
+        error: 'Retry window has expired. Retry is only allowed within 48 hours of the original import.' 
+      });
     }
     
     // Check if the original file still exists
@@ -520,6 +547,57 @@ router.get('/template', (req, res) => {
     console.error('Template download error:', error);
     res.status(500).json({ 
       error: 'Failed to download template', 
+      details: error.message 
+    });
+  }
+});
+
+// POST /api/import/cleanup - Clean up expired files
+router.post('/cleanup', async (req, res) => {
+  try {
+    // Initialize import service
+    const service = initializeImportService(req.app.locals.db);
+    
+    // Clean up expired files
+    const cleanedCount = await service.cleanupExpiredFiles();
+    
+    res.json({
+      message: 'File cleanup completed',
+      data: {
+        cleanedCount: cleanedCount
+      }
+    });
+
+  } catch (error) {
+    console.error('File cleanup error:', error);
+    res.status(500).json({ 
+      error: 'Failed to cleanup files', 
+      details: error.message 
+    });
+  }
+});
+
+// GET /api/import/cleanup/status - Get cleanup status
+router.get('/cleanup/status', async (req, res) => {
+  try {
+    // Initialize import service
+    const service = initializeImportService(req.app.locals.db);
+    
+    // Get expired import logs
+    const expiredLogs = await service.getExpiredImportLogs();
+    
+    res.json({
+      message: 'Cleanup status retrieved',
+      data: {
+        expiredCount: expiredLogs.length,
+        expiredLogs: expiredLogs
+      }
+    });
+
+  } catch (error) {
+    console.error('Get cleanup status error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get cleanup status', 
       details: error.message 
     });
   }

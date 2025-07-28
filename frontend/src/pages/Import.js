@@ -11,6 +11,7 @@ const Import = () => {
   const [importHistory, setImportHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyError, setHistoryError] = useState(null);
+  const [showAllProjects, setShowAllProjects] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState('');
@@ -44,16 +45,30 @@ const Import = () => {
     fetchData();
   }, []);
 
-  // Fetch import history when selected project changes
+  // Fetch import history when selected project changes or view mode changes
   useEffect(() => {
     const fetchImportHistory = async () => {
-      if (!selectedProjectId) return;
+      // Show all projects if:
+      // 1. showAllProjects is true, OR
+      // 2. No project is selected AND not creating new project, OR
+      // 3. Creating new project (showAllProjects should be true)
+      const shouldShowAllProjects = showAllProjects || 
+                                   (!selectedProjectId && !showNewProjectForm) ||
+                                   showNewProjectForm;
+      
+      if (!selectedProjectId && !shouldShowAllProjects) return;
       
       try {
         setLoadingHistory(true);
         setHistoryError(null);
         
-        const response = await importAPI.getLogs(selectedProjectId);
+        let response;
+        if (shouldShowAllProjects) {
+          response = await importAPI.getAllLogs();
+        } else {
+          response = await importAPI.getLogs(selectedProjectId);
+        }
+        
         const logs = response.data.data || [];
         
         // Transform API data to match UI format
@@ -70,7 +85,9 @@ const Import = () => {
           projects: 1,
           duration: log.duration || '--',
           error: log.errors?.[0] || null,
-          strategy: log.strategy || 'unknown'
+          strategy: log.strategy || 'unknown',
+          projectId: log.project_id,
+          projectName: log.project_name || `Project ${log.project_id}`
         }));
         
         setImportHistory(transformedHistory);
@@ -84,7 +101,7 @@ const Import = () => {
     };
 
     fetchImportHistory();
-  }, [selectedProjectId]);
+  }, [selectedProjectId, showAllProjects, showNewProjectForm]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -596,9 +613,27 @@ const Import = () => {
       <div className="mb-8" data-element="import-history-section">
         <Card elevation="sm" hover={false} data-element="import-history-card">
           <Card.Header data-element="import-history-header">
-            <h3 className="text-lg font-sf-display font-semibold text-apple-gray-7" data-element="import-history-title">
-              Import History
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-sf-display font-semibold text-apple-gray-7" data-element="import-history-title">
+                Import History
+              </h3>
+              <div className="flex items-center space-x-3">
+                <span className="text-sm font-sf text-apple-gray-5">
+                  {showAllProjects || showNewProjectForm || !selectedProjectId ? 'All Projects' : 'Current Project Only'}
+                </span>
+                {!showNewProjectForm && selectedProjectId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowAllProjects(!showAllProjects)}
+                    className="font-sf font-medium"
+                    data-element="import-history-toggle"
+                  >
+                    {showAllProjects ? 'Show Current Project' : 'Show All Projects'}
+                  </Button>
+                )}
+              </div>
+            </div>
           </Card.Header>
           <Card.Body className="p-0" data-element="import-history-body">
             <div className="overflow-x-auto" data-element="import-table-container">
@@ -608,6 +643,11 @@ const Import = () => {
                     <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-file">
                       File
                     </th>
+                    {(showAllProjects || showNewProjectForm || !selectedProjectId) && (
+                      <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-project">
+                        Project
+                      </th>
+                    )}
                     <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-size">
                       Size
                     </th>
@@ -631,7 +671,7 @@ const Import = () => {
                 <tbody className="bg-white divide-y divide-apple-gray-2" data-element="import-table-body">
                   {loadingHistory ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center">
+                      <td colSpan={(showAllProjects || showNewProjectForm || !selectedProjectId) ? 8 : 7} className="px-6 py-12 text-center">
                         <div className="flex items-center justify-center space-x-3">
                           <Clock className="w-6 h-6 text-apple-gray-4 animate-spin" />
                           <span className="text-sm font-sf font-medium text-apple-gray-5">Loading import history...</span>
@@ -640,7 +680,7 @@ const Import = () => {
                     </tr>
                   ) : historyError ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center">
+                      <td colSpan={(showAllProjects || showNewProjectForm || !selectedProjectId) ? 8 : 7} className="px-6 py-12 text-center">
                         <div className="flex items-center justify-center space-x-3">
                           <AlertCircle className="w-6 h-6 text-apple-red" />
                           <span className="text-sm font-sf font-medium text-apple-red">{historyError}</span>
@@ -649,7 +689,7 @@ const Import = () => {
                     </tr>
                   ) : importHistory.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center">
+                      <td colSpan={(showAllProjects || showNewProjectForm || !selectedProjectId) ? 8 : 7} className="px-6 py-12 text-center">
                         <div className="flex items-center justify-center space-x-3">
                           <FileText className="w-6 h-6 text-apple-gray-4" />
                           <span className="text-sm font-sf font-medium text-apple-gray-5">No import history found</span>
@@ -674,6 +714,15 @@ const Import = () => {
                           </div>
                         </div>
                       </td>
+                      {(showAllProjects || showNewProjectForm || !selectedProjectId) && (
+                        <td className="px-6 py-5 whitespace-nowrap text-sm font-sf text-apple-gray-7" data-element={`import-project-${index + 1}`}>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="default" size="sm" className="bg-apple-blue/10 text-apple-blue border-apple-blue/20">
+                              {importItem.projectName}
+                            </Badge>
+                          </div>
+                        </td>
+                      )}
                       <td className="px-6 py-5 whitespace-nowrap text-sm font-sf text-apple-gray-7" data-element={`import-size-${index + 1}`}>
                         {importItem.size}
                       </td>

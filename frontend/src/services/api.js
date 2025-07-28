@@ -197,11 +197,20 @@ export const importAPI = {
   // Get import logs for project
   getLogs: (projectId) => api.get(`/api/import/logs/${projectId}`),
   
+  // Get all import logs across all projects
+  getAllLogs: () => api.get('/api/import/logs'),
+  
   // Retry failed import
   retryImport: (importLogId, strategy) => api.post(`/api/import/retry/${importLogId}`, { strategy }),
   
   // Delete import log
   deleteImportLog: (importLogId) => api.delete(`/api/import/logs/${importLogId}`),
+  
+  // Clean up expired files
+  cleanupFiles: () => api.post('/api/import/cleanup'),
+  
+  // Get cleanup status
+  getCleanupStatus: () => api.get('/api/import/cleanup/status'),
 };
 
 export const activitiesAPI = {
