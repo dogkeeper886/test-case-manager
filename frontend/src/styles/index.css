@@ -52,4 +52,7 @@
   .default-border {
     @apply border-apple-gray-2;
   }
+  
+  /* Fix for filter panel border shining issue - resolved by adding proper hover effects */
+  /* The issue was caused by missing hover effects on dropdown options, not CSS transitions */
 }

@@ -222,7 +222,7 @@ const AdvancedSearch = ({
         <div className="max-h-48 overflow-y-auto">
           {searchHistory.map((historyItem, index) => (
             <button
-              key={index}
+              key={`search-history-${historyItem}-${index}`}
               onClick={() => handleSearchHistoryClick(historyItem)}
               className="w-full px-3 py-2 text-left text-sm font-sf text-apple-gray-7 hover:bg-apple-gray-1 transition-colors duration-200"
               data-testid={`search-history-item-${index}`}

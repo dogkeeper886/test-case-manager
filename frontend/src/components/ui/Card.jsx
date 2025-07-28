@@ -15,7 +15,7 @@ const Card = ({
   const baseClasses = `
     bg-white
     font-sf
-    transition-all duration-200 ease-out
+    transition-[box-shadow,transform,background-color,border-color] duration-200 ease-out
     focus:outline-none focus:ring-2 focus:ring-apple-blue/50
   `;
 

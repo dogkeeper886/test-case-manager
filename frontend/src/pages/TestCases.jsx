@@ -39,7 +39,7 @@ import TestCasesCompactCards from '../components/test-cases/TestCasesCompactCard
 import TestCasesKanban from '../components/test-cases/TestCasesKanban';
 import TestCasesTimeline from '../components/test-cases/TestCasesTimeline';
 import ViewToggle from '../components/test-cases/ViewToggle';
-import { FilterPanel } from '../components/filters';
+import { FilterDialog } from '../components/filters';
 import { PerformanceMonitor, PerformanceAnalytics } from '../components/ui';
 import { testCasesAPI, testSuitesAPI, projectsAPI } from '../services/api';
 import useTestCaseStore from '../stores/testCaseStore';
@@ -64,14 +64,14 @@ const TestCases = () => {
   const [sortBy, setSortBy] = useState('id');
   const [sortOrder, setSortOrder] = useState('asc');
   const [selectedIds, setSelectedIds] = useState([]);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
   const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
   const [showPerformanceAnalytics, setShowPerformanceAnalytics] = useState(false);
   const [useOptimizedTable, setUseOptimizedTable] = useState(true);
   const [showBulkActions, setShowBulkActions] = useState(false);
 
-  // Refs for click outside functionality
-  const filterPanelRef = useRef(null);
+  // Refs for click outside functionality (no longer needed for dialog)
+  // const filterPanelRef = useRef(null);
 
   const { setTestCases: setStoreTestCases, setTestSuites: setStoreTestSuites } = useTestCaseStore();
   
@@ -104,17 +104,17 @@ const TestCases = () => {
     fetchData();
   }, []);
 
-  // Handle click outside to close filter panel
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showFilters && filterPanelRef.current && !filterPanelRef.current.contains(event.target)) {
-        setShowFilters(false);
-      }
-    };
+  // Handle click outside to close filter panel (no longer needed for dialog)
+  // useEffect(() => {
+  //   const handleClickOutside = (event) => {
+  //     if (showFilters && filterPanelRef.current && !filterPanelRef.current.contains(event.target)) {
+  //       setShowFilters(false);
+  //     }
+  //   };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showFilters]);
+  //   document.addEventListener('mousedown', handleClickOutside);
+  //   return () => document.removeEventListener('mousedown', handleClickOutside);
+  // }, [showFilters]);
 
   const fetchData = async () => {
     try {
@@ -702,7 +702,7 @@ const TestCases = () => {
           <Button
             variant="ghost"
             icon={<Filter className="w-4 h-4" />}
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={() => setShowFilterDialog(true)}
             className="flex-shrink-0"
             data-testid="filters-toggle-button"
           >
@@ -751,32 +751,29 @@ const TestCases = () => {
           )}
         </div>
 
-        {/* Advanced Filter Panel */}
-        {showFilters && (
-          <div className="mb-6" data-testid="advanced-filter-panel" ref={filterPanelRef}>
-            <FilterPanel
-              filters={{
-                search: { query: searchQuery, field: searchField, operator: searchOperator },
-                project: projectFilter,
-                suite: suiteFilter,
-                status: statusFilter,
-                priority: priorityFilter,
-                dates: dateFilters
-              }}
-              onFilterChange={handleFilterChange}
-              onClearFilters={handleClearFilters}
-              onSavePreset={handleSavePreset}
-              onLoadPreset={handleLoadPreset}
-              onDeletePreset={handleDeletePreset}
-              onApplyPreset={handleApplyPreset}
-              savedPresets={savedPresets}
-              projects={projects}
-              testSuites={testSuites}
-              onClose={() => setShowFilters(false)}
-              data-testid="filter-panel"
-            />
-          </div>
-        )}
+        {/* Filter Dialog */}
+        <FilterDialog
+          isVisible={showFilterDialog}
+          onClose={() => setShowFilterDialog(false)}
+          filters={{
+            search: { query: searchQuery, field: searchField, operator: searchOperator },
+            project: projectFilter,
+            suite: suiteFilter,
+            status: statusFilter,
+            priority: priorityFilter,
+            dates: dateFilters
+          }}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+          onSavePreset={handleSavePreset}
+          onLoadPreset={handleLoadPreset}
+          onDeletePreset={handleDeletePreset}
+          onApplyPreset={handleApplyPreset}
+          savedPresets={savedPresets}
+          projects={projects}
+          testSuites={testSuites}
+          data-testid="filter-dialog"
+        />
 
         {/* Bulk Actions - Fixed Position Overlay */}
         {selectedIds.length > 0 && (

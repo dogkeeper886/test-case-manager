@@ -24,7 +24,7 @@ const FilterPanel = ({
   const [expandedSections, setExpandedSections] = useState({
     search: true,
     basic: true,
-    dates: false,
+    dates: true,
     advanced: false
   });
   const [showPresetManager, setShowPresetManager] = useState(false);
@@ -33,13 +33,12 @@ const FilterPanel = ({
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
   
-  const panelRef = useRef(null);
   const projectDropdownRef = useRef(null);
   const suiteDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
   const priorityDropdownRef = useRef(null);
 
-  // Handle click outside to close dropdowns and panel
+  // Handle click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Close dropdowns
@@ -116,44 +115,44 @@ const FilterPanel = ({
       });
     }
     
-    if (filters.project) {
+    if (filters.projectFilter) {
       active.push({
         type: 'project',
         label: 'Project',
-        value: filters.project,
+        value: filters.projectFilter,
         variant: 'project'
       });
     }
     
-    if (filters.suite) {
+    if (filters.suiteFilter) {
       active.push({
         type: 'suite',
         label: 'Test Suite',
-        value: filters.suite,
+        value: filters.suiteFilter,
         variant: 'suite'
       });
     }
     
-    if (filters.status) {
+    if (filters.statusFilter) {
       active.push({
         type: 'status',
         label: 'Status',
-        value: filters.status,
+        value: filters.statusFilter,
         variant: 'status'
       });
     }
     
-    if (filters.priority) {
+    if (filters.priorityFilter) {
       active.push({
         type: 'priority',
         label: 'Priority',
-        value: filters.priority,
+        value: filters.priorityFilter,
         variant: 'priority'
       });
     }
     
     // Add date filters
-    Object.entries(filters.dates || {}).forEach(([type, dateFilter]) => {
+    Object.entries(filters.dateFilters || {}).forEach(([type, dateFilter]) => {
       if (dateFilter.start || dateFilter.end) {
         const dateRange = [];
         if (dateFilter.start) dateRange.push(dateFilter.start);
@@ -181,13 +180,12 @@ const FilterPanel = ({
     placeholder = "Select option...",
     isOpen,
     onToggle,
-    dropdownRef,
     dataTestId
   }) => {
     const selectedOption = options.find(option => option.value === value);
     
     return (
-      <div className="space-y-2" ref={dropdownRef}>
+      <div className="space-y-2">
         <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid={`${dataTestId}-label`}>
           {label}
         </label>
@@ -195,7 +193,7 @@ const FilterPanel = ({
           <button
             type="button"
             onClick={onToggle}
-            className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-all duration-200 bg-white text-left flex items-center justify-between"
+            className="w-full px-4 py-3 text-sm font-sf border border-apple-gray-2 rounded-apple-md focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue hover:border-apple-gray-3 transition-[border-color,box-shadow] duration-200 bg-white text-left flex items-center justify-between"
             data-testid={`${dataTestId}-button`}
           >
             <span className={selectedOption ? 'text-apple-gray-7' : 'text-apple-gray-4'}>
@@ -207,20 +205,22 @@ const FilterPanel = ({
           </button>
           
           <div 
-            className={`absolute top-full left-0 right-0 mt-1 bg-white border border-apple-gray-2 rounded-apple-lg shadow-apple-lg z-50 transition-all duration-200 ${
+            className={`absolute top-full left-0 right-0 mt-1 bg-white border border-apple-gray-2 rounded-apple-lg shadow-apple-lg z-50 transition-[opacity,transform] duration-200 ${
               isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
             }`}
             data-testid={`${dataTestId}-dropdown`}
           >
-            {options.map((option) => (
+            {options.map((option, index) => (
               <button
-                key={option.value}
+                key={`${option.value}-${index}`}
                 onClick={() => {
                   onChange(option.value);
                   onToggle();
                 }}
-                className={`w-full px-4 py-3 text-left text-sm font-sf hover:bg-apple-gray-1 first:rounded-t-apple-lg last:rounded-b-apple-lg transition-colors duration-200 ${
-                  value === option.value ? 'bg-apple-blue/10 text-apple-blue' : 'text-apple-gray-7'
+                className={`w-full px-4 py-3 text-left text-sm font-sf first:rounded-t-apple-lg last:rounded-b-apple-lg transition-colors duration-150 ${
+                  value === option.value 
+                    ? 'bg-apple-blue/10 text-apple-blue hover:bg-apple-blue/15' 
+                    : 'text-apple-gray-7 hover:bg-apple-gray-1'
                 }`}
                 data-testid={`${dataTestId}-option-${option.value}`}
               >
@@ -239,7 +239,6 @@ const FilterPanel = ({
       padding="lg" 
       className={`bg-white rounded-apple-lg shadow-apple-sm border border-apple-gray-2 ${className}`}
       data-testid="advanced-filter-panel"
-      ref={panelRef}
     >
       {/* Filter Header */}
       <div className="flex items-center justify-between mb-6" data-testid="filter-panel-header">
@@ -298,9 +297,9 @@ const FilterPanel = ({
       {activeFilters.length > 0 && (
         <div className="mb-6 p-4 bg-apple-gray-1/50 rounded-apple-lg border border-apple-gray-2/50" data-testid="active-filters-section">
           <div className="flex flex-wrap gap-2" data-testid="active-filters-chips">
-            {activeFilters.map((filter) => (
+            {activeFilters.map((filter, index) => (
               <FilterChip
-                key={filter.type}
+                key={`${filter.type}-${filter.value}-${index}`}
                 label={filter.label}
                 value={filter.value}
                 variant={filter.variant}
@@ -377,16 +376,16 @@ const FilterPanel = ({
           </button>
           
           <div 
-            className={`overflow-hidden transition-all duration-200 ease-out ${
+            className={`overflow-hidden transition-[max-height,opacity] duration-200 ease-out ${
               expandedSections.basic ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
             }`}
             data-testid="basic-filters-content"
           >
-            <div className="pt-2 space-y-4" data-testid="basic-filters-inner">
+            <div className="pt-2 space-y-4 transition-none" data-testid="basic-filters-inner">
               {/* Project Filter */}
               <CustomDropdown
                 label="Project"
-                value={filters.project || ''}
+                value={filters.projectFilter || ''}
                 options={[
                   { value: '', label: 'All Projects' },
                   ...projects.map(project => ({ value: project.name, label: project.name }))
@@ -395,14 +394,13 @@ const FilterPanel = ({
                 placeholder="Select project..."
                 isOpen={showProjectDropdown}
                 onToggle={() => setShowProjectDropdown(!showProjectDropdown)}
-                dropdownRef={projectDropdownRef}
                 dataTestId="project-filter"
               />
 
               {/* Test Suite Filter */}
               <CustomDropdown
                 label="Test Suite"
-                value={filters.suite || ''}
+                value={filters.suiteFilter || ''}
                 options={[
                   { value: '', label: 'All Test Suites' },
                   ...testSuites.map(suite => ({ value: suite.name, label: suite.name }))
@@ -411,14 +409,13 @@ const FilterPanel = ({
                 placeholder="Select test suite..."
                 isOpen={showSuiteDropdown}
                 onToggle={() => setShowSuiteDropdown(!showSuiteDropdown)}
-                dropdownRef={suiteDropdownRef}
                 dataTestId="suite-filter"
               />
 
               {/* Status Filter */}
               <CustomDropdown
                 label="Status"
-                value={filters.status || ''}
+                value={filters.statusFilter || ''}
                 options={[
                   { value: '', label: 'All Statuses' },
                   { value: '1', label: 'Pass' },
@@ -431,14 +428,13 @@ const FilterPanel = ({
                 placeholder="Select status..."
                 isOpen={showStatusDropdown}
                 onToggle={() => setShowStatusDropdown(!showStatusDropdown)}
-                dropdownRef={statusDropdownRef}
                 dataTestId="status-filter"
               />
 
               {/* Priority Filter */}
               <CustomDropdown
                 label="Priority"
-                value={filters.priority || ''}
+                value={filters.priorityFilter || ''}
                 options={[
                   { value: '', label: 'All Priorities' },
                   { value: '1', label: 'High' },
@@ -449,7 +445,6 @@ const FilterPanel = ({
                 placeholder="Select priority..."
                 isOpen={showPriorityDropdown}
                 onToggle={() => setShowPriorityDropdown(!showPriorityDropdown)}
-                dropdownRef={priorityDropdownRef}
                 dataTestId="priority-filter"
               />
             </div>
@@ -476,20 +471,20 @@ const FilterPanel = ({
           </button>
           
           <div 
-            className={`overflow-hidden transition-all duration-200 ease-out ${
+            className={`overflow-hidden transition-[max-height,opacity] duration-200 ease-out ${
               expandedSections.dates ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
             }`}
             data-testid="date-filters-content"
           >
-            <div className="pt-2 space-y-4" data-testid="date-filters-inner">
+            <div className="pt-2 space-y-4 transition-none" data-testid="date-filters-inner">
               {/* Created Date Filter */}
               <div className="space-y-2" data-testid="created-date-filter-container">
                 <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid="created-date-filter-label">
                   Created Date
                 </label>
                 <DateRangePicker
-                  startDate={filters.dates?.created?.start}
-                  endDate={filters.dates?.created?.end}
+                  startDate={filters.dateFilters?.created?.start}
+                  endDate={filters.dateFilters?.created?.end}
                   onDateChange={(start, end) => handleDateChange('created', start, end)}
                   placeholder="Select created date range"
                   data-testid="created-date-picker"
@@ -502,8 +497,8 @@ const FilterPanel = ({
                   Updated Date
                 </label>
                 <DateRangePicker
-                  startDate={filters.dates?.updated?.start}
-                  endDate={filters.dates?.updated?.end}
+                  startDate={filters.dateFilters?.updated?.start}
+                  endDate={filters.dateFilters?.updated?.end}
                   onDateChange={(start, end) => handleDateChange('updated', start, end)}
                   placeholder="Select updated date range"
                   data-testid="updated-date-picker"
@@ -516,8 +511,8 @@ const FilterPanel = ({
                   Execution Date
                 </label>
                 <DateRangePicker
-                  startDate={filters.dates?.executed?.start}
-                  endDate={filters.dates?.executed?.end}
+                  startDate={filters.dateFilters?.executed?.start}
+                  endDate={filters.dateFilters?.executed?.end}
                   onDateChange={(start, end) => handleDateChange('executed', start, end)}
                   placeholder="Select execution date range"
                   data-testid="execution-date-picker"
@@ -552,7 +547,7 @@ const FilterPanel = ({
             }`}
             data-testid="advanced-filters-content"
           >
-            <div className="pt-2 p-4 bg-apple-gray-1/30 rounded-apple-lg border border-apple-gray-2/50" data-testid="advanced-filters-inner">
+            <div className="pt-2 p-4 bg-apple-gray-1/30 rounded-apple-lg border border-apple-gray-2/50 transition-none" data-testid="advanced-filters-inner">
               <p className="text-sm text-apple-gray-5 font-sf" data-testid="advanced-filters-placeholder">
                 Advanced filters including custom fields, execution types, and more will be available here.
               </p>

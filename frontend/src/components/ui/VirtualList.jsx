@@ -75,7 +75,7 @@ const VirtualList = ({
       >
         {visibleItems.map((item) => (
           <div
-            key={item.id || item.virtualIndex}
+            key={`${item.id || 'item'}-${item.virtualIndex}`}
             style={item.style}
             className="transition-opacity duration-200"
           >

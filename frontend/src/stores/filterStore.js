@@ -74,7 +74,17 @@ const useFilterStore = create(
       },
       
       setBasicFilter: (filterType, value) => {
-        set({ [filterType]: value });
+        const filterMapping = {
+          project: 'projectFilter',
+          suite: 'suiteFilter', 
+          status: 'statusFilter',
+          priority: 'priorityFilter'
+        };
+        
+        const storeProperty = filterMapping[filterType];
+        if (storeProperty) {
+          set({ [storeProperty]: value });
+        }
       },
       
       setCustomFieldFilter: (fieldName, value) => {
