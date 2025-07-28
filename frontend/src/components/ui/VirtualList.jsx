@@ -9,11 +9,13 @@ const VirtualList = ({
   className = '',
   onScroll,
   scrollToIndex,
+  autoScrollOnDataChange = true,
   ...props
 }) => {
   const [scrollTop, setScrollTop] = useState(0);
   const [containerRef, setContainerRef] = useState(null);
   const scrollElementRef = useRef(null);
+  const prevItemsLengthRef = useRef(items.length);
 
   // Calculate virtual list dimensions
   const totalHeight = items.length * itemHeight;
@@ -53,13 +55,22 @@ const VirtualList = ({
     }
   }, [scrollToIndex, itemHeight]);
 
-  // Auto-scroll to top when items change
+  // Auto-scroll to top when items change significantly (not just filtering)
   useEffect(() => {
-    if (scrollElementRef.current) {
-      scrollElementRef.current.scrollTop = 0;
-      setScrollTop(0);
+    if (scrollElementRef.current && autoScrollOnDataChange) {
+      // Only auto-scroll if the change is significant (e.g., new data loaded)
+      // Don't auto-scroll for filtering operations that reduce the list
+      const currentScrollTop = scrollElementRef.current.scrollTop;
+      const isDataAddition = items.length > prevItemsLengthRef.current;
+      
+      if (isDataAddition || currentScrollTop === 0) {
+        // Auto-scroll to top only when new data is added or user is already at top
+        scrollElementRef.current.scrollTop = 0;
+        setScrollTop(0);
+      }
     }
-  }, [items.length]);
+    prevItemsLengthRef.current = items.length;
+  }, [items.length, autoScrollOnDataChange]);
 
   return (
     <div

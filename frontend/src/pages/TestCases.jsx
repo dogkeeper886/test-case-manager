@@ -40,7 +40,7 @@ import TestCasesKanban from '../components/test-cases/TestCasesKanban';
 import TestCasesTimeline from '../components/test-cases/TestCasesTimeline';
 import ViewToggle from '../components/test-cases/ViewToggle';
 import { FilterDialog } from '../components/filters';
-import { PerformanceMonitor, PerformanceAnalytics } from '../components/ui';
+
 import { testCasesAPI, testSuitesAPI, projectsAPI } from '../services/api';
 import useTestCaseStore from '../stores/testCaseStore';
 import useFilterStore from '../stores/filterStore';
@@ -65,8 +65,6 @@ const TestCases = () => {
   const [sortOrder, setSortOrder] = useState('asc');
   const [selectedIds, setSelectedIds] = useState([]);
   const [showFilterDialog, setShowFilterDialog] = useState(false);
-  const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
-  const [showPerformanceAnalytics, setShowPerformanceAnalytics] = useState(false);
   const [useOptimizedTable, setUseOptimizedTable] = useState(true);
   const [showBulkActions, setShowBulkActions] = useState(false);
 
@@ -160,8 +158,8 @@ const TestCases = () => {
     }
   };
 
-  // Optimized filtering with caching
-  const { filteredItems: filteredTestCases, cacheStats } = useOptimizedFilters(testCases || [], {
+  // Optimized filtering
+  const { filteredItems: filteredTestCases } = useOptimizedFilters(testCases || [], {
     search: { query: searchQuery, field: searchField, operator: searchOperator },
     project: projectFilter,
     suite: suiteFilter,
@@ -169,6 +167,8 @@ const TestCases = () => {
     priority: priorityFilter,
     dates: dateFilters
   });
+
+
 
 
 
@@ -726,29 +726,7 @@ const TestCases = () => {
             </Button>
           )}
 
-          {/* Performance Monitor Toggle - Only show in table mode */}
-          {viewMode === 'table' && (
-            <Button
-              variant="ghost"
-              onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
-              className="flex-shrink-0"
-              data-testid="performance-monitor-toggle"
-            >
-              Performance
-            </Button>
-          )}
 
-          {/* Performance Analytics Toggle - Only show in table mode */}
-          {viewMode === 'table' && (
-            <Button
-              variant="ghost"
-              onClick={() => setShowPerformanceAnalytics(!showPerformanceAnalytics)}
-              className="flex-shrink-0"
-              data-testid="performance-analytics-toggle"
-            >
-              Analytics
-            </Button>
-          )}
         </div>
 
         {/* Filter Dialog */}
@@ -908,25 +886,7 @@ const TestCases = () => {
           </div>
         )}
 
-        {/* Performance Monitor */}
-        <PerformanceMonitor
-          isVisible={showPerformanceMonitor}
-          onClose={() => setShowPerformanceMonitor(false)}
-        />
 
-        {/* Performance Analytics */}
-        <PerformanceAnalytics
-          isVisible={showPerformanceAnalytics}
-          onClose={() => setShowPerformanceAnalytics(false)}
-          cacheStats={cacheStats}
-          filterMetrics={{
-            activeFilters: getActiveFiltersCount(),
-            operations: cacheStats.totalAccess || 0,
-            avgTime: '12.3ms',
-            complexFilters: Object.keys(dateFilters).filter(key => dateFilters[key].enabled).length,
-            cacheHits: Math.floor((cacheStats.hitRate || 0.85) * (cacheStats.totalAccess || 100))
-          }}
-        />
       </div>
     </Layout>
   );

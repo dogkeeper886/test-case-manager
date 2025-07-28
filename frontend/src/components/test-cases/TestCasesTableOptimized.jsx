@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { ChevronUp, ChevronDown, CheckSquare, Square, FileText, CheckCircle, Minus } from 'lucide-react';
 import { Button, Badge } from '../ui';
 import VirtualList from '../ui/VirtualList';
-import FilterCache, { debounce, throttle, memoize } from '../../utils/filterCache';
+import { debounce, throttle } from '../../utils/filterCache';
 import { htmlToText, getHtmlPreview, containsHtml } from '../../utils/htmlToText';
 
 const TestCasesTableOptimized = ({
@@ -15,7 +15,6 @@ const TestCasesTableOptimized = ({
   className = ''
 }) => {
   const [hoveredRow, setHoveredRow] = useState(null);
-  const [cache] = useState(() => new FilterCache(50));
 
   // Memoized sorting function
   const sortedTestCases = useMemo(() => {
@@ -37,22 +36,10 @@ const TestCasesTableOptimized = ({
     return sorted;
   }, [testCases, sortBy, sortOrder]);
 
-  // Memoized filter cache key
-  const cacheKey = useMemo(() => {
-    return cache.generateKey({}, testCases);
-  }, [testCases, cache]);
-
-  // Cached filtered results
+  // Filtered results (no caching)
   const filteredTestCases = useMemo(() => {
-    const cached = cache.get(cacheKey);
-    if (cached) {
-      return cached.value;
-    }
-
-    const result = sortedTestCases;
-    cache.set(cacheKey, result);
-    return result;
-  }, [sortedTestCases, cacheKey, cache]);
+    return sortedTestCases;
+  }, [sortedTestCases]);
 
   // Select all functionality
   const isAllSelected = selectedIds.length === filteredTestCases.length && filteredTestCases.length > 0;
@@ -376,6 +363,7 @@ const TestCasesTableOptimized = ({
             renderItem={renderRow}
             onScroll={handleScroll}
             className="scrollbar-thin scrollbar-thumb-apple-gray-3 scrollbar-track-transparent"
+            autoScrollOnDataChange={false}
           />
         </div>
       ) : (
@@ -394,9 +382,7 @@ const TestCasesTableOptimized = ({
           <span data-testid="test-cases-count-optimized">
             Showing {filteredTestCases.length} of {testCases.length} test cases
           </span>
-          <span data-testid="cache-stats-optimized">
-            Cache: {cache.getStats().size}/{cache.getStats().maxSize} entries
-          </span>
+
         </div>
       </div>
     </div>

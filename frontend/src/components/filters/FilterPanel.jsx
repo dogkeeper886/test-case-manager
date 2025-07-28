@@ -97,8 +97,7 @@ const FilterPanel = ({
 
   const handleClosePanel = () => {
     if (onClose) {
-      // Trigger search before closing
-      onFilterChange('search', { query: '', field: 'all', operator: 'AND' });
+      // Close panel without resetting filters
       onClose();
     }
   };
@@ -183,13 +182,29 @@ const FilterPanel = ({
     dataTestId
   }) => {
     const selectedOption = options.find(option => option.value === value);
+    const dropdownRef = useRef(null);
+    
+    // Check if dropdown should open upward
+    const [openUpward, setOpenUpward] = useState(false);
+    
+    useEffect(() => {
+      if (isOpen && dropdownRef.current) {
+        const rect = dropdownRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const dropdownHeight = Math.min(options.length * 48, 240); // 48px per option, max 240px
+        const spaceBelow = viewportHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        
+        setOpenUpward(spaceBelow < dropdownHeight && spaceAbove > dropdownHeight);
+      }
+    }, [isOpen, options.length]);
     
     return (
       <div className="space-y-2">
         <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid={`${dataTestId}-label`}>
           {label}
         </label>
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={onToggle}
@@ -205,7 +220,11 @@ const FilterPanel = ({
           </button>
           
           <div 
-            className={`absolute top-full left-0 right-0 mt-1 bg-white border border-apple-gray-2 rounded-apple-lg shadow-apple-lg z-50 transition-[opacity,transform] duration-200 ${
+            className={`absolute left-0 right-0 bg-white border border-apple-gray-2 rounded-apple-lg shadow-apple-lg z-[100] max-h-60 overflow-y-auto transition-[opacity,transform] duration-200 ${
+              openUpward 
+                ? 'bottom-full mb-1' 
+                : 'top-full mt-1'
+            } ${
               isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
             }`}
             data-testid={`${dataTestId}-dropdown`}

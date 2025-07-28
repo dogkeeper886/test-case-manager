@@ -1,12 +1,9 @@
-import { useMemo, useCallback, useRef } from 'react';
-import FilterCache, { memoize, debounce } from '../utils/filterCache';
+import { useMemo, useCallback } from 'react';
 
 const useOptimizedFilters = (items = [], filters = {}) => {
-  const cacheRef = useRef(new FilterCache(100));
-  const lastFiltersRef = useRef(null);
 
-  // Memoized filter function
-  const applyFilters = useMemo(() => memoize((items, filters) => {
+  // Simple filter function
+  const applyFilters = (items, filters) => {
     let filtered = [...items];
 
     // Search filter
@@ -99,58 +96,17 @@ const useOptimizedFilters = (items = [], filters = {}) => {
     }
 
     return filtered;
-  }), []);
+  };
 
-  // Optimized filtering with caching
+  // Simple filtering without caching
   const filteredItems = useMemo(() => {
-    const filterKey = JSON.stringify(filters);
-    
-    // Check if filters haven't changed
-    if (lastFiltersRef.current === filterKey) {
-      return cacheRef.current.get(filterKey)?.value || items;
-    }
-
-    // Generate cache key
-    const cacheKey = cacheRef.current.generateKey(filters, items);
-    
-    // Check cache first
-    const cached = cacheRef.current.get(cacheKey);
-    if (cached) {
-      lastFiltersRef.current = filterKey;
-      return cached.value;
-    }
-
-    // Apply filters synchronously
+    // Apply filters directly
     const result = applyFilters(items, filters);
-    
-    // Cache result
-    cacheRef.current.set(cacheKey, result);
-    lastFiltersRef.current = filterKey;
-    
     return result;
-  }, [items, filters, applyFilters]);
-
-  // Cache statistics
-  const cacheStats = useMemo(() => {
-    return cacheRef.current.getStats();
-  }, [filteredItems]);
-
-  // Clear cache
-  const clearCache = useCallback(() => {
-    cacheRef.current.clear();
-    lastFiltersRef.current = null;
-  }, []);
-
-  // Invalidate cache for specific pattern
-  const invalidateCache = useCallback((pattern) => {
-    cacheRef.current.invalidate(pattern);
-  }, []);
+  }, [items, filters]);
 
   return {
-    filteredItems: filteredItems || [],
-    cacheStats,
-    clearCache,
-    invalidateCache
+    filteredItems: filteredItems || []
   };
 };
 

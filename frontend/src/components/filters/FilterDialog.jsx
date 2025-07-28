@@ -193,13 +193,29 @@ const FilterDialog = ({
     dataTestId
   }) => {
     const selectedOption = options.find(option => option.value === value);
+    const dropdownRef = useRef(null);
+    
+    // Check if dropdown should open upward
+    const [openUpward, setOpenUpward] = useState(false);
+    
+    useEffect(() => {
+      if (isOpen && dropdownRef.current) {
+        const rect = dropdownRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const dropdownHeight = Math.min(options.length * 48, 240); // 48px per option, max 240px
+        const spaceBelow = viewportHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        
+        setOpenUpward(spaceBelow < dropdownHeight && spaceAbove > dropdownHeight);
+      }
+    }, [isOpen, options.length]);
     
     return (
       <div className="space-y-2">
         <label className="block text-sm font-sf font-semibold text-apple-gray-6" data-testid={`${dataTestId}-label`}>
           {label}
         </label>
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={onToggle}
@@ -215,7 +231,11 @@ const FilterDialog = ({
           </button>
           
           <div 
-            className={`absolute top-full left-0 right-0 mt-1 bg-white border border-apple-gray-2 rounded-apple-lg shadow-apple-lg z-50 transition-[opacity,transform] duration-200 ${
+            className={`absolute left-0 right-0 bg-white border border-apple-gray-2 rounded-apple-lg shadow-apple-lg z-[100] max-h-60 overflow-y-auto transition-[opacity,transform] duration-200 ${
+              openUpward 
+                ? 'bottom-full mb-1' 
+                : 'top-full mt-1'
+            } ${
               isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
             }`}
             data-testid={`${dataTestId}-dropdown`}
@@ -327,10 +347,10 @@ const FilterDialog = ({
                 data-testid="search-content"
               >
                 <div className="pt-4" data-testid="search-inner">
-                  <AdvancedSearch
-                    searchData={filters.search || {}}
-                    onChange={handleSearchChange}
-                  />
+                                  <AdvancedSearch
+                  searchData={filters.search || {}}
+                  onChange={handleSearchChange}
+                />
                 </div>
               </div>
             </div>
@@ -390,10 +410,10 @@ const FilterDialog = ({
                     value={filters.status}
                     options={[
                       { value: '', label: 'All Statuses' },
-                      { value: 'Pass', label: 'Pass' },
-                      { value: 'Fail', label: 'Fail' },
-                      { value: 'Blocked', label: 'Blocked' },
-                      { value: 'Not Run', label: 'Not Run' }
+                      { value: '1', label: 'Pass' },
+                      { value: '2', label: 'Fail' },
+                      { value: '3', label: 'Block' },
+                      { value: '4', label: 'Draft' }
                     ]}
                     onChange={(value) => handleBasicFilterChange('status', value)}
                     isOpen={showStatusDropdown}
@@ -406,9 +426,9 @@ const FilterDialog = ({
                     value={filters.priority}
                     options={[
                       { value: '', label: 'All Priorities' },
-                      { value: 'High', label: 'High' },
-                      { value: 'Medium', label: 'Medium' },
-                      { value: 'Low', label: 'Low' }
+                      { value: '1', label: 'High' },
+                      { value: '2', label: 'Medium' },
+                      { value: '3', label: 'Low' }
                     ]}
                     onChange={(value) => handleBasicFilterChange('priority', value)}
                     isOpen={showPriorityDropdown}
