@@ -1,10 +1,12 @@
 const TestLinkXMLParser = require('../utils/TestLinkXMLParser');
+const ProjectService = require('./ProjectService');
 const fs = require('fs').promises;
 
 class TestLinkImportService {
   constructor(db) {
     this.db = db;
     this.parser = new TestLinkXMLParser();
+    this.projectService = new ProjectService(db);
   }
 
   /**
@@ -22,10 +24,10 @@ class TestLinkImportService {
   /**
    * Preview import without actually importing data
    * @param {string} filePath - Path to XML file
-   * @param {number} projectId - Project ID
+   * @param {number} projectId - Project ID (optional)
    * @returns {Promise<Object>} Preview data
    */
-  async previewImport(filePath, projectId) {
+  async previewImport(filePath, projectId = null) {
     try {
       // Parse XML file
       const parsedData = await this.parser.parseFile(filePath);
@@ -39,8 +41,11 @@ class TestLinkImportService {
       // Get statistics
       const stats = this.parser.getStatistics(parsedData);
       
-      // Analyze for duplicates
-      const duplicateAnalysis = await this.analyzeDuplicates(parsedData, projectId);
+      // Analyze for duplicates (only if projectId is provided)
+      let duplicateAnalysis = { testSuites: [], testCases: [], summary: { duplicateTestSuites: 0, duplicateTestCases: 0 } };
+      if (projectId) {
+        duplicateAnalysis = await this.analyzeDuplicates(parsedData, projectId);
+      }
       
       return {
         success: true,

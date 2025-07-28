@@ -125,6 +125,9 @@ export const projectsAPI = {
   
   // Delete project
   delete: (id) => api.delete(`/api/projects/${id}`),
+  
+  // Get project statistics
+  getStatistics: (id) => api.get(`/api/projects/${id}/statistics`),
 };
 
 export const documentsAPI = {

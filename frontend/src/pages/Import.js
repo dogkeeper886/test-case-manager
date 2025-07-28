@@ -1,28 +1,59 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, FileText, Trash2, Plus, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { Button, Card, Badge } from '../components/ui';
+import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
-import { importAPI } from '../services/api';
-import { showSuccess, showError } from '../utils/toast';
+import { importAPI, projectsAPI } from '../services/api';
+import { showSuccess, showError, showWarning, showInfo } from '../utils/toast';
 
 const Import = () => {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
-  // Removed uploadError and uploadSuccess state - now using toast notifications
   const [importHistory, setImportHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyError, setHistoryError] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [showNewProjectForm, setShowNewProjectForm] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectDescription, setNewProjectDescription] = useState('');
   const fileInputRef = useRef(null);
 
-  // Fetch import history on component mount
+  // Fetch projects and import history on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch projects
+        setLoadingProjects(true);
+        const projectsResponse = await projectsAPI.getAll();
+        const projectsData = projectsResponse.data.data || [];
+        setProjects(projectsData);
+        
+        // Set first project as default if available
+        if (projectsData.length > 0 && !selectedProjectId) {
+          setSelectedProjectId(projectsData[0].id.toString());
+        }
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+        showError('Failed to load projects');
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Fetch import history when selected project changes
   useEffect(() => {
     const fetchImportHistory = async () => {
+      if (!selectedProjectId) return;
+      
       try {
         setLoadingHistory(true);
         setHistoryError(null);
         
-        // Fetch import logs for project 1 (sample project)
-        const response = await importAPI.getLogs(1);
+        const response = await importAPI.getLogs(selectedProjectId);
         const logs = response.data.data || [];
         
         // Transform API data to match UI format
@@ -36,7 +67,7 @@ const Import = () => {
                   log.status === 'processing' ? 'Processing' : 'Unknown',
           testCases: log.imported_test_cases || 0,
           testSuites: log.imported_test_suites || 0,
-          projects: 1, // Always 1 for now
+          projects: 1,
           duration: log.duration || '--',
           error: log.errors?.[0] || null,
           strategy: log.strategy || 'unknown'
@@ -46,7 +77,6 @@ const Import = () => {
       } catch (error) {
         console.error('Failed to fetch import history:', error);
         setHistoryError('Failed to load import history');
-        // Fallback to empty array
         setImportHistory([]);
       } finally {
         setLoadingHistory(false);
@@ -54,7 +84,7 @@ const Import = () => {
     };
 
     fetchImportHistory();
-  }, []);
+  }, [selectedProjectId]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -123,14 +153,38 @@ const Import = () => {
       return;
     }
 
+    // Validate project selection
+    if (!showNewProjectForm && !selectedProjectId) {
+      showError('Please select an existing project or choose to create a new one');
+      return;
+    }
+
+    if (showNewProjectForm && !newProjectName.trim()) {
+      showError('Please enter a project name for the new project');
+      return;
+    }
+
+    if (showNewProjectForm && newProjectName.trim().length < 2) {
+      showError('Project name must be at least 2 characters long');
+      return;
+    }
+
     setUploading(true);
 
     try {
       const formData = new FormData();
       formData.append('xmlFile', file);
-      formData.append('projectId', '1'); // Use the sample project
+      
+      // Add project information
+      if (showNewProjectForm) {
+        formData.append('newProjectName', newProjectName.trim());
+        formData.append('newProjectDescription', newProjectDescription.trim());
+      } else {
+        formData.append('projectId', selectedProjectId);
+      }
 
       // First, preview the import to show user what will be imported
+      showInfo('Analyzing import file...');
       const previewResponse = await importAPI.previewFile(formData);
       console.log('Preview response:', previewResponse.data);
       
@@ -140,6 +194,7 @@ const Import = () => {
       const totalCount = previewData.statistics.totalTestCases;
       
       if (duplicateCount > 0) {
+        showWarning(`Found ${duplicateCount} duplicate test cases out of ${totalCount} total. You can proceed with the import or review the duplicates first.`);
         const confirmMessage = `Found ${duplicateCount} duplicate test cases out of ${totalCount} total. Do you want to proceed with the import?`;
         if (!window.confirm(confirmMessage)) {
           setUploading(false);
@@ -148,18 +203,52 @@ const Import = () => {
       }
 
       // Proceed with import using the recommended strategy
+      showInfo('Importing test cases...');
       const importFormData = new FormData();
       importFormData.append('xmlFile', file);
-      importFormData.append('projectId', '1');
+      
+      // Add project information
+      if (showNewProjectForm) {
+        importFormData.append('newProjectName', newProjectName.trim());
+        importFormData.append('newProjectDescription', newProjectDescription.trim());
+      } else {
+        importFormData.append('projectId', selectedProjectId);
+      }
+      
       importFormData.append('strategy', previewData.recommendations.suggestedStrategy);
 
       const response = await importAPI.importFile(importFormData);
 
-      showSuccess(`Successfully imported ${file.name} with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`);
+      const successMessage = showNewProjectForm 
+        ? `Successfully imported ${file.name} into new project "${newProjectName}" with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`
+        : `Successfully imported ${file.name} with ${response.data.data.importedCases} new cases and ${response.data.data.updatedCases} updated cases`;
+      
+      showSuccess(successMessage);
       console.log('Import response:', response.data);
       
+      // If new project was created, refresh projects list and select it
+      let newProjectId = null;
+      if (showNewProjectForm && response.data.data.projectCreated) {
+        const projectsResponse = await projectsAPI.getAll();
+        const projectsData = projectsResponse.data.data || [];
+        setProjects(projectsData);
+        
+        // Find the newly created project and select it
+        const newProject = projectsData.find(p => p.name === newProjectName.trim());
+        if (newProject) {
+          newProjectId = newProject.id;
+          setSelectedProjectId(newProject.id.toString());
+        }
+        
+        // Reset new project form
+        setShowNewProjectForm(false);
+        setNewProjectName('');
+        setNewProjectDescription('');
+      }
+      
       // Refresh import history after successful import
-      const historyResponse = await importAPI.getLogs(1);
+      const currentProjectId = newProjectId || selectedProjectId;
+      const historyResponse = await importAPI.getLogs(currentProjectId);
       const logs = historyResponse.data.data || [];
       const transformedHistory = logs.map(log => ({
         id: log.id,
@@ -319,12 +408,117 @@ const Import = () => {
         </div>
       </div>
 
+      {/* Project Selection */}
+      <div className="mb-6" data-element="project-selection-section">
+        <Card elevation="sm" hover={false} data-element="project-selection-card">
+          <Card.Header data-element="project-selection-header">
+            <h3 className="text-lg font-sf-display font-semibold text-apple-gray-7" data-element="project-selection-title">
+              Project Selection
+            </h3>
+          </Card.Header>
+          <Card.Body className="p-6" data-element="project-selection-body">
+            {loadingProjects ? (
+              <div className="flex items-center justify-center space-x-3 py-6">
+                <Clock className="w-5 h-5 text-apple-gray-4 animate-spin" />
+                <span className="text-sm font-medium text-apple-gray-5">Loading projects...</span>
+              </div>
+            ) : (
+              <div className="space-y-6" data-element="project-selection-content">
+                {/* Existing Project Selection */}
+                <div className="space-y-3" data-element="existing-project-section">
+                  <label className="text-sm font-sf font-semibold text-apple-gray-7" data-element="project-selection-label">
+                    Select Existing Project
+                  </label>
+                  <select
+                    value={selectedProjectId}
+                    onChange={(e) => setSelectedProjectId(e.target.value)}
+                    disabled={showNewProjectForm}
+                    className="w-full px-4 py-3 border border-apple-gray-3 rounded-apple-lg text-sm font-sf focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue transition-all duration-200 disabled:bg-apple-gray-1 disabled:text-apple-gray-4"
+                    data-element="project-select"
+                  >
+                    <option value="">Choose a project...</option>
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-apple-gray-2"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-3 bg-white text-apple-gray-4 font-medium">or</span>
+                  </div>
+                </div>
+
+                {/* New Project Creation */}
+                <div className="space-y-3" data-element="new-project-section">
+                  <div className="flex items-center space-x-3" data-element="new-project-toggle">
+                    <input
+                      type="checkbox"
+                      id="create-new-project"
+                      checked={showNewProjectForm}
+                      onChange={(e) => {
+                        setShowNewProjectForm(e.target.checked);
+                        if (e.target.checked) {
+                          setSelectedProjectId('');
+                        }
+                      }}
+                      className="w-5 h-5 text-apple-blue border-apple-gray-3 rounded-md focus:ring-2 focus:ring-apple-blue/50 focus:ring-offset-0 transition-colors duration-200"
+                      data-element="new-project-checkbox"
+                    />
+                    <label htmlFor="create-new-project" className="text-sm font-sf font-semibold text-apple-gray-7 cursor-pointer" data-element="new-project-label">
+                      Create New Project
+                    </label>
+                  </div>
+
+                  {showNewProjectForm && (
+                    <div className="space-y-4 pl-8" data-element="new-project-form">
+                      <div data-element="new-project-name">
+                        <label className="text-sm font-sf font-semibold text-apple-gray-7" data-element="new-project-name-label">
+                          Project Name *
+                        </label>
+                        <Input
+                          type="text"
+                          value={newProjectName}
+                          onChange={(e) => setNewProjectName(e.target.value)}
+                          placeholder="Enter project name"
+                          className="mt-2"
+                          data-element="new-project-name-input"
+                        />
+                      </div>
+                      <div data-element="new-project-description">
+                        <label className="text-sm font-sf font-semibold text-apple-gray-7" data-element="new-project-description-label">
+                          Description (Optional)
+                        </label>
+                        <textarea
+                          value={newProjectDescription}
+                          onChange={(e) => setNewProjectDescription(e.target.value)}
+                          placeholder="Enter project description"
+                          rows={3}
+                          className="w-full px-4 py-3 mt-2 border border-apple-gray-3 rounded-apple-lg text-sm font-sf focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue transition-all duration-200 resize-none"
+                          data-element="new-project-description-input"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      </div>
+
       {/* Import Area */}
       <div className="mb-8" data-element="import-upload-section">
-        <Card elevation="sm" data-element="import-upload-card">
+        <Card elevation="sm" hover={false} data-element="import-upload-card">
           <Card.Body className="p-8" data-element="import-upload-body">
             <div
-              className={`relative border-2 border-dashed rounded-apple p-8 text-center transition-all duration-200 ${
+              className={`relative border-2 border-dashed rounded-apple-lg p-8 text-center transition-all duration-200 ${
                 dragActive
                   ? 'border-apple-blue bg-apple-blue/5'
                   : 'border-apple-gray-3 hover:border-apple-gray-4'
@@ -335,10 +529,10 @@ const Import = () => {
               onDrop={handleDrop}
               data-element="import-drop-zone"
             >
-              <Upload className="w-12 h-12 text-apple-gray-4 mx-auto mb-4" data-element="import-upload-icon" />
-              <div className="text-sm text-apple-gray-6" data-element="import-upload-text">
+              <Upload className="w-16 h-16 text-apple-gray-4 mx-auto mb-6" data-element="import-upload-icon" />
+              <div className="space-y-2" data-element="import-upload-text">
                 <label htmlFor="import-file-upload" className="cursor-pointer" data-element="import-upload-label">
-                  <span className="font-medium text-apple-blue hover:text-apple-blue/80" data-element="import-upload-link">
+                  <span className="text-lg font-sf font-semibold text-apple-blue hover:text-apple-blue/80 transition-colors duration-200" data-element="import-upload-link">
                     Upload TestLink XML file
                   </span>
                   <input 
@@ -352,9 +546,9 @@ const Import = () => {
                     onChange={handleFileSelect}
                   />
                 </label>
-                <p className="pl-1" data-element="import-drag-text">or drag and drop</p>
+                <p className="text-sm text-apple-gray-5" data-element="import-drag-text">or drag and drop</p>
               </div>
-              <p className="text-xs text-apple-gray-4 mt-2" data-element="import-file-types">
+              <p className="text-xs text-apple-gray-4 mt-4" data-element="import-file-types">
                 TestLink XML export files only
               </p>
               
@@ -372,20 +566,21 @@ const Import = () => {
             </div>
             
             {/* Help Section */}
-            <div className="mt-6 p-4 bg-apple-gray-1 rounded-apple" data-element="import-help-section">
-              <div className="flex items-start space-x-3" data-element="import-help-content">
-                <FileText className="w-5 h-5 text-apple-blue mt-0.5" data-element="import-help-icon" />
-                <div data-element="import-help-text">
-                  <h4 className="text-sm font-medium text-apple-gray-7 mb-1" data-element="import-help-title">
+            <div className="mt-6 p-6 bg-apple-gray-1 rounded-apple-lg" data-element="import-help-section">
+              <div className="flex items-start space-x-4" data-element="import-help-content">
+                <FileText className="w-6 h-6 text-apple-blue mt-0.5 flex-shrink-0" data-element="import-help-icon" />
+                <div className="space-y-3" data-element="import-help-text">
+                  <h4 className="text-sm font-sf font-semibold text-apple-gray-7" data-element="import-help-title">
                     How to export from TestLink
                   </h4>
-                  <p className="text-xs text-apple-gray-5 mb-2" data-element="import-help-description">
+                  <p className="text-sm text-apple-gray-5 leading-relaxed" data-element="import-help-description">
                     In TestLink, go to Test Specification → Export → XML. Select your test project and export the XML file.
                   </p>
                   <Button 
                     size="sm" 
                     variant="outline"
                     onClick={handleDownloadTemplate}
+                    className="font-sf font-medium"
                     data-element="import-download-template"
                   >
                     Download Template
@@ -399,9 +594,9 @@ const Import = () => {
 
       {/* Import History */}
       <div className="mb-8" data-element="import-history-section">
-        <Card elevation="sm" data-element="import-history-card">
+        <Card elevation="sm" hover={false} data-element="import-history-card">
           <Card.Header data-element="import-history-header">
-            <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="import-history-title">
+            <h3 className="text-lg font-sf-display font-semibold text-apple-gray-7" data-element="import-history-title">
               Import History
             </h3>
           </Card.Header>
@@ -410,25 +605,25 @@ const Import = () => {
               <table className="min-w-full divide-y divide-apple-gray-2" data-element="import-table">
                 <thead className="bg-apple-gray-1" data-element="import-table-header">
                   <tr data-element="import-table-header-row">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-5 uppercase tracking-wider" data-element="import-header-file">
+                    <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-file">
                       File
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-5 uppercase tracking-wider" data-element="import-header-size">
+                    <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-size">
                       Size
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-5 uppercase tracking-wider" data-element="import-header-status">
+                    <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-status">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-5 uppercase tracking-wider" data-element="import-header-results">
+                    <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-results">
                       Results
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-5 uppercase tracking-wider" data-element="import-header-duration">
+                    <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-duration">
                       Duration
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-5 uppercase tracking-wider" data-element="import-header-uploaded">
+                    <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-uploaded">
                       Uploaded
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-apple-gray-5 uppercase tracking-wider" data-element="import-header-actions">
+                    <th className="px-6 py-4 text-left text-xs font-sf font-semibold text-apple-gray-5 uppercase tracking-wider" data-element="import-header-actions">
                       Actions
                     </th>
                   </tr>
@@ -436,54 +631,54 @@ const Import = () => {
                 <tbody className="bg-white divide-y divide-apple-gray-2" data-element="import-table-body">
                   {loadingHistory ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-8 text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <Clock className="w-5 h-5 text-apple-gray-4 animate-spin" />
-                          <span className="text-apple-gray-5">Loading import history...</span>
+                      <td colSpan="7" className="px-6 py-12 text-center">
+                        <div className="flex items-center justify-center space-x-3">
+                          <Clock className="w-6 h-6 text-apple-gray-4 animate-spin" />
+                          <span className="text-sm font-sf font-medium text-apple-gray-5">Loading import history...</span>
                         </div>
                       </td>
                     </tr>
                   ) : historyError ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-8 text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <AlertCircle className="w-5 h-5 text-apple-red" />
-                          <span className="text-apple-red">{historyError}</span>
+                      <td colSpan="7" className="px-6 py-12 text-center">
+                        <div className="flex items-center justify-center space-x-3">
+                          <AlertCircle className="w-6 h-6 text-apple-red" />
+                          <span className="text-sm font-sf font-medium text-apple-red">{historyError}</span>
                         </div>
                       </td>
                     </tr>
                   ) : importHistory.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-8 text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <FileText className="w-5 h-5 text-apple-gray-4" />
-                          <span className="text-apple-gray-5">No import history found</span>
+                      <td colSpan="7" className="px-6 py-12 text-center">
+                        <div className="flex items-center justify-center space-x-3">
+                          <FileText className="w-6 h-6 text-apple-gray-4" />
+                          <span className="text-sm font-sf font-medium text-apple-gray-5">No import history found</span>
                         </div>
                       </td>
                     </tr>
                   ) : (
                     importHistory.map((importItem, index) => (
-                    <tr key={importItem.id} className="hover:bg-apple-gray-1/50 transition-colors" data-element={`import-row-${index + 1}`}>
-                      <td className="px-6 py-4 whitespace-nowrap" data-element={`import-file-${index + 1}`}>
+                    <tr key={importItem.id} className="hover:bg-apple-gray-1/30 transition-colors duration-200" data-element={`import-row-${index + 1}`}>
+                      <td className="px-6 py-5 whitespace-nowrap" data-element={`import-file-${index + 1}`}>
                         <div className="flex items-center" data-element={`import-file-info-${index + 1}`}>
                           <div data-element={`import-file-icon-${index + 1}`}>
                             <FileText className="w-5 h-5 text-apple-blue" />
                           </div>
-                          <div className="ml-3" data-element={`import-file-details-${index + 1}`}>
-                            <div className="text-sm font-medium text-apple-gray-7" data-element={`import-filename-${index + 1}`}>
+                          <div className="ml-4" data-element={`import-file-details-${index + 1}`}>
+                            <div className="text-sm font-sf font-semibold text-apple-gray-7" data-element={`import-filename-${index + 1}`}>
                               {importItem.filename}
                             </div>
-                            <div className="text-sm text-apple-gray-5" data-element={`import-filesize-${index + 1}`}>
+                            <div className="text-sm text-apple-gray-5 mt-1" data-element={`import-filesize-${index + 1}`}>
                               {importItem.size}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-apple-gray-7" data-element={`import-size-${index + 1}`}>
+                      <td className="px-6 py-5 whitespace-nowrap text-sm font-sf text-apple-gray-7" data-element={`import-size-${index + 1}`}>
                         {importItem.size}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap" data-element={`import-status-${index + 1}`}>
-                        <div className="flex items-center space-x-2" data-element={`import-status-content-${index + 1}`}>
+                      <td className="px-6 py-5 whitespace-nowrap" data-element={`import-status-${index + 1}`}>
+                        <div className="flex items-center space-x-3" data-element={`import-status-content-${index + 1}`}>
                           <div data-element={`import-status-icon-${index + 1}`}>
                             {getStatusIcon(importItem.status)}
                           </div>
@@ -496,7 +691,7 @@ const Import = () => {
                           </Badge>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-apple-gray-7" data-element={`import-results-${index + 1}`}>
+                      <td className="px-6 py-5 whitespace-nowrap text-sm font-sf text-apple-gray-7" data-element={`import-results-${index + 1}`}>
                         <div className="space-y-1" data-element={`import-results-details-${index + 1}`}>
                           <div data-element={`import-testcases-${index + 1}`}>
                             {importItem.testCases} test cases
@@ -509,26 +704,27 @@ const Import = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-apple-gray-7" data-element={`import-duration-${index + 1}`}>
+                      <td className="px-6 py-5 whitespace-nowrap text-sm font-sf text-apple-gray-7" data-element={`import-duration-${index + 1}`}>
                         {importItem.duration}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-apple-gray-7" data-element={`import-uploaded-${index + 1}`}>
+                      <td className="px-6 py-5 whitespace-nowrap text-sm font-sf text-apple-gray-7" data-element={`import-uploaded-${index + 1}`}>
                         {importItem.uploaded}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" data-element={`import-actions-${index + 1}`}>
-                        <div className="flex items-center space-x-2" data-element={`import-action-buttons-${index + 1}`}>
+                      <td className="px-6 py-5 whitespace-nowrap text-sm font-sf font-medium" data-element={`import-actions-${index + 1}`}>
+                        <div className="flex items-center space-x-3" data-element={`import-action-buttons-${index + 1}`}>
                           {importItem.status === 'Failed' && (
                             <Button 
                               size="sm" 
                               variant="outline"
                               onClick={() => handleRetryImport(importItem.id)}
+                              className="font-sf font-medium"
                               data-element={`import-retry-${index + 1}`}
                             >
                               Retry
                             </Button>
                           )}
                           <button 
-                            className="text-apple-red hover:text-apple-red/80 transition-colors" 
+                            className="text-apple-red hover:text-apple-red/80 transition-colors duration-200 p-1 rounded-md hover:bg-apple-red/5" 
                             onClick={() => handleDeleteImport(importItem.id)}
                             data-element={`import-delete-${index + 1}`}
                           >

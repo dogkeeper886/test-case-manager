@@ -157,7 +157,9 @@ Our design system uses consistent tokens defined in `tailwind.config.js`:
 - **Border Radius**: Consistent rounding (`rounded-apple-sm`, `rounded-apple-md`, `rounded-apple-lg`)
 - **Transitions**: Standardized timing (`duration-200`, `duration-300`)
 
-📖 **Detailed Design Documentation**: See [`docs/design-documents/test-case-views-design-system.md`](docs/design-documents/test-case-views-design-system.md) for comprehensive design system documentation.
+📖 **Detailed Design Documentation**: 
+- [Test Case Views Design System](docs/design-documents/test-case-views-design-system.md) - Comprehensive design system documentation
+- [Apple Notification System](docs/design-documents/apple-notification-system.md) - Toast notification design and implementation
 
 ## 📊 Current Data Statistics
 

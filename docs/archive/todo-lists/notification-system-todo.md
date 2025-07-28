@@ -154,24 +154,24 @@
 ## Priority 5: Documentation
 
 ### 5.1 Usage Documentation
-- [ ] **Task**: Document toast usage
-- [ ] **Requirements**:
-  - [ ] **API documentation**: How to use toast functions
-  - [ ] **Examples**: Code examples for each type
-  - [ ] **Best practices**: When to use each type
-  - [ ] **Migration guide**: How to replace old notifications
-- [ ] **Files**: `docs/toast-usage.md`
-- [ ] **Status**: 🔄 PENDING
+- [x] **Task**: Document toast usage
+- [x] **Requirements**:
+  - [x] **API documentation**: How to use toast functions
+  - [x] **Examples**: Code examples for each type
+  - [x] **Best practices**: When to use each type
+  - [x] **Migration guide**: How to replace old notifications
+- [x] **Files**: `docs/design-documents/apple-notification-system.md`
+- [x] **Status**: ✅ COMPLETED
 
 ### 5.2 Design System Integration
-- [ ] **Task**: Update design system documentation
-- [ ] **Requirements**:
-  - [ ] **Toast patterns**: Document in design system
-  - [ ] **Color usage**: Success, error, warning, info colors
-  - [ ] **Animation specs**: Timing and easing
-  - [ ] **Accessibility**: Guidelines for notifications
-- [ ] **Files**: `docs/design-system.md`
-- [ ] **Status**: 🔄 PENDING
+- [x] **Task**: Update design system documentation
+- [x] **Requirements**:
+  - [x] **Toast patterns**: Document in design system
+  - [x] **Color usage**: Success, error, warning, info colors
+  - [x] **Animation specs**: Timing and easing
+  - [x] **Accessibility**: Guidelines for notifications
+- [x] **Files**: `docs/design-documents/apple-notification-system.md`
+- [x] **Status**: ✅ COMPLETED
 
 ## Implementation Strategy
 

@@ -53,25 +53,44 @@ router.post('/testlink', upload.single('xmlFile'), async (req, res) => {
       return res.status(400).json({ error: 'No XML file uploaded' });
     }
 
-    const { projectId, documentId, strategy } = req.body;
+    const { projectId, newProjectName, newProjectDescription, documentId, strategy } = req.body;
     
-    if (!projectId) {
-      return res.status(400).json({ error: 'Project ID is required' });
-    }
-
     // Validate strategy
     const validStrategies = Object.values(TestLinkImportService.IMPORT_STRATEGIES);
     const importStrategy = strategy && validStrategies.includes(strategy) 
       ? strategy 
       : TestLinkImportService.IMPORT_STRATEGIES.UPDATE_EXISTING;
 
-    // Initialize import service
-    const service = initializeImportService(req.app.locals.db);
+    // Initialize services
+    const importService = initializeImportService(req.app.locals.db);
+    const ProjectService = require('../services/ProjectService');
+    const projectService = new ProjectService(req.app.locals.db);
+    
+    let actualProjectId = projectId ? parseInt(projectId) : null;
+    let projectCreated = false;
+    
+    // If creating a new project
+    if (!actualProjectId && newProjectName) {
+      try {
+        const newProject = await projectService.createProject(newProjectName, newProjectDescription || '');
+        actualProjectId = newProject.id;
+        projectCreated = true;
+      } catch (projectError) {
+        return res.status(400).json({ 
+          error: 'Failed to create project', 
+          details: projectError.message 
+        });
+      }
+    }
+    
+    if (!actualProjectId) {
+      return res.status(400).json({ error: 'Either projectId or newProjectName is required' });
+    }
     
     // Import the file
-    const result = await service.importFromFile(
+    const result = await importService.importFromFile(
       req.file.path, 
-      parseInt(projectId), 
+      actualProjectId, 
       importStrategy,
       documentId ? parseInt(documentId) : null
     );
@@ -89,16 +108,20 @@ router.post('/testlink', upload.single('xmlFile'), async (req, res) => {
       `TestLink XML import completed successfully. Imported ${result.importedTestSuites} test suites and ${result.importedTestCases} test cases.`,
       {
         fileName: req.file.originalname,
-        projectId: parseInt(projectId),
+        projectId: actualProjectId,
         importedTestSuites: result.importedTestSuites,
         importedTestCases: result.importedTestCases,
-        strategy: importStrategy
+        strategy: importStrategy,
+        projectCreated: projectCreated
       }
     );
 
     res.status(201).json({
       message: 'Import completed successfully',
-      data: result
+      data: {
+        ...result,
+        projectCreated: projectCreated
+      }
     });
 
   } catch (error) {
@@ -126,17 +149,36 @@ router.post('/testlink/preview', upload.single('xmlFile'), async (req, res) => {
       return res.status(400).json({ error: 'No XML file uploaded' });
     }
 
-    const { projectId } = req.body;
+    const { projectId, newProjectName, newProjectDescription } = req.body;
     
-    if (!projectId) {
-      return res.status(400).json({ error: 'Project ID is required' });
+    // Initialize services
+    const importService = initializeImportService(req.app.locals.db);
+    const ProjectService = require('../services/ProjectService');
+    const projectService = new ProjectService(req.app.locals.db);
+    
+    let actualProjectId = projectId ? parseInt(projectId) : null;
+    
+    // If creating a new project, validate the project name
+    if (!actualProjectId && newProjectName) {
+      // Check if project name already exists
+      const existingProject = await projectService.db.query(
+        'SELECT id FROM projects WHERE name = $1',
+        [newProjectName.trim()]
+      );
+      
+      if (existingProject.rows.length > 0) {
+        return res.status(400).json({ 
+          error: 'Project name already exists', 
+          details: `A project with the name "${newProjectName}" already exists. Please choose a different name.`
+        });
+      }
+      
+      // For preview, we don't create the project yet, just validate the name
+      // The actual project creation will happen in the main import route
     }
-
-    // Initialize import service
-    const service = initializeImportService(req.app.locals.db);
     
-    // Preview the import
-    const preview = await service.previewImport(req.file.path, parseInt(projectId));
+    // Preview the import (without projectId for new projects, so no duplicate analysis)
+    const preview = await importService.previewImport(req.file.path, actualProjectId);
 
     // Clean up uploaded file
     try {
