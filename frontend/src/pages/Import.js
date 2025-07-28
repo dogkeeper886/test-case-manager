@@ -292,6 +292,7 @@ const Import = () => {
   return (
     <Layout
       onSearch={handleLayoutSearch}
+      showSearch={false}
       breadcrumbs={[
         { label: 'Import', href: '/import' }
       ]}
