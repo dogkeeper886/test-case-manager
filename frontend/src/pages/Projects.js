@@ -267,6 +267,7 @@ const Projects = () => {
                 <Card 
                   key={project.id} 
                   elevation="sm"
+                  hover={false}
                   className="cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
                   data-element={`project-card-${project.id}`}
                 >

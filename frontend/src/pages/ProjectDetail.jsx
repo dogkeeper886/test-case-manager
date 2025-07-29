@@ -360,7 +360,7 @@ const ProjectDetail = () => {
 
       {/* Project Status and Metadata */}
       <div className="mb-8">
-        <Card elevation="sm">
+        <Card elevation="sm" hover={false}>
           <div className="p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -404,7 +404,7 @@ const ProjectDetail = () => {
       <div className="mb-8">
         <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6">Project Statistics</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card elevation="sm" className="group">
+          <Card elevation="sm" hover={false} className="group">
             <div className="p-4 lg:p-6 text-center">
               <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-apple-blue/10 rounded-apple-lg mx-auto mb-3">
                 <FileText className="w-5 h-5 lg:w-6 lg:h-6 text-apple-blue" />
@@ -416,7 +416,7 @@ const ProjectDetail = () => {
             </div>
           </Card>
 
-          <Card elevation="sm" className="group">
+          <Card elevation="sm" hover={false} className="group">
             <div className="p-4 lg:p-6 text-center">
               <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-success/10 rounded-apple-lg mx-auto mb-3">
                 <FolderOpen className="w-5 h-5 lg:w-6 lg:h-6 text-success" />
@@ -428,7 +428,7 @@ const ProjectDetail = () => {
             </div>
           </Card>
 
-          <Card elevation="sm" className="group">
+          <Card elevation="sm" hover={false} className="group">
             <div className="p-4 lg:p-6 text-center">
               <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-warning/10 rounded-apple-lg mx-auto mb-3">
                 <Activity className="w-5 h-5 lg:w-6 lg:h-6 text-warning" />
@@ -440,7 +440,7 @@ const ProjectDetail = () => {
             </div>
           </Card>
 
-          <Card elevation="sm" className="group">
+          <Card elevation="sm" hover={false} className="group">
             <div className="p-4 lg:p-6 text-center">
               <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-info/10 rounded-apple-lg mx-auto mb-3">
                 <BarChart3 className="w-5 h-5 lg:w-6 lg:h-6 text-info" />
@@ -458,7 +458,7 @@ const ProjectDetail = () => {
       {project.recentActivities && project.recentActivities.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6">Recent Activities</h2>
-          <Card elevation="sm">
+          <Card elevation="sm" hover={false}>
             <div className="p-4 lg:p-6">
                                 <div className="space-y-3">
                     {project.recentActivities.slice(0, 5).map((activity, index) => (
@@ -495,7 +495,7 @@ const ProjectDetail = () => {
       {project.recentImportLogs && project.recentImportLogs.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6">Recent Import Logs</h2>
-          <Card elevation="sm">
+          <Card elevation="sm" hover={false}>
             <div className="p-4 lg:p-6">
                                 <div className="space-y-3">
                     {project.recentImportLogs.slice(0, 5).map((log, index) => (
@@ -584,7 +584,7 @@ const ProjectDetail = () => {
               <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6">Test Case Overview</h2>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Status Distribution */}
-                <Card elevation="sm">
+                <Card elevation="sm" hover={false}>
                   <div className="p-4">
                     <h3 className="text-sm font-sf font-medium text-apple-gray-7 mb-3">Status Distribution</h3>
                     <div className="space-y-2">
@@ -605,7 +605,7 @@ const ProjectDetail = () => {
                 </Card>
 
                 {/* Priority Distribution */}
-                <Card elevation="sm">
+                <Card elevation="sm" hover={false}>
                   <div className="p-4">
                     <h3 className="text-sm font-sf font-medium text-apple-gray-7 mb-3">Priority Distribution</h3>
                     <div className="space-y-2">
@@ -626,7 +626,7 @@ const ProjectDetail = () => {
                 </Card>
 
                 {/* Quick Stats */}
-                <Card elevation="sm">
+                <Card elevation="sm" hover={false}>
                   <div className="p-4">
                     <h3 className="text-sm font-sf font-medium text-apple-gray-7 mb-3">Quick Stats</h3>
                     <div className="space-y-3">
@@ -669,7 +669,7 @@ const ProjectDetail = () => {
                   View All
                 </Button>
               </div>
-              <Card elevation="sm">
+              <Card elevation="sm" hover={false}>
                 <div className="p-4">
                   <div className="space-y-3">
                     {recentTestCases.map((testCase) => (
@@ -744,7 +744,7 @@ const ProjectDetail = () => {
                   View All
                 </Button>
               </div>
-              <Card elevation="sm">
+              <Card elevation="sm" hover={false}>
                 <div className="p-4">
                   <div className="space-y-3">
                     {recentTestSuites.map((suite) => (
