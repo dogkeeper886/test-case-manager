@@ -7,4 +7,5 @@ export { default as TestCaseEditForm } from './TestCaseEditForm';
 export { default as InlineEditInput } from './InlineEditInput';
 export { default as InlineEditSelect } from './InlineEditSelect';
 export { default as InlineEditTextarea } from './InlineEditTextarea';
-export { default as InlineEditBadge } from './InlineEditBadge'; 
+export { default as InlineEditBadge } from './InlineEditBadge';
+export { default as TestCasePreviewDialog } from './TestCasePreviewDialog'; 
