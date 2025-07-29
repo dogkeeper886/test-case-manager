@@ -189,7 +189,10 @@ const ProjectEditForm = () => {
                 disabled={loading}
               />
               {errors.name && (
-                <p className="text-sm text-error mt-1">{errors.name}</p>
+                <p className="text-sm text-error mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-error rounded-full"></span>
+                  {errors.name}
+                </p>
               )}
               <p className="text-xs text-apple-gray-4 mt-1">
                 Choose a descriptive name for your project (2-255 characters)
@@ -211,7 +214,10 @@ const ProjectEditForm = () => {
                 disabled={loading}
               />
               {errors.description && (
-                <p className="text-sm text-error mt-1">{errors.description}</p>
+                <p className="text-sm text-error mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-error rounded-full"></span>
+                  {errors.description}
+                </p>
               )}
               <p className="text-xs text-apple-gray-4 mt-1">
                 Provide additional details about your project (max 1000 characters)
@@ -268,13 +274,22 @@ const ProjectEditForm = () => {
       <div className="mt-6">
         <Card elevation="sm">
           <div className="p-4">
-            <h3 className="text-sm font-sf font-medium text-apple-gray-7 mb-2">
+            <h3 className="text-sm font-sf font-medium text-apple-gray-7 mb-3">
               Project Information
             </h3>
-            <div className="text-sm text-apple-gray-5 space-y-1">
-              <p>• Project ID: {project.id}</p>
-              <p>• Created: {new Date(project.created_at).toLocaleDateString()}</p>
-              <p>• Last Updated: {new Date(project.updated_at).toLocaleDateString()}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-apple-gray-4">ID:</span>
+                <span className="font-sf font-medium text-apple-gray-7">{project.id}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-apple-gray-4">Created:</span>
+                <span className="font-sf font-medium text-apple-gray-7">{new Date(project.created_at).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-apple-gray-4">Updated:</span>
+                <span className="font-sf font-medium text-apple-gray-7">{new Date(project.updated_at).toLocaleDateString()}</span>
+              </div>
             </div>
           </div>
         </Card>

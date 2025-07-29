@@ -129,7 +129,10 @@ const ProjectCreateForm = () => {
                 disabled={loading}
               />
               {errors.name && (
-                <p className="text-sm text-error mt-1">{errors.name}</p>
+                <p className="text-sm text-error mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-error rounded-full"></span>
+                  {errors.name}
+                </p>
               )}
               <p className="text-xs text-apple-gray-4 mt-1">
                 Choose a descriptive name for your project (2-255 characters)
@@ -151,7 +154,10 @@ const ProjectCreateForm = () => {
                 disabled={loading}
               />
               {errors.description && (
-                <p className="text-sm text-error mt-1">{errors.description}</p>
+                <p className="text-sm text-error mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-error rounded-full"></span>
+                  {errors.description}
+                </p>
               )}
               <p className="text-xs text-apple-gray-4 mt-1">
                 Provide additional details about your project (max 1000 characters)
