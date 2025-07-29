@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Search, Filter, ChevronDown, Folder, FolderOpen, FileText, Users, Calendar, Hash, BarChart3, User } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
@@ -9,6 +9,7 @@ import { testSuitesAPI, projectsAPI } from '../services/api';
 
 const TestSuiteBrowser = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   // State management
   const [testSuites, setTestSuites] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -25,6 +26,25 @@ const TestSuiteBrowser = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Restore state from URL parameters on mount
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const expandedParam = searchParams.get('expanded');
+    const projectParam = searchParams.get('project');
+    
+    // Restore project selection immediately
+    if (projectParam) {
+      setSelectedProjectId(projectParam);
+    }
+    
+    // Store expanded state to restore after data loads
+    if (expandedParam) {
+      const expandedIds = expandedParam.split(',').filter(id => id.trim() !== '');
+      // Store in sessionStorage temporarily
+      sessionStorage.setItem('restoreExpandedSuites', JSON.stringify(expandedIds));
+    }
+  }, [location.search]);
 
   // Handle project selection changes
   useEffect(() => {
@@ -59,6 +79,21 @@ const TestSuiteBrowser = () => {
         const defaultProject = projectsData[0];
         setSelectedProjectId(defaultProject.id.toString());
       }
+
+      // Restore expanded suites state after data is loaded
+      const restoreExpandedSuites = sessionStorage.getItem('restoreExpandedSuites');
+      if (restoreExpandedSuites) {
+        try {
+          const expandedIds = JSON.parse(restoreExpandedSuites);
+          console.log('Restoring expanded suites:', expandedIds);
+          setExpandedSuites(new Set(expandedIds));
+          // Clear the stored state
+          sessionStorage.removeItem('restoreExpandedSuites');
+        } catch (error) {
+          console.error('Error restoring expanded suites:', error);
+          sessionStorage.removeItem('restoreExpandedSuites');
+        }
+      }
     } catch (err) {
       console.error('Error fetching data:', err);
       // Set empty arrays on error
@@ -82,9 +117,13 @@ const TestSuiteBrowser = () => {
   // Handle test case selection from tree
   const handleTestCaseSelect = (testCase) => {
     console.log('Selected test case from tree:', testCase);
-    // setSelectedTestCaseId(testCase.id); // Removed
-    // Navigate to test case detail page
-    navigate(`/testcases/${testCase.id}`);
+    
+    // Create URL with current state for return navigation
+    const expandedIds = Array.from(expandedSuites).join(',');
+    const returnUrl = `/testcases/${testCase.id}?returnTo=test-suites&expanded=${expandedIds}&project=${selectedProjectId}`;
+    
+    // Navigate to test case detail page with state
+    navigate(returnUrl);
   };
 
   // Handle search from layout

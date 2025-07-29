@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Edit, 
@@ -37,6 +37,7 @@ import { showSuccess, showError, showWarning, dismissToast } from '../utils/toas
 const TestCaseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [testCase, setTestCase] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -262,7 +263,20 @@ const TestCaseDetail = () => {
   };
 
   const handleBack = () => {
-    navigate('/testcases');
+    // Check if we came from test suite browser
+    const searchParams = new URLSearchParams(location.search);
+    const returnTo = searchParams.get('returnTo');
+    const expanded = searchParams.get('expanded');
+    const project = searchParams.get('project');
+    
+    if (returnTo === 'test-suites') {
+      // Return to test suite browser with preserved state
+      const returnUrl = `/test-suites?expanded=${expanded}&project=${project}`;
+      navigate(returnUrl);
+    } else {
+      // Default navigation to test cases list
+      navigate('/testcases');
+    }
   };
 
   if (loading) {
