@@ -262,43 +262,107 @@ const SuiteDetailsPanel = ({ suite, onEdit, onDelete }) => {
         </Card.Body>
       </Card>
 
-      {/* Suite Statistics */}
+      {/* Suite Statistics - Modern Compact Design */}
       <Card elevation="sm" data-element="suite-details-stats-card">
-        <Card.Header>
-          <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="suite-details-stats-title">
-            Suite Statistics
-          </h3>
+        <Card.Header className="pb-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="suite-details-stats-title">
+              Overview
+            </h3>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" size="sm">
+                {totalTestCases} Test Cases
+              </Badge>
+              <Badge variant="outline" size="sm">
+                {subSuitesCount} Sub-Suites
+              </Badge>
+            </div>
+          </div>
         </Card.Header>
         <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-element="suite-details-stats-grid">
-            {/* Total Test Cases */}
-            <div className="text-center p-4 bg-apple-gray-1 rounded-apple" data-element="suite-details-total-cases">
-              <FileText className="w-8 h-8 text-apple-blue mx-auto mb-2" />
-              <p className="text-2xl font-sf font-semibold text-apple-gray-7">{totalTestCases}</p>
-              <p className="text-xs text-apple-gray-4">Total Test Cases</p>
-            </div>
-
-            {/* Execution Coverage */}
-            <div className="text-center p-4 bg-apple-gray-1 rounded-apple" data-element="suite-details-coverage">
-              <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-2xl font-sf font-semibold text-apple-gray-7">{coveragePercentage}%</p>
-              <p className="text-xs text-apple-gray-4">Execution Coverage</p>
-            </div>
-
-            {/* Health Score */}
-            <div className="text-center p-4 bg-apple-gray-1 rounded-apple" data-element="suite-details-health">
-              <div className={`w-8 h-8 mx-auto mb-2 ${getHealthScoreColor(healthScore)}`}>
-                {getHealthScoreIcon(healthScore)}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" data-element="suite-details-stats-grid">
+            {/* Key Metrics */}
+            <div className="space-y-4" data-element="suite-details-key-metrics">
+              <div className="flex items-center justify-between p-3 bg-apple-gray-1 rounded-apple" data-element="suite-details-coverage">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium text-apple-gray-6">Coverage</span>
+                </div>
+                <span className="text-lg font-sf font-semibold text-apple-gray-7">{coveragePercentage}%</span>
               </div>
-              <p className={`text-2xl font-sf font-semibold ${getHealthScoreColor(healthScore)}`}>{healthScore}%</p>
-              <p className="text-xs text-apple-gray-4">Health Score</p>
+              
+              <div className="flex items-center justify-between p-3 bg-apple-gray-1 rounded-apple" data-element="suite-details-health">
+                <div className="flex items-center gap-3">
+                  <div className={getHealthScoreColor(healthScore)}>
+                    {getHealthScoreIcon(healthScore)}
+                  </div>
+                  <span className="text-sm font-medium text-apple-gray-6">Health</span>
+                </div>
+                <span className={`text-lg font-sf font-semibold ${getHealthScoreColor(healthScore)}`}>{healthScore}%</span>
+              </div>
             </div>
 
-            {/* Sub-Suites */}
-            <div className="text-center p-4 bg-apple-gray-1 rounded-apple" data-element="suite-details-sub-suites">
-              <Folder className="w-8 h-8 text-apple-gray-5 mx-auto mb-2" />
-              <p className="text-2xl font-sf font-semibold text-apple-gray-7">{subSuitesCount}</p>
-              <p className="text-xs text-apple-gray-4">Sub-Suites</p>
+            {/* Status Breakdown */}
+            <div className="space-y-3" data-element="suite-details-status-breakdown">
+              <h4 className="text-sm font-sf font-semibold text-apple-gray-6">Status</h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <span className="text-sm text-apple-gray-5">Pending</span>
+                  </div>
+                  <span className="text-sm font-medium text-apple-gray-7">{statusCounts.pending}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                    <span className="text-sm text-apple-gray-5">Passed</span>
+                  </div>
+                  <span className="text-sm font-medium text-apple-gray-7">{statusCounts.passed}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                    <span className="text-sm text-apple-gray-5">Failed</span>
+                  </div>
+                  <span className="text-sm font-medium text-apple-gray-7">{statusCounts.failed}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                    <span className="text-sm text-apple-gray-5">Skipped</span>
+                  </div>
+                  <span className="text-sm font-medium text-apple-gray-7">{statusCounts.skipped}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Priority Breakdown */}
+            <div className="space-y-3" data-element="suite-details-priority-breakdown">
+              <h4 className="text-sm font-sf font-semibold text-apple-gray-6">Priority</h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <span className="text-sm text-apple-gray-5">Low</span>
+                  </div>
+                  <span className="text-sm font-medium text-apple-gray-7">{priorityCounts.low}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <span className="text-sm text-apple-gray-5">Medium</span>
+                  </div>
+                  <span className="text-sm font-medium text-apple-gray-7">{priorityCounts.medium}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                    <span className="text-sm text-apple-gray-5">High</span>
+                  </div>
+                  <span className="text-sm font-medium text-apple-gray-7">{priorityCounts.high}</span>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -7,10 +7,16 @@ const TestSuiteTree = ({
   onSuiteSelect, 
   onTestCaseSelect,
   selectedSuiteId = null,
-  selectedTestCaseId = null 
+  selectedTestCaseId = null,
+  expandedSuites: externalExpandedSuites,
+  onToggleExpansion
 }) => {
-  const [expandedSuites, setExpandedSuites] = useState(new Set());
+  const [internalExpandedSuites, setInternalExpandedSuites] = useState(new Set());
   const [loading] = useState(false);
+  
+  // Use external expanded state if provided, otherwise use internal
+  const expandedSuites = externalExpandedSuites || internalExpandedSuites;
+  const setExpandedSuites = onToggleExpansion || setInternalExpandedSuites;
 
   // Ensure testSuites is always an array and memoize it
   const safeTestSuites = useMemo(() => {
@@ -19,29 +25,43 @@ const TestSuiteTree = ({
 
   // Expand all suites by default - only run when testSuites prop actually changes
   useEffect(() => {
-    const allSuiteIds = new Set();
-    const collectSuiteIds = (suites) => {
-      suites.forEach(suite => {
-        allSuiteIds.add(suite.id);
-        if (suite.test_suites && suite.test_suites.length > 0) {
-          collectSuiteIds(suite.test_suites);
-        }
-      });
-    };
-    collectSuiteIds(safeTestSuites);
-    setExpandedSuites(allSuiteIds);
-  }, [testSuites]); // Use testSuites directly instead of safeTestSuites
+    if (!externalExpandedSuites) { // Only auto-expand if not using external state
+      const allSuiteIds = new Set();
+      const collectSuiteIds = (suites) => {
+        suites.forEach(suite => {
+          allSuiteIds.add(suite.id);
+          if (suite.test_suites && suite.test_suites.length > 0) {
+            collectSuiteIds(suite.test_suites);
+          }
+        });
+      };
+      collectSuiteIds(safeTestSuites);
+      setInternalExpandedSuites(allSuiteIds);
+    }
+  }, [testSuites, externalExpandedSuites]); // Use testSuites directly instead of safeTestSuites
 
   const toggleSuite = (suiteId) => {
-    setExpandedSuites(prev => {
-      const newSet = new Set(prev);
+    if (onToggleExpansion) {
+      // Use external toggle function
+      const newSet = new Set(expandedSuites);
       if (newSet.has(suiteId)) {
         newSet.delete(suiteId);
       } else {
         newSet.add(suiteId);
       }
-      return newSet;
-    });
+      onToggleExpansion(newSet);
+    } else {
+      // Use internal state
+      setInternalExpandedSuites(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(suiteId)) {
+          newSet.delete(suiteId);
+        } else {
+          newSet.add(suiteId);
+        }
+        return newSet;
+      });
+    }
   };
 
   const isExpanded = (suiteId) => expandedSuites.has(suiteId);
