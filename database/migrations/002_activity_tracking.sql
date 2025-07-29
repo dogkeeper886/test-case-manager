@@ -46,7 +46,8 @@ INSERT INTO activity_types (type_code, display_name, description, icon, color) V
 ('import_complete', 'Import Completed', 'A data import operation was completed', 'CheckCircle', 'success'),
 ('import_failed', 'Import Failed', 'A data import operation failed', 'XCircle', 'error'),
 ('report_generate', 'Report Generated', 'A new report was generated', 'BarChart3', 'success'),
-('report_export', 'Report Exported', 'A report was exported', 'Download', 'apple-blue');
+('report_export', 'Report Exported', 'A report was exported', 'Download', 'apple-blue')
+ON CONFLICT (type_code) DO NOTHING;
 
 -- 4. Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_activities_user_id ON activities(user_id);

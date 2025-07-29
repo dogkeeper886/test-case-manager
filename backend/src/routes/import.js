@@ -577,6 +577,29 @@ router.post('/cleanup', async (req, res) => {
   }
 });
 
+// GET /api/import/history - Get import history
+router.get('/history', async (req, res) => {
+  try {
+    // Initialize import service
+    const service = initializeImportService(req.app.locals.db);
+    
+    // Get all import logs
+    const importLogs = await service.getAllImportLogs();
+    
+    res.json({
+      message: 'Import history retrieved',
+      data: importLogs
+    });
+
+  } catch (error) {
+    console.error('Get import history error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get import history', 
+      details: error.message 
+    });
+  }
+});
+
 // GET /api/import/cleanup/status - Get cleanup status
 router.get('/cleanup/status', async (req, res) => {
   try {

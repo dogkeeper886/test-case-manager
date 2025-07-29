@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { pool, testConnection } = require('./services/database');
+const MigrationService = require('./services/MigrationService');
 require('dotenv').config();
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/documents', require('./routes/documents'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/import', require('./routes/import'));
 app.use('/api/activities', require('./routes/activities'));
+app.use('/api/migrations', require('./routes/migrations'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -46,11 +48,19 @@ app.use((err, req, res, next) => {
 app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
   
-  // Test database connection on startup
+  // Test database connection and run migrations on startup
   try {
     await testConnection();
+    console.log('✅ Database connection successful');
+    
+    // Run database migrations
+    const migrationService = new MigrationService(pool);
+    const migrationResult = await migrationService.runMigrations();
+    console.log(`✅ Database migrations completed: ${migrationResult.applied} applied, ${migrationResult.failed} failed`);
+    
   } catch (error) {
-    console.error('Failed to connect to database on startup:', error);
+    console.error('❌ Failed to initialize database:', error);
+    process.exit(1); // Exit if database initialization fails
   }
 });
 
