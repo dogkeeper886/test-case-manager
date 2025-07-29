@@ -355,7 +355,7 @@ const ProjectDetail = () => {
 
       {/* Project Status and Metadata */}
       <div className="mb-8" data-element="project-status-section">
-        <Card elevation="sm" className="transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5" data-element="project-status-card">
+        <Card elevation="sm" hover={false} className="transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5" data-element="project-status-card">
           <div className="p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center gap-4">
