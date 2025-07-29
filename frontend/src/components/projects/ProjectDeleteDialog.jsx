@@ -43,7 +43,7 @@ const ProjectDeleteDialog = ({ project, isOpen, onClose, onDelete }) => {
     <div className="fixed inset-0 z-50 overflow-y-auto" data-element="project-delete-dialog">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={handleClose}
         data-element="project-delete-backdrop"
       />
@@ -51,7 +51,7 @@ const ProjectDeleteDialog = ({ project, isOpen, onClose, onDelete }) => {
       {/* Dialog */}
       <div className="flex min-h-full items-center justify-center p-4" data-element="project-delete-container">
         <div className="relative w-full max-w-md" data-element="project-delete-content">
-          <Card elevation="xl" className="overflow-hidden" data-element="project-delete-card">
+          <Card elevation="xl" hover={false} className="overflow-hidden" data-element="project-delete-card">
             {/* Header */}
             <div className="bg-error/5 border-b border-error/20 px-6 py-4" data-element="project-delete-header">
               <div className="flex items-center gap-3">
