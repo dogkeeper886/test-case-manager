@@ -14,6 +14,7 @@ const TestSuiteBrowser = () => {
   const [error, setError] = useState(null);
   const [selectedSuiteId, setSelectedSuiteId] = useState(null);
   const [selectedTestCaseId, setSelectedTestCaseId] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSuite, setSelectedSuite] = useState(null);
 
@@ -26,20 +27,9 @@ const TestSuiteBrowser = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await testSuitesAPI.getAll();
-      const flatSuites = response.data.data || response.data || [];
-      
-      // Build hierarchical structure from flat data
-      const buildHierarchy = (suites, parentId = null) => {
-        const children = suites.filter(suite => suite.parent_suite_id === parentId);
-        return children.map(suite => ({
-          ...suite,
-          test_suites: buildHierarchy(suites, suite.id),
-          test_cases: [] // Will be populated separately
-        }));
-      };
-      
-      const hierarchicalSuites = buildHierarchy(flatSuites);
+      // Request hierarchical data with test cases included
+      const response = await testSuitesAPI.getAll(true);
+      const hierarchicalSuites = response.data.data || response.data || [];
       setTestSuites(hierarchicalSuites);
     } catch (err) {
       console.error('Error fetching test suites:', err);
