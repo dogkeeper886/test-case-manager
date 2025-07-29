@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Eye, Edit, Trash2, FolderOpen, Users, Calendar, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import { projectsAPI, testCasesAPI } from '../services/api';
 
 const Projects = () => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [testCases, setTestCases] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,30 +78,19 @@ const Projects = () => {
   });
 
   const handleViewProject = (project) => {
-    console.log('View project:', project);
-    // TODO: Navigate to project detail view
+    navigate(`/projects/${project.id}`);
   };
 
   const handleEditProject = (project) => {
-    console.log('Edit project:', project);
-    // TODO: Open edit modal or navigate to edit page
+    navigate(`/projects/${project.id}/edit`);
   };
 
-  const handleDeleteProject = async (project) => {
-    if (window.confirm(`Are you sure you want to delete "${project.name}"?`)) {
-      try {
-        await projectsAPI.delete(project.id);
-        setProjects(projects.filter(p => p.id !== project.id));
-      } catch (err) {
-        console.error('Error deleting project:', err);
-        alert('Failed to delete project');
-      }
-    }
+  const handleDeleteProject = (project) => {
+    navigate(`/projects/${project.id}/delete`);
   };
 
   const handleCreateProject = () => {
-    console.log('Create project clicked');
-    // TODO: Open create project modal or navigate to create form
+    navigate('/projects/create');
   };
 
   const handleLayoutSearch = (query) => {

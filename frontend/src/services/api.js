@@ -117,6 +117,9 @@ export const projectsAPI = {
   // Get project by ID
   getById: (id) => api.get(`/api/projects/${id}`),
   
+  // Get project details with statistics and recent data
+  getDetails: (id) => api.get(`/api/projects/${id}/details`),
+  
   // Create new project
   create: (data) => api.post('/api/projects', data),
   

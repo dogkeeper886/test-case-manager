@@ -9,6 +9,10 @@ import { TOAST_CONTAINER_CONFIG } from './utils/toast';
 
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
+import ProjectDetail from './pages/ProjectDetail';
+import ProjectCreateForm from './components/projects/ProjectCreateForm';
+import ProjectEditForm from './components/projects/ProjectEditForm';
+import ProjectDeleteDialog from './components/projects/ProjectDeleteDialog';
 import TestCases from './pages/TestCases.jsx';
 import TestCaseDetail from './pages/TestCaseDetail';
 import TestSuiteBrowser from './pages/TestSuiteBrowser';
@@ -30,6 +34,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/create" element={<ProjectCreateForm />} />
+            <Route path="/projects/:id" element={<ProjectDetail />} />
+            <Route path="/projects/:id/edit" element={<ProjectEditForm />} />
+            <Route path="/projects/:id/delete" element={<ProjectDeleteDialog />} />
             <Route path="/testcases" element={<TestCases />} />
             <Route path="/testcases/:id" element={<TestCaseDetail />} />
             <Route path="/test-suites" element={<TestSuiteBrowser />} />
