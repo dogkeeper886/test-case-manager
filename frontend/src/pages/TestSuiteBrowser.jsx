@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter } from 'lucide-react';
-import { Button, Card, Badge, Input } from '../components/ui';
+import { Plus } from 'lucide-react';
+import { Button, Card } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import TestSuiteTree from '../components/test-cases/TestSuiteTree';
+import SuiteDetailsPanel from '../components/test-cases/SuiteDetailsPanel';
 import { testSuitesAPI } from '../services/api';
 
 const TestSuiteBrowser = () => {
@@ -14,6 +15,7 @@ const TestSuiteBrowser = () => {
   const [selectedSuiteId, setSelectedSuiteId] = useState(null);
   const [selectedTestCaseId, setSelectedTestCaseId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSuite, setSelectedSuite] = useState(null);
 
   // Fetch test suites on component mount
   useEffect(() => {
@@ -37,6 +39,7 @@ const TestSuiteBrowser = () => {
   const handleSuiteSelect = (suite) => {
     console.log('Selected suite:', suite);
     setSelectedSuiteId(suite.id);
+    setSelectedSuite(suite);
   };
 
   // Handle test case selection from tree
@@ -51,6 +54,37 @@ const TestSuiteBrowser = () => {
   const handleLayoutSearch = (query) => {
     setSearchQuery(query);
     // TODO: Implement global search
+  };
+
+  // Suite action handlers
+  const handleEditSuite = (suite) => {
+    console.log('Edit suite:', suite);
+    // TODO: Implement suite editing
+  };
+
+  const handleDeleteSuite = (suite) => {
+    console.log('Delete suite:', suite);
+    // TODO: Implement suite deletion with confirmation
+  };
+
+  const handleDuplicateSuite = (suite) => {
+    console.log('Duplicate suite:', suite);
+    // TODO: Implement suite duplication
+  };
+
+  const handleExportSuite = (suite) => {
+    console.log('Export suite:', suite);
+    // TODO: Implement suite export to TestLink XML
+  };
+
+  const handleArchiveSuite = (suite) => {
+    console.log('Archive suite:', suite);
+    // TODO: Implement suite archiving
+  };
+
+  const handleMoveSuite = (suite) => {
+    console.log('Move suite:', suite);
+    // TODO: Implement suite moving
   };
 
   if (loading) {
@@ -170,39 +204,16 @@ const TestSuiteBrowser = () => {
         {/* Details Panel */}
         <div className="lg:col-span-2" data-element="testsuites-details-section">
           <Card elevation="sm" className="h-full" data-element="testsuites-details-card">
-            <Card.Header data-element="testsuites-details-header">
-              <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="testsuites-details-title">
-                Suite Details
-              </h3>
-            </Card.Header>
-            <Card.Body data-element="testsuites-details-body">
-              {selectedSuiteId ? (
-                <div className="space-y-4" data-element="testsuites-selected-suite">
-                  <div className="text-center py-8" data-element="testsuites-suite-content">
-                    <div className="text-apple-gray-4 mb-4" data-element="testsuites-suite-icon">
-                      <Search className="w-16 h-16 mx-auto" />
-                    </div>
-                    <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2" data-element="testsuites-suite-title">
-                      Suite Selected
-                    </h3>
-                    <p className="text-apple-gray-5" data-element="testsuites-suite-description">
-                      Test suite details will be displayed here
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8" data-element="testsuites-empty-state">
-                  <div className="text-apple-gray-4 mb-4" data-element="testsuites-empty-icon">
-                    <Search className="w-16 h-16 mx-auto" />
-                  </div>
-                  <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2" data-element="testsuites-empty-title">
-                    Select a Test Suite
-                  </h3>
-                  <p className="text-apple-gray-5" data-element="testsuites-empty-description">
-                    Choose a test suite from the tree to view its details
-                  </p>
-                </div>
-              )}
+            <Card.Body className="p-0" data-element="testsuites-details-body">
+              <SuiteDetailsPanel
+                suite={selectedSuite}
+                onEdit={handleEditSuite}
+                onDelete={handleDeleteSuite}
+                onDuplicate={handleDuplicateSuite}
+                onExport={handleExportSuite}
+                onArchive={handleArchiveSuite}
+                onMove={handleMoveSuite}
+              />
             </Card.Body>
           </Card>
         </div>
