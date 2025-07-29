@@ -40,28 +40,29 @@ const ProjectDeleteDialog = ({ project, isOpen, onClose, onDelete }) => {
   const isConfirmValid = confirmationText === project.name;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto" data-element="project-delete-dialog">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black transition-opacity"
         onClick={handleClose}
+        data-element="project-delete-backdrop"
       />
       
       {/* Dialog */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-md">
-          <Card elevation="xl" className="overflow-hidden">
+      <div className="flex min-h-full items-center justify-center p-4" data-element="project-delete-container">
+        <div className="relative w-full max-w-md" data-element="project-delete-content">
+          <Card elevation="xl" className="overflow-hidden" data-element="project-delete-card">
             {/* Header */}
-            <div className="bg-error/5 border-b border-error/20 px-6 py-4">
+            <div className="bg-error/5 border-b border-error/20 px-6 py-4" data-element="project-delete-header">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-error/10 rounded-apple-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-error/10 rounded-apple-lg flex items-center justify-center" data-element="project-delete-icon">
                   <AlertTriangle className="w-5 h-5 text-error" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-sf font-semibold text-apple-gray-7">
+                  <h2 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="project-delete-title">
                     Delete Project
                   </h2>
-                  <p className="text-sm text-apple-gray-4">
+                  <p className="text-sm text-apple-gray-4" data-element="project-delete-subtitle">
                     This action cannot be undone
                   </p>
                 </div>
@@ -69,62 +70,62 @@ const ProjectDeleteDialog = ({ project, isOpen, onClose, onDelete }) => {
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6" data-element="project-delete-content-body">
               {/* Project Info */}
-              <div className="text-center">
-                <h3 className="text-xl font-sf font-semibold text-apple-gray-7 mb-2">
+              <div className="text-center" data-element="project-delete-info">
+                <h3 className="text-xl font-sf font-semibold text-apple-gray-7 mb-2" data-element="project-delete-name">
                   {project.name}
                 </h3>
                 {project.description && (
-                  <p className="text-sm text-apple-gray-5 mb-4">
+                  <p className="text-sm text-apple-gray-5 mb-4" data-element="project-delete-description">
                     {project.description}
                   </p>
                 )}
-                <Badge variant="error" size="lg" className="flex items-center gap-2 mx-auto w-fit">
+                <Badge variant="error" size="lg" className="flex items-center gap-2 mx-auto w-fit" data-element="project-delete-warning-badge">
                   <Trash2 className="w-4 h-4" />
                   Project will be permanently deleted
                 </Badge>
               </div>
 
               {/* Items to be deleted */}
-              <div className="bg-apple-gray-1/30 rounded-apple-lg p-4">
-                <h4 className="text-sm font-sf font-medium text-apple-gray-7 mb-3">
+              <div className="bg-apple-gray-1/30 rounded-apple-lg p-4" data-element="project-delete-items-section">
+                <h4 className="text-sm font-sf font-medium text-apple-gray-7 mb-3" data-element="project-delete-items-title">
                   The following items will also be deleted:
                 </h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
+                <div className="space-y-2" data-element="project-delete-items-list">
+                  <div className="flex items-center justify-between text-sm" data-element="project-delete-test-cases-item">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-apple-blue" />
                       <span className="text-apple-gray-6">Test Cases</span>
                     </div>
-                    <span className="font-sf font-medium text-apple-gray-7">
+                    <span className="font-sf font-medium text-apple-gray-7" data-element="project-delete-test-cases-count">
                       {project.statistics?.testCases || 0}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-sm" data-element="project-delete-test-suites-item">
                     <div className="flex items-center gap-2">
                       <FolderOpen className="w-4 h-4 text-success" />
                       <span className="text-apple-gray-6">Test Suites</span>
                     </div>
-                    <span className="font-sf font-medium text-apple-gray-7">
+                    <span className="font-sf font-medium text-apple-gray-7" data-element="project-delete-test-suites-count">
                       {project.statistics?.testSuites || 0}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-sm" data-element="project-delete-import-logs-item">
                     <div className="flex items-center gap-2">
                       <Activity className="w-4 h-4 text-warning" />
                       <span className="text-apple-gray-6">Import Logs</span>
                     </div>
-                    <span className="font-sf font-medium text-apple-gray-7">
+                    <span className="font-sf font-medium text-apple-gray-7" data-element="project-delete-import-logs-count">
                       {project.statistics?.importLogs || 0}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-sm" data-element="project-delete-activities-item">
                     <div className="flex items-center gap-2">
                       <BarChart3 className="w-4 h-4 text-info" />
                       <span className="text-apple-gray-6">Activities</span>
                     </div>
-                    <span className="font-sf font-medium text-apple-gray-7">
+                    <span className="font-sf font-medium text-apple-gray-7" data-element="project-delete-activities-count">
                       {project.statistics?.activities || 0}
                     </span>
                   </div>
@@ -132,8 +133,8 @@ const ProjectDeleteDialog = ({ project, isOpen, onClose, onDelete }) => {
               </div>
 
               {/* Confirmation */}
-              <div>
-                <label htmlFor="confirmation" className="block text-sm font-sf font-medium text-apple-gray-7 mb-2">
+              <div data-element="project-delete-confirmation-section">
+                <label htmlFor="confirmation" className="block text-sm font-sf font-medium text-apple-gray-7 mb-2" data-element="project-delete-confirmation-label">
                   Type the project name to confirm deletion
                 </label>
                 <input
@@ -155,9 +156,10 @@ const ProjectDeleteDialog = ({ project, isOpen, onClose, onDelete }) => {
                     }
                   `}
                   disabled={loading}
+                  data-element="project-delete-confirmation-input"
                 />
                 {isConfirmValid && (
-                  <p className="text-sm text-error mt-1 flex items-center gap-1">
+                  <p className="text-sm text-error mt-1 flex items-center gap-1" data-element="project-delete-confirmation-warning">
                     <span className="w-1 h-1 bg-error rounded-full"></span>
                     This will permanently delete the project and all related data
                   </p>
@@ -166,12 +168,13 @@ const ProjectDeleteDialog = ({ project, isOpen, onClose, onDelete }) => {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-apple-gray-2 bg-apple-gray-1/30">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-apple-gray-2 bg-apple-gray-1/30" data-element="project-delete-footer">
               <Button
                 variant="secondary"
                 onClick={handleClose}
                 disabled={loading}
                 className="flex items-center gap-2"
+                data-element="project-delete-cancel-button"
               >
                 Cancel
               </Button>
@@ -180,6 +183,7 @@ const ProjectDeleteDialog = ({ project, isOpen, onClose, onDelete }) => {
                 onClick={handleDelete}
                 disabled={!isConfirmValid || loading}
                 className="flex items-center gap-2"
+                data-element="project-delete-confirm-button"
               >
                 <Trash2 className="w-4 h-4" />
                 {loading ? 'Deleting...' : 'Delete Project'}
