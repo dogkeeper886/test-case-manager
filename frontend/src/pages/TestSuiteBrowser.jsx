@@ -5,6 +5,7 @@ import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import TestSuiteTree from '../components/test-cases/TestSuiteTree';
 import SuiteDetailsDialog from '../components/test-cases/SuiteDetailsDialog';
+import TestCaseDetailModal from '../components/test-cases/TestCaseDetailModal';
 import { testSuitesAPI, projectsAPI } from '../services/api';
 
 const TestSuiteBrowser = () => {
@@ -21,6 +22,10 @@ const TestSuiteBrowser = () => {
   // State for SuiteDetailsDialog
   const [isSuiteDetailsDialogOpen, setIsSuiteDetailsDialogOpen] = useState(false);
   const [suiteToEdit, setSuiteToEdit] = useState(null);
+
+  // State for TestCaseDetailModal
+  const [isTestCaseModalOpen, setIsTestCaseModalOpen] = useState(false);
+  const [selectedTestCaseId, setSelectedTestCaseId] = useState(null);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -118,12 +123,15 @@ const TestSuiteBrowser = () => {
   const handleTestCaseSelect = (testCase) => {
     console.log('Selected test case from tree:', testCase);
     
-    // Create URL with current state for return navigation
-    const expandedIds = Array.from(expandedSuites).join(',');
-    const returnUrl = `/testcases/${testCase.id}?returnTo=test-suites&expanded=${expandedIds}&project=${selectedProjectId}`;
-    
-    // Navigate to test case detail page with state
-    navigate(returnUrl);
+    // Open modal instead of navigating - this preserves all tree state!
+    setSelectedTestCaseId(testCase.id);
+    setIsTestCaseModalOpen(true);
+  };
+
+  // Handle closing test case modal
+  const handleCloseTestCaseModal = () => {
+    setIsTestCaseModalOpen(false);
+    setSelectedTestCaseId(null);
   };
 
   // Handle search from layout
@@ -304,6 +312,13 @@ const TestSuiteBrowser = () => {
           setIsSuiteDetailsDialogOpen(false);
           setSuiteToEdit(null);
         }}
+      />
+
+      {/* Test Case Detail Modal */}
+      <TestCaseDetailModal
+        testCaseId={selectedTestCaseId}
+        isOpen={isTestCaseModalOpen}
+        onClose={handleCloseTestCaseModal}
       />
     </Layout>
   );
