@@ -11,6 +11,9 @@ const Card = ({
   padding = 'md',
   ...props
 }) => {
+  // Handle the case where hover is passed as a string (variant name)
+  const actualHover = typeof hover === 'string' ? true : hover;
+  const actualHoverVariant = typeof hover === 'string' ? hover : hoverVariant;
   // Base classes
   const baseClasses = `
     bg-white
@@ -39,13 +42,19 @@ const Card = ({
 
   // Hover effect variants
   const getHoverClasses = () => {
-    if (!hover) return '';
+    if (!actualHover) return '';
     
-    switch (hoverVariant) {
+    switch (actualHoverVariant) {
       case 'lift':
         return `
           hover:shadow-apple-md
           hover:-translate-y-1
+          cursor-pointer
+        `;
+      case 'clean':
+        return `
+          hover:shadow-apple-md
+          hover:-translate-y-0.5
           cursor-pointer
         `;
       case 'border':

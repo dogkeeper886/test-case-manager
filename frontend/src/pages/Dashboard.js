@@ -158,7 +158,6 @@ const Dashboard = () => {
       value: stats.projects,
       icon: FolderOpen,
       color: 'bg-apple-blue',
-      hoverColor: 'hover:bg-blue-600',
       onClick: () => navigate('/projects'),
       dataElement: 'dashboard-projects-card'
     },
@@ -167,7 +166,6 @@ const Dashboard = () => {
       value: stats.testCases,
       icon: FileText,
       color: 'bg-success',
-      hoverColor: 'hover:bg-green-600',
       onClick: () => navigate('/testcases'),
       dataElement: 'dashboard-testcases-card'
     }
@@ -270,7 +268,7 @@ const Dashboard = () => {
           <Card
             key={metric.name}
             elevation="sm"
-            hover="lift"
+            hover="clean"
             onClick={metric.onClick}
             className="cursor-pointer"
             data-element={metric.dataElement}
@@ -294,7 +292,7 @@ const Dashboard = () => {
 
       {/* Recent Activity */}
       <div data-element="dashboard-activity-section">
-        <Card elevation="sm" data-element="dashboard-activity-card">
+        <Card elevation="sm" hover="clean" data-element="dashboard-activity-card">
           <div className="flex items-center justify-between mb-6" data-element="dashboard-activity-header">
             <h2 className="text-xl font-sf font-semibold text-apple-gray-7" data-element="dashboard-activity-title">
               Recent Activity
@@ -325,7 +323,7 @@ const Dashboard = () => {
               {activities.map((activity) => (
                 <div
                   key={activity.id}
-                  className="group relative flex items-start space-x-3 p-4 rounded-apple-lg border border-transparent hover:border-apple-gray-2 hover:bg-apple-gray-1/30 hover:shadow-apple-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:ring-offset-2 transition-all duration-200 ease-out cursor-pointer"
+                  className="group relative flex items-start space-x-3 p-4 rounded-apple-lg border border-transparent hover:shadow-apple-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:ring-offset-2 transition-all duration-200 ease-out cursor-pointer"
                   onClick={() => navigate(`/activities/${activity.id}`)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -342,7 +340,7 @@ const Dashboard = () => {
                     {getActivityIcon(activity.icon)}
                   </div>
                   <div className="flex-1 min-w-0" data-element={`dashboard-activity-${activity.id}-content`}>
-                    <p className="text-sm font-sf font-medium text-apple-gray-7 group-hover:text-apple-blue transition-colors duration-200" data-element={`dashboard-activity-${activity.id}-title`}>
+                    <p className="text-sm font-sf font-medium text-apple-gray-7 transition-colors duration-200" data-element={`dashboard-activity-${activity.id}-title`}>
                       {activity.display_name || activity.action_type}
                     </p>
                     <p className="text-xs text-apple-gray-5 mt-1" data-element={`dashboard-activity-${activity.id}-description`}>
@@ -357,7 +355,7 @@ const Dashboard = () => {
                           {formatTimeAgo(activity.created_at)}
                         </span>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-apple-gray-3 group-hover:text-apple-blue group-hover:translate-x-1 transition-all duration-200 ease-out" />
+                      <ChevronRight className="w-4 h-4 text-apple-gray-3 group-hover:translate-x-1 transition-all duration-200 ease-out" />
                     </div>
                   </div>
                 </div>
