@@ -266,14 +266,13 @@ const Projects = () => {
               return (
                 <Card 
                   key={project.id} 
-                elevation="sm"
-                hover="lift"
-                className="cursor-pointer"
+                  elevation="sm"
+                  className="cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
                   data-element={`project-card-${project.id}`}
                 >
                 <div className="p-6" data-element={`project-card-content-${project.id}`}>
                   {/* Project Header */}
-                  <div className="flex items-start justify-between mb-4" data-element={`project-header-${project.id}`}>
+                  <div className="flex items-start justify-between mb-6" data-element={`project-header-${project.id}`}>
                     <div className="flex-1 min-w-0" data-element={`project-title-section-${project.id}`}>
                       <h3 className="text-lg font-sf font-semibold text-apple-gray-7 truncate" data-element={`project-title-${project.id}`}>
                         {project.name}
@@ -294,11 +293,11 @@ const Projects = () => {
                             e.stopPropagation();
                             handleViewProject(project);
                           }}
-                        className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
-                        data-element={`project-view-${project.id}`}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                          className="h-8 w-8 p-0 text-apple-gray-4 hover:text-apple-blue transition-all duration-200"
+                          data-element={`project-view-${project.id}`}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -306,11 +305,11 @@ const Projects = () => {
                             e.stopPropagation();
                             handleEditProject(project);
                           }}
-                        className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10 transition-all duration-200"
-                        data-element={`project-edit-${project.id}`}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
+                          className="h-8 w-8 p-0 text-apple-gray-4 hover:text-apple-blue transition-all duration-200"
+                          data-element={`project-edit-${project.id}`}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -318,28 +317,29 @@ const Projects = () => {
                             e.stopPropagation();
                             handleDeleteProject(project);
                           }}
-                        className="h-8 w-8 p-0 text-apple-gray-5 hover:text-error hover:bg-error/10 transition-all duration-200"
-                        data-element={`project-delete-${project.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                          className="h-8 w-8 p-0 text-apple-gray-4 hover:text-error transition-all duration-200"
+                          data-element={`project-delete-${project.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                     </div>
                   </div>
 
                   {/* Project Stats */}
-                  <div className="space-y-3" data-element={`project-stats-${project.id}`}>
+                  <div className="space-y-4" data-element={`project-stats-${project.id}`}>
                     {/* Status Badge */}
                     <div data-element={`project-status-${project.id}`}>
                       <Badge
                         variant={stats.total > 0 ? 'success' : 'default'}
                         size="sm"
+                        className="font-sf font-medium"
                       >
                         {stats.status}
                       </Badge>
                     </div>
 
                     {/* Test Case Counts */}
-                    <div className="grid grid-cols-3 gap-3" data-element={`project-test-counts-${project.id}`}>
+                    <div className="grid grid-cols-3 gap-4" data-element={`project-test-counts-${project.id}`}>
                       <div className="text-center" data-element={`project-total-${project.id}`}>
                         <p className="text-lg font-sf font-bold text-apple-gray-7" data-element={`project-total-count-${project.id}`}>
                           {stats.total}
@@ -368,7 +368,7 @@ const Projects = () => {
 
                     {/* Progress Bar */}
                     {stats.total > 0 && (
-                      <div className="space-y-2" data-element={`project-progress-${project.id}`}>
+                      <div className="space-y-3" data-element={`project-progress-${project.id}`}>
                         <div className="flex items-center justify-between text-xs" data-element={`project-progress-labels-${project.id}`}>
                           <span className="text-apple-gray-5">Success Rate</span>
                           <span className="font-sf font-medium text-apple-gray-7">
@@ -387,7 +387,7 @@ const Projects = () => {
                   </div>
 
                   {/* Project Metadata */}
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-apple-gray-2" data-element={`project-metadata-${project.id}`}>
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-apple-gray-2" data-element={`project-metadata-${project.id}`}>
                     <div className="flex items-center gap-2 text-xs text-apple-gray-4" data-element={`project-created-${project.id}`}>
                       <Calendar className="w-3 h-3" />
                       <span>Created {new Date(project.created_at).toLocaleDateString()}</span>

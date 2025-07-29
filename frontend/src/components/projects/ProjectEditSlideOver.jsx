@@ -133,7 +133,7 @@ const ProjectEditSlideOver = ({ project, isOpen, onClose, onSave }) => {
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="h-8 w-8 p-0 text-apple-gray-4 hover:text-apple-gray-7 hover:bg-apple-gray-2"
+                className="h-8 w-8 p-0 text-apple-gray-4 hover:text-apple-gray-7"
               >
                 <X className="w-4 h-4" />
               </Button>
