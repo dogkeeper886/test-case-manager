@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, ChevronDown, Folder, FolderOpen, FileText, Users, Calendar, Hash, BarChart3 } from 'lucide-react';
+import { Plus, Search, Filter, ChevronDown, Folder, FolderOpen, FileText, Users, Calendar, Hash, BarChart3, User, Edit, Trash2 } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import TestSuiteTree from '../components/test-cases/TestSuiteTree';
 import SuiteDetailsPanel from '../components/test-cases/SuiteDetailsPanel';
+import SuiteDetailsDialog from '../components/test-cases/SuiteDetailsDialog';
 import { testSuitesAPI, projectsAPI } from '../services/api';
 
 const TestSuiteBrowser = () => {
@@ -26,10 +27,24 @@ const TestSuiteBrowser = () => {
   const [expandedSuites, setExpandedSuites] = useState(new Set());
   const [showFilterPanel, setShowFilterPanel] = useState(false);
 
+  // State for SuiteDetailsDialog
+  const [isSuiteDetailsDialogOpen, setIsSuiteDetailsDialogOpen] = useState(false);
+  const [suiteToEdit, setSuiteToEdit] = useState(null);
+
   // Fetch data on component mount
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle project selection changes
+  useEffect(() => {
+    if (selectedProjectId && testSuites.length > 0) {
+      console.log('Project selection changed to:', selectedProjectId);
+      console.log('Available test suites:', testSuites.length);
+      const filtered = testSuites.filter(suite => suite.project_id?.toString() === selectedProjectId);
+      console.log('Filtered test suites:', filtered.length);
+    }
+  }, [selectedProjectId, testSuites]);
 
   const fetchData = async () => {
     try {
@@ -48,9 +63,11 @@ const TestSuiteBrowser = () => {
       setProjects(projectsData);
       setTestSuites(hierarchicalSuites);
       
-      // Set first project as default if available
+      // Set first project as default if available and no project is currently selected
       if (projectsData.length > 0 && !selectedProjectId) {
-        setSelectedProjectId(projectsData[0].id.toString());
+        const defaultProjectId = projectsData[0].id.toString();
+        setSelectedProjectId(defaultProjectId);
+        console.log('Setting default project:', defaultProjectId);
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -62,8 +79,20 @@ const TestSuiteBrowser = () => {
 
   // Filter test suites by selected project
   const filteredTestSuites = testSuites.filter(suite => {
-    if (!selectedProjectId) return true;
-    return suite.project_id?.toString() === selectedProjectId;
+    // Temporarily show all suites for debugging
+    console.log(`Suite ${suite.id}: ${suite.name} (project ${suite.project_id})`);
+    return true;
+    
+    // Original filtering logic (commented out for debugging)
+    /*
+    if (!selectedProjectId) {
+      console.log('No project selected, showing all suites');
+      return true;
+    }
+    const matches = suite.project_id?.toString() === selectedProjectId;
+    console.log(`Suite ${suite.id} (project ${suite.project_id}) matches selected project ${selectedProjectId}: ${matches}`);
+    return matches;
+    */
   });
 
   // Handle suite selection
@@ -90,7 +119,8 @@ const TestSuiteBrowser = () => {
   // Suite action handlers
   const handleEditSuite = (suite) => {
     console.log('Edit suite:', suite);
-    // TODO: Implement suite editing
+    setSuiteToEdit(suite);
+    setIsSuiteDetailsDialogOpen(true);
   };
 
   const handleDeleteSuite = (suite) => {
@@ -108,14 +138,15 @@ const TestSuiteBrowser = () => {
   };
 
   // Toggle suite expansion
-  const toggleSuiteExpansion = (suiteId) => {
-    const newExpanded = new Set(expandedSuites);
-    if (newExpanded.has(suiteId)) {
-      newExpanded.delete(suiteId);
-    } else {
-      newExpanded.add(suiteId);
-    }
-    setExpandedSuites(newExpanded);
+  const toggleSuiteExpansion = (expandedSuitesSet) => {
+    console.log('Toggle expansion called with:', expandedSuitesSet);
+    setExpandedSuites(expandedSuitesSet);
+  };
+
+  // Handle view suite details
+  const handleViewSuite = (suite) => {
+    setSuiteToEdit(suite);
+    setIsSuiteDetailsDialogOpen(true);
   };
 
   // Get selected project name
@@ -169,7 +200,21 @@ const TestSuiteBrowser = () => {
           variant: 'primary',
           icon: <Plus className="w-4 h-4" />,
           onClick: () => console.log('Add test suite')
-        }
+        },
+        ...(selectedSuite ? [
+          {
+            label: 'Edit Suite',
+            variant: 'outline',
+            icon: <Edit className="w-4 h-4" />,
+            onClick: () => handleEditSuite(selectedSuite)
+          },
+          {
+            label: 'Delete Suite',
+            variant: 'outline',
+            icon: <Trash2 className="w-4 h-4" />,
+            onClick: () => handleDeleteSuite(selectedSuite)
+          }
+        ] : [])
       ]}
       showSearch={false}
     >
@@ -185,110 +230,60 @@ const TestSuiteBrowser = () => {
             </p>
           </div>
           
-          {/* Project Selection and Controls */}
-          <div className="flex items-center gap-3" data-element="testsuites-controls">
-            {/* Project Selector */}
-            <div className="relative" data-element="project-selector">
-              <Button
-                variant="outline"
-                onClick={() => setShowProjectDropdown(!showProjectDropdown)}
-                className="min-w-[200px] justify-between"
-                data-element="project-selector-button"
-              >
-                <div className="flex items-center gap-2">
-                  <Folder className="w-4 h-4 text-apple-gray-4" />
-                  <span className="text-sm font-medium">
-                    {selectedProject ? selectedProject.name : 'Select Project'}
-                  </span>
-                </div>
-                <ChevronDown className={`w-4 h-4 text-apple-gray-4 transition-transform duration-200 ${showProjectDropdown ? 'rotate-180' : ''}`} />
-              </Button>
-              
-              {/* Project Dropdown */}
-              {showProjectDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-apple-gray-2 rounded-apple-lg shadow-apple-lg z-50 max-h-60 overflow-y-auto">
-                  {projects.map((project) => (
-                    <button
-                      key={project.id}
-                      onClick={() => handleProjectSelect(project.id.toString())}
-                      className={`w-full px-4 py-3 text-left text-sm hover:bg-apple-gray-1 transition-colors duration-200 flex items-center gap-3 ${
-                        selectedProjectId === project.id.toString() 
-                          ? 'bg-apple-blue/10 text-apple-blue' 
-                          : 'text-apple-gray-7'
-                      }`}
-                      data-element={`project-option-${project.id}`}
-                    >
-                      <Folder className="w-4 h-4" />
-                      <span className="font-medium">{project.name}</span>
-                      {selectedProjectId === project.id.toString() && (
-                        <div className="ml-auto w-2 h-2 bg-apple-blue rounded-full" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-apple-gray-1 rounded-apple-lg p-1" data-element="view-mode-toggle">
-              <Button
-                variant={viewMode === 'tree' ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('tree')}
-                className="text-xs"
-                data-element="view-mode-tree"
-              >
-                Tree
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="text-xs"
-                data-element="view-mode-list"
-              >
-                List
-              </Button>
-            </div>
-
-            {/* Filter Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilterPanel(!showFilterPanel)}
-              className="gap-2"
-              data-element="filter-button"
+          {/* Project Selector */}
+          <div className="relative" data-element="testsuites-project-selector">
+            <button
+              onClick={() => setShowProjectDropdown(!showProjectDropdown)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-apple-gray-3 rounded-apple hover:border-apple-gray-4 transition-colors"
+              data-element="testsuites-project-button"
             >
-              <Filter className="w-4 h-4" />
-              Filter
-            </Button>
+              <div className="w-2 h-2 bg-apple-blue rounded-full" data-element="testsuites-project-indicator"></div>
+              <span className="text-sm font-medium text-apple-gray-7" data-element="testsuites-project-name">
+                {selectedProject?.name || 'Select Project'}
+              </span>
+              <ChevronDown className="w-4 h-4 text-apple-gray-5" data-element="testsuites-project-chevron" />
+            </button>
+            
+            {showProjectDropdown && (
+              <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-apple-gray-3 rounded-apple shadow-lg z-10" data-element="testsuites-project-dropdown">
+                {projects.map(project => (
+                  <button
+                    key={project.id}
+                    onClick={() => handleProjectSelect(project.id.toString())}
+                    className="w-full px-4 py-2 text-left hover:bg-apple-gray-2 transition-colors flex items-center gap-2"
+                    data-element={`testsuites-project-option-${project.id}`}
+                  >
+                    <div className={`w-2 h-2 rounded-full ${project.id.toString() === selectedProjectId ? 'bg-apple-blue' : 'bg-apple-gray-4'}`}></div>
+                    <span className="text-sm text-apple-gray-7">{project.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-
+        
         {/* Project Info Bar */}
         {selectedProject && (
-          <div className="mt-4 p-4 bg-apple-gray-1 rounded-apple-lg border border-apple-gray-2" data-element="project-info-bar">
+          <div className="mt-4 p-4 bg-apple-gray-1 rounded-apple border border-apple-gray-2" data-element="testsuites-project-info">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <Folder className="w-5 h-5 text-apple-blue" />
-                  <span className="font-medium text-apple-gray-7">{selectedProject.name}</span>
+                  <div className="w-2 h-2 bg-apple-blue rounded-full"></div>
+                  <span className="text-sm font-medium text-apple-gray-7">{selectedProject.name}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-apple-gray-5">
-                  <Users className="w-4 h-4" />
-                  <span>{selectedProject.owner || 'No Owner'}</span>
+                <div className="flex items-center gap-2 text-apple-gray-5">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">{selectedProject.owner || 'No Owner'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-apple-gray-5">
+                <div className="flex items-center gap-2 text-apple-gray-5">
                   <Calendar className="w-4 h-4" />
-                  <span>Created {new Date(selectedProject.created_at).toLocaleDateString()}</span>
+                  <span className="text-sm">Created {new Date(selectedProject.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" size="sm">
-                  {filteredTestSuites.length} Test Suites
-                </Badge>
-                <Badge variant="outline" size="sm">
-                  {selectedProject.status || 'Active'}
+                <span className="text-sm text-apple-gray-5">{filteredTestSuites.length} Test Suites</span>
+                <Badge variant="outline" size="sm" className="bg-apple-green/10 text-apple-green border-apple-green/20">
+                  active
                 </Badge>
               </div>
             </div>
@@ -321,6 +316,7 @@ const TestSuiteBrowser = () => {
                   selectedTestCaseId={selectedTestCaseId}
                   expandedSuites={expandedSuites}
                   onToggleExpansion={toggleSuiteExpansion}
+                  onViewSuite={handleViewSuite}
                 />
               </div>
             </div>
@@ -352,6 +348,26 @@ const TestSuiteBrowser = () => {
           )}
         </div>
       </div>
+
+      {/* Suite Details Dialog */}
+      <SuiteDetailsDialog
+        isOpen={isSuiteDetailsDialogOpen}
+        onClose={() => {
+          setIsSuiteDetailsDialogOpen(false);
+          setSuiteToEdit(null);
+        }}
+        suite={suiteToEdit}
+        onEdit={(suite) => {
+          console.log('Edit suite from dialog:', suite);
+          // TODO: Implement suite editing
+        }}
+        onDelete={(suite) => {
+          console.log('Delete suite from dialog:', suite);
+          // TODO: Implement suite deletion with confirmation
+          setIsSuiteDetailsDialogOpen(false);
+          setSuiteToEdit(null);
+        }}
+      />
     </Layout>
   );
 };

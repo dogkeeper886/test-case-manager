@@ -21,125 +21,111 @@ const SuiteDetailsPanel = ({ suite, onEdit, onDelete }) => {
             Select a Test Suite
           </h3>
           <p className="text-apple-gray-4 max-w-md">
-            Choose a test suite from the tree to view its details
+            Choose a test suite from the tree to view its details and statistics
           </p>
         </div>
       </div>
     );
   }
 
-  // Calculate suite statistics
-  const getTestCasesCount = (suite) => {
-    let count = suite.test_cases ? suite.test_cases.length : 0;
-    if (suite.test_suites) {
-      suite.test_suites.forEach(childSuite => {
-        count += getTestCasesCount(childSuite);
-      });
-    }
-    return count;
-  };
+  // Calculate statistics
+  const calculateStats = (suite) => {
+    let totalTestCases = 0;
+    let statusCounts = { passed: 0, failed: 0, blocked: 0, skipped: 0 };
+    let priorityCounts = { high: 0, medium: 0, low: 0 };
+    let subSuitesCount = 0;
 
-  const getTestCasesByStatus = (suite) => {
-    const statusCounts = { pending: 0, passed: 0, failed: 0, blocked: 0, skipped: 0 };
-    
-    const countStatuses = (testCases) => {
-      testCases.forEach(testCase => {
-        switch (testCase.status) {
-          case 1: statusCounts.pending++; break;
-          case 2: statusCounts.passed++; break;
-          case 3: statusCounts.failed++; break;
-          case 4: statusCounts.blocked++; break;
-          case 5: statusCounts.skipped++; break;
-          default: break;
-        }
-      });
+    const traverseSuite = (s) => {
+      // Count test cases in this suite
+      if (s.test_cases) {
+        totalTestCases += s.test_cases.length;
+        s.test_cases.forEach(testCase => {
+          if (testCase.status) {
+            const status = typeof testCase.status === 'string' ? testCase.status.toLowerCase() : testCase.status.toString();
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+          }
+          if (testCase.priority) {
+            const priority = typeof testCase.priority === 'string' ? testCase.priority.toLowerCase() : testCase.priority.toString();
+            priorityCounts[priority] = (priorityCounts[priority] || 0) + 1;
+          }
+        });
+      }
+
+      // Count sub-suites
+      if (s.test_suites) {
+        subSuitesCount += s.test_suites.length;
+        s.test_suites.forEach(traverseSuite);
+      }
     };
 
-    if (suite.test_cases) {
-      countStatuses(suite.test_cases);
-    }
-    
-    if (suite.test_suites) {
-      suite.test_suites.forEach(childSuite => {
-        if (childSuite.test_cases) {
-          countStatuses(childSuite.test_cases);
-        }
-      });
-    }
+    traverseSuite(suite);
 
-    return statusCounts;
+    // Calculate coverage and health score
+    const totalStatusCount = Object.values(statusCounts).reduce((a, b) => a + b, 0);
+    const passedCount = statusCounts.passed || 0;
+    const coveragePercentage = totalStatusCount > 0 ? Math.round((passedCount / totalStatusCount) * 100) : 0;
+    
+    const healthScore = Math.round(
+      (passedCount * 0.4 + (statusCounts.skipped || 0) * 0.2) / totalStatusCount * 100
+    ) || 0;
+
+    return {
+      totalTestCases,
+      statusCounts,
+      priorityCounts,
+      subSuitesCount,
+      coveragePercentage,
+      healthScore
+    };
   };
 
-  // Calculate statistics
-  const totalTestCases = getTestCasesCount(suite);
-  const statusCounts = getTestCasesByStatus(suite);
-  const subSuitesCount = suite.test_suites ? suite.test_suites.length : 0;
-  
-  // Calculate health score
-  const totalStatusCount = Object.values(statusCounts).reduce((a, b) => a + b, 0);
-  const healthScore = totalStatusCount > 0 ? Math.round(((statusCounts.passed + statusCounts.pending) / totalStatusCount) * 100) : 0;
+  const stats = calculateStats(suite);
+  const { totalTestCases, subSuitesCount, coveragePercentage, healthScore, statusCounts } = stats;
 
-  const getHealthColor = (score) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-orange-600';
-    return 'text-red-600';
+  const getHealthScoreIcon = (score) => {
+    if (score >= 80) return <CheckCircle className="w-4 h-4 text-green-600" />;
+    if (score >= 60) return <AlertCircle className="w-4 h-4 text-yellow-600" />;
+    return <XCircle className="w-4 h-4 text-red-600" />;
   };
 
   return (
     <div className="h-full flex flex-col" data-element="suite-details-panel">
-      {/* Suite Header - Minimal */}
-      <div className="flex items-center justify-between p-4 border-b border-apple-gray-2" data-element="suite-details-header">
-        <div className="flex-1" data-element="suite-details-title-section">
-          <h2 className="text-lg font-sf font-semibold text-apple-gray-7 mb-1" data-element="suite-details-title">
-            {suite.name}
-          </h2>
-          {suite.description && (
-            <p className="text-sm text-apple-gray-5 truncate" data-element="suite-details-description">
-              {suite.description}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2" data-element="suite-details-actions">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit?.(suite)}
-            data-element="suite-details-edit-button"
-          >
-            <Edit className="w-4 h-4 mr-1" />
-            Edit
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onDelete?.(suite)}
-            data-element="suite-details-delete-button"
-          >
-            <Trash2 className="w-4 h-4 mr-1" />
-            Delete
-          </Button>
+      {/* Quick Stats Bar */}
+      <div className="flex items-center justify-between p-4 border-b border-apple-gray-2 bg-apple-gray-1/50" data-element="suite-details-quick-stats">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-apple-blue rounded-full"></div>
+            <span className="text-sm font-medium text-apple-gray-7">Coverage</span>
+            <span className="text-sm text-apple-gray-5">{coveragePercentage}%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {getHealthScoreIcon(healthScore)}
+            <span className="text-sm font-medium text-apple-gray-7">Health</span>
+            <span className="text-sm text-apple-gray-5">{healthScore}/100</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-apple-gray-4" />
+            <span className="text-sm font-medium text-apple-gray-7">Cases</span>
+            <span className="text-sm text-apple-gray-5">{totalTestCases}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Folder className="w-4 h-4 text-apple-gray-4" />
+            <span className="text-sm font-medium text-apple-gray-7">Sub-Suites</span>
+            <span className="text-sm text-apple-gray-5">{subSuitesCount}</span>
+          </div>
         </div>
       </div>
 
-      {/* Quick Stats - Compact */}
-      <div className="p-4 border-b border-apple-gray-2" data-element="suite-details-quick-stats">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-apple-gray-4" />
-              <span className="text-sm text-apple-gray-5">Cases:</span>
-              <span className="text-lg font-sf font-semibold text-apple-gray-7">{totalTestCases}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Folder className="w-4 h-4 text-apple-gray-4" />
-              <span className="text-sm text-apple-gray-5">Sub-Suites:</span>
-              <span className="text-lg font-sf font-semibold text-apple-gray-7">{subSuitesCount}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-apple-gray-5">Health:</span>
-              <span className={`text-lg font-sf font-semibold ${getHealthColor(healthScore)}`}>{healthScore}%</span>
-            </div>
+      {/* Suite Header */}
+      <div className="p-4 border-b border-apple-gray-2" data-element="suite-details-header">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h3 className="text-lg font-sf font-semibold text-apple-gray-7 mb-1" data-element="suite-details-name">
+              {suite.name}
+            </h3>
+            <p className="text-sm text-apple-gray-5" data-element="suite-details-description">
+              {suite.description || 'No description available'}
+            </p>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Eye } from 'lucide-react';
 import { Badge } from '../ui';
 
 const TestSuiteTree = ({ 
@@ -9,7 +9,8 @@ const TestSuiteTree = ({
   selectedSuiteId = null,
   selectedTestCaseId = null,
   expandedSuites: externalExpandedSuites,
-  onToggleExpansion
+  onToggleExpansion,
+  onViewSuite
 }) => {
   const [internalExpandedSuites, setInternalExpandedSuites] = useState(new Set());
   const [loading] = useState(false);
@@ -88,7 +89,7 @@ const TestSuiteTree = ({
         {/* Test Suite Row */}
         <div
           className={`
-            flex items-center px-3 py-2 rounded-apple cursor-pointer transition-all duration-200
+            flex items-center px-3 py-2 rounded-apple cursor-pointer transition-all duration-200 group
             hover:bg-apple-gray-2/50
             ${isSelected ? 'bg-apple-blue/10 border border-apple-blue/20' : ''}
             ${level > 0 ? 'ml-6' : ''}
@@ -132,6 +133,19 @@ const TestSuiteTree = ({
                 {testCasesCount} {testCasesCount === 1 ? 'case' : 'cases'}
               </Badge>
             )}
+
+            {/* View Details Icon */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewSuite?.(suite);
+              }}
+              className="ml-2 p-1 hover:bg-apple-gray-3/50 rounded-apple transition-colors opacity-0 group-hover:opacity-100"
+              title="View suite details"
+              data-element={`suite-view-button-${suite.id}`}
+            >
+              <Eye className="w-4 h-4 text-apple-gray-5 hover:text-apple-blue" />
+            </button>
           </div>
         </div>
 
