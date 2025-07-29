@@ -297,9 +297,9 @@ const TestSuiteBrowser = () => {
       </div>
 
       {/* Main Content - Modern Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6" data-element="testsuites-main-content">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6" data-element="testsuites-main-content">
         {/* Test Suite Tree - Modern Design */}
-        <div className="xl:col-span-1" data-element="testsuites-tree-section">
+        <div className="xl:col-span-4" data-element="testsuites-tree-section">
           <div className="bg-white rounded-apple border border-apple-gray-2 h-full" data-element="testsuites-tree-container">
             <div className="p-4 border-b border-apple-gray-2" data-element="testsuites-tree-header">
               <div className="flex items-center justify-between">
@@ -327,8 +327,8 @@ const TestSuiteBrowser = () => {
           </div>
         </div>
 
-        {/* Details Panel - Enhanced Design */}
-        <div className="xl:col-span-3" data-element="testsuites-details-section">
+        {/* Details Panel - Compact Design */}
+        <div className="xl:col-span-1" data-element="testsuites-details-section">
           {selectedSuite ? (
             <SuiteDetailsPanel
               suite={selectedSuite}
@@ -344,7 +344,7 @@ const TestSuiteBrowser = () => {
                     No Test Suite Selected
                   </h3>
                   <p className="text-apple-gray-4 max-w-md">
-                    Select a test suite from the tree to view its details, statistics, and manage its content.
+                    Select a test suite from the tree to view its details
                   </p>
                 </div>
               </div>
