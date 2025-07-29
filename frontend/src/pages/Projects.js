@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, Eye, Edit, Trash2, FolderOpen, Users, Calendar, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Plus, Search, Filter, FolderOpen, Users, Calendar, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import { ProjectCreateSlideOver } from '../components/projects';
@@ -79,17 +79,7 @@ const Projects = () => {
     return true;
   });
 
-  const handleViewProject = (project) => {
-    navigate(`/projects/${project.id}`);
-  };
 
-  const handleEditProject = (project) => {
-    navigate(`/projects/${project.id}/edit`);
-  };
-
-  const handleDeleteProject = (project) => {
-    navigate(`/projects/${project.id}/delete`);
-  };
 
   const handleCreateProject = () => {
     setIsCreateOpen(true);
@@ -269,11 +259,12 @@ const Projects = () => {
                   elevation="sm"
                   hover={false}
                   className="cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
+                  onClick={() => navigate(`/projects/${project.id}`)}
                   data-element={`project-card-${project.id}`}
                 >
                 <div className="p-6" data-element={`project-card-content-${project.id}`}>
                   {/* Project Header */}
-                  <div className="flex items-start justify-between mb-6" data-element={`project-header-${project.id}`}>
+                  <div className="mb-6" data-element={`project-header-${project.id}`}>
                     <div className="flex-1 min-w-0" data-element={`project-title-section-${project.id}`}>
                       <h3 className="text-lg font-sf font-semibold text-apple-gray-7 truncate" data-element={`project-title-${project.id}`}>
                         {project.name}
@@ -283,46 +274,6 @@ const Projects = () => {
                           {project.description}
                         </p>
                       )}
-                    </div>
-                    
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 ml-4" data-element={`project-actions-${project.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewProject(project);
-                          }}
-                          className="h-8 w-8 p-0 text-apple-gray-4 hover:text-apple-blue transition-all duration-200"
-                          data-element={`project-view-${project.id}`}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditProject(project);
-                          }}
-                          className="h-8 w-8 p-0 text-apple-gray-4 hover:text-apple-blue transition-all duration-200"
-                          data-element={`project-edit-${project.id}`}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteProject(project);
-                          }}
-                          className="h-8 w-8 p-0 text-apple-gray-4 hover:text-error transition-all duration-200"
-                          data-element={`project-delete-${project.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
                     </div>
                   </div>
 
