@@ -234,13 +234,7 @@ const ProjectDetail = () => {
     navigate(`/test-suites/${suiteId}`);
   };
 
-  const handleCreateTestCase = () => {
-    navigate(`/testcases/create?project=${id}`);
-  };
 
-  // const handleCreateTestSuite = () => {
-  //   navigate(`/test-suites/create?project=${id}`);
-  // };
 
   if (loading) {
     return (
@@ -333,7 +327,7 @@ const ProjectDetail = () => {
       ]}
     >
       {/* Page Header */}
-      <div className="mb-8">
+      <div className="mb-8" data-element="project-detail-header">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
@@ -342,15 +336,16 @@ const ProjectDetail = () => {
                 size="sm"
                 onClick={handleBack}
                 className="h-8 w-8 p-0 text-apple-gray-5 hover:text-apple-blue hover:bg-apple-blue/10"
+                data-element="back-button"
               >
                 <ArrowLeft className="w-4 h-4" />
               </Button>
-              <h1 className="text-3xl font-sf-display font-semibold text-apple-gray-7">
+              <h1 className="text-3xl font-sf-display font-semibold text-apple-gray-7" data-element="project-title">
                 {project.name}
               </h1>
             </div>
             {project.description && (
-              <p className="text-apple-gray-5 text-lg">
+              <p className="text-apple-gray-5 text-lg" data-element="project-description">
                 {project.description}
               </p>
             )}
@@ -359,8 +354,8 @@ const ProjectDetail = () => {
       </div>
 
       {/* Project Status and Metadata */}
-      <div className="mb-8">
-        <Card elevation="sm" hover={false}>
+      <div className="mb-8" data-element="project-status-section">
+        <Card elevation="sm" hover={false} data-element="project-status-card">
           <div className="p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -368,16 +363,17 @@ const ProjectDetail = () => {
                   variant={getStatusColor(project.status)}
                   size="lg"
                   className="flex items-center gap-2"
+                  data-element="project-status-badge"
                 >
                   {getStatusIcon(project.status)}
                   {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                 </Badge>
                 <div className="hidden sm:flex items-center gap-6 text-sm text-apple-gray-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" data-element="created-date">
                     <Calendar className="w-4 h-4" />
                     <span>Created {formatDate(project.created_at)}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" data-element="updated-date">
                     <Clock className="w-4 h-4" />
                     <span>Updated {formatDate(project.updated_at)}</span>
                   </div>
@@ -386,11 +382,11 @@ const ProjectDetail = () => {
               
               {/* Mobile-friendly metadata */}
               <div className="sm:hidden space-y-2">
-                <div className="flex items-center gap-2 text-sm text-apple-gray-4">
+                <div className="flex items-center gap-2 text-sm text-apple-gray-4" data-element="mobile-created-date">
                   <Calendar className="w-4 h-4" />
                   <span>Created {formatDate(project.created_at)}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-apple-gray-4">
+                <div className="flex items-center gap-2 text-sm text-apple-gray-4" data-element="mobile-updated-date">
                   <Clock className="w-4 h-4" />
                   <span>Updated {formatDate(project.updated_at)}</span>
                 </div>
@@ -401,51 +397,71 @@ const ProjectDetail = () => {
       </div>
 
       {/* Statistics Grid */}
-      <div className="mb-8">
-        <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6">Project Statistics</h2>
+      <div className="mb-8" data-element="project-statistics-section">
+        <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6" data-element="statistics-title">Project Statistics</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card elevation="sm" hover={false} className="group">
+          <Card 
+            elevation="sm" 
+            className="group cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
+            onClick={() => navigate(`/testcases?project=${id}`)}
+            data-element="statistics-test-cases-card"
+          >
             <div className="p-4 lg:p-6 text-center">
-              <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-apple-blue/10 rounded-apple-lg mx-auto mb-3">
+              <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-apple-blue/10 rounded-apple-lg mx-auto mb-3 group-hover:bg-apple-blue/20 transition-colors">
                 <FileText className="w-5 h-5 lg:w-6 lg:h-6 text-apple-blue" />
               </div>
-              <p className="text-xl lg:text-2xl font-sf font-bold text-apple-gray-7 mb-1">
+              <p className="text-xl lg:text-2xl font-sf font-bold text-apple-gray-7 mb-1 group-hover:text-apple-blue transition-colors">
                 {project.statistics.testCases.toLocaleString()}
               </p>
               <p className="text-xs lg:text-sm text-apple-gray-5">Test Cases</p>
             </div>
           </Card>
 
-          <Card elevation="sm" hover={false} className="group">
+          <Card 
+            elevation="sm" 
+            className="group cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
+            onClick={() => navigate(`/test-suites?project=${id}`)}
+            data-element="statistics-test-suites-card"
+          >
             <div className="p-4 lg:p-6 text-center">
-              <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-success/10 rounded-apple-lg mx-auto mb-3">
+              <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-success/10 rounded-apple-lg mx-auto mb-3 group-hover:bg-success/20 transition-colors">
                 <FolderOpen className="w-5 h-5 lg:w-6 lg:h-6 text-success" />
               </div>
-              <p className="text-xl lg:text-2xl font-sf font-bold text-apple-gray-7 mb-1">
+              <p className="text-xl lg:text-2xl font-sf font-bold text-apple-gray-7 mb-1 group-hover:text-success transition-colors">
                 {project.statistics.testSuites.toLocaleString()}
               </p>
               <p className="text-xs lg:text-sm text-apple-gray-5">Test Suites</p>
             </div>
           </Card>
 
-          <Card elevation="sm" hover={false} className="group">
+          <Card 
+            elevation="sm" 
+            className="group cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
+            onClick={() => navigate(`/import?project=${id}`)}
+            data-element="statistics-import-logs-card"
+          >
             <div className="p-4 lg:p-6 text-center">
-              <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-warning/10 rounded-apple-lg mx-auto mb-3">
+              <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-warning/10 rounded-apple-lg mx-auto mb-3 group-hover:bg-warning/20 transition-colors">
                 <Activity className="w-5 h-5 lg:w-6 lg:h-6 text-warning" />
               </div>
-              <p className="text-xl lg:text-2xl font-sf font-bold text-apple-gray-7 mb-1">
+              <p className="text-xl lg:text-2xl font-sf font-bold text-apple-gray-7 mb-1 group-hover:text-warning transition-colors">
                 {project.statistics.importLogs.toLocaleString()}
               </p>
               <p className="text-xs lg:text-sm text-apple-gray-5">Import Logs</p>
             </div>
           </Card>
 
-          <Card elevation="sm" hover={false} className="group">
+          <Card 
+            elevation="sm" 
+            className="group cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
+            onClick={() => navigate(`/activities?project=${id}`)}
+            data-element="statistics-activities-card"
+          >
             <div className="p-4 lg:p-6 text-center">
-              <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-info/10 rounded-apple-lg mx-auto mb-3">
+              <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-info/10 rounded-apple-lg mx-auto mb-3 group-hover:bg-info/20 transition-colors">
                 <BarChart3 className="w-5 h-5 lg:w-6 lg:h-6 text-info" />
               </div>
-              <p className="text-xl lg:text-2xl font-sf font-bold text-apple-gray-7 mb-1">
+              <p className="text-xl lg:text-2xl font-sf font-bold text-apple-gray-7 mb-1 group-hover:text-info transition-colors">
                 {project.statistics.activities.toLocaleString()}
               </p>
               <p className="text-xs lg:text-sm text-apple-gray-5">Activities</p>
@@ -454,134 +470,17 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      {/* Recent Activities */}
-      {project.recentActivities && project.recentActivities.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6">Recent Activities</h2>
-          <Card elevation="sm" hover={false}>
-            <div className="p-4 lg:p-6">
-                                <div className="space-y-3">
-                    {project.recentActivities.slice(0, 5).map((activity, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 bg-apple-gray-1/30 rounded-apple-lg">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-apple-blue/10 rounded-full flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-apple-blue" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-sf font-medium text-apple-gray-7 mb-1 line-clamp-2">
-                        {activity.description}
-                      </p>
-                      <p className="text-xs text-apple-gray-4">
-                        {formatDate(activity.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {project.recentActivities.length > 5 && (
-                <div className="mt-4 pt-4 border-t border-apple-gray-2">
-                  <p className="text-xs text-apple-gray-4 text-center">
-                    Showing 5 of {project.recentActivities.length} activities
-                  </p>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
-      )}
 
-      {/* Recent Import Logs */}
-      {project.recentImportLogs && project.recentImportLogs.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6">Recent Import Logs</h2>
-          <Card elevation="sm" hover={false}>
-            <div className="p-4 lg:p-6">
-                                <div className="space-y-3">
-                    {project.recentImportLogs.slice(0, 5).map((log, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 bg-apple-gray-1/30 rounded-apple-lg">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-warning/10 rounded-full flex items-center justify-center">
-                        <FileText className="w-4 h-4 text-warning" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-sf font-medium text-apple-gray-7 mb-1 line-clamp-1">
-                        {log.file_name}
-                      </p>
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant={log.status === 'completed' ? 'success' : log.status === 'failed' ? 'error' : 'warning'} size="sm">
-                          {log.status}
-                        </Badge>
-                        <span className="text-xs text-apple-gray-4">
-                          {log.imported_test_cases} test cases imported
-                        </span>
-                      </div>
-                      <p className="text-xs text-apple-gray-4">
-                        {formatDate(log.started_at)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {project.recentImportLogs.length > 5 && (
-                <div className="mt-4 pt-4 border-t border-apple-gray-2">
-                  <p className="text-xs text-apple-gray-4 text-center">
-                    Showing 5 of {project.recentImportLogs.length} import logs
-                  </p>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
-      )}
 
-      {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Button
-            variant="secondary"
-            className="h-16 flex flex-col items-center justify-center gap-2 group transition-all"
-            onClick={() => navigate(`/testcases?project=${id}`)}
-          >
-            <FileText className="w-6 h-6 text-apple-blue group-hover:scale-110 transition-transform" />
-            <span className="font-sf font-medium">View Test Cases</span>
-          </Button>
-          <Button
-            variant="secondary"
-            className="h-16 flex flex-col items-center justify-center gap-2 group transition-all"
-            onClick={() => navigate(`/test-suites?project=${id}`)}
-          >
-            <FolderOpen className="w-6 h-6 text-success group-hover:scale-110 transition-transform" />
-            <span className="font-sf font-medium">View Test Suites</span>
-          </Button>
-          <Button
-            variant="secondary"
-            className="h-16 flex flex-col items-center justify-center gap-2 group transition-all"
-            onClick={handleCreateTestCase}
-          >
-            <FileText className="w-6 h-6 text-info group-hover:scale-110 transition-transform" />
-            <span className="font-sf font-medium">Create Test Case</span>
-          </Button>
-          <Button
-            variant="secondary"
-            className="h-16 flex flex-col items-center justify-center gap-2 group transition-all"
-            onClick={() => navigate(`/import?project=${id}`)}
-          >
-            <Activity className="w-6 h-6 text-warning group-hover:scale-110 transition-transform" />
-            <span className="font-sf font-medium">Import Data</span>
-          </Button>
-        </div>
-      </div>
+
 
       {/* Test Case Management Section */}
       {!loadingTestData && (
         <>
           {/* Test Case Statistics */}
           {testCaseStats.total > 0 && (
-            <div className="mb-8">
-              <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6">Test Case Overview</h2>
+            <div className="mb-8" data-element="test-case-overview-section">
+              <h2 className="text-xl font-sf font-semibold text-apple-gray-7 mb-6" data-element="test-case-overview-title">Test Case Overview</h2>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Status Distribution */}
                 <Card elevation="sm" hover={false}>
@@ -657,14 +556,15 @@ const ProjectDetail = () => {
 
           {/* Recent Test Cases */}
           {recentTestCases.length > 0 && (
-            <div className="mb-8">
+            <div className="mb-8" data-element="recent-test-cases-section">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-sf font-semibold text-apple-gray-7">Recent Test Cases</h2>
+                <h2 className="text-xl font-sf font-semibold text-apple-gray-7" data-element="recent-test-cases-title">Recent Test Cases</h2>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate(`/testcases?project=${id}`)}
                   className="text-apple-blue hover:text-apple-blue/80"
+                  data-element="view-all-test-cases-button"
                 >
                   View All
                 </Button>
@@ -730,52 +630,7 @@ const ProjectDetail = () => {
             </div>
           )}
 
-          {/* Recent Test Suites */}
-          {recentTestSuites.length > 0 && (
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-sf font-semibold text-apple-gray-7">Recent Test Suites</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(`/test-suites?project=${id}`)}
-                  className="text-apple-blue hover:text-apple-blue/80"
-                >
-                  View All
-                </Button>
-              </div>
-              <Card elevation="sm" hover={false}>
-                <div className="p-4">
-                  <div className="space-y-3">
-                    {recentTestSuites.map((suite) => (
-                      <div
-                        key={suite.id}
-                        className="flex items-center justify-between p-3 bg-apple-gray-1/30 rounded-apple-lg cursor-pointer group"
-                        onClick={() => handleViewTestSuite(suite.id)}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="flex-shrink-0">
-                            <FolderOpen className="w-5 h-5 text-success" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-sf font-medium text-apple-gray-7 mb-1 line-clamp-1 group-hover:text-success transition-colors">
-                              {suite.name}
-                            </p>
-                            <p className="text-xs text-apple-gray-4">
-                              {suite.test_cases_count || 0} test cases
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <ChevronRight className="w-4 h-4 text-apple-gray-4 group-hover:text-success transition-colors" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
+
         </>
       )}
 
