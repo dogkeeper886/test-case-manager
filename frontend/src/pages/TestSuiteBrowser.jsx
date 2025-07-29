@@ -124,11 +124,6 @@ const TestSuiteBrowser = () => {
   if (loading) {
     return (
       <Layout
-        testSuites={testSuites}
-        onSuiteSelect={handleSuiteSelect}
-        onTestCaseSelect={handleTestCaseSelect}
-        selectedSuiteId={selectedSuiteId}
-        selectedTestCaseId={selectedTestCaseId}
         onSearch={handleLayoutSearch}
         breadcrumbs={[
           { label: 'Test Suite Browser', href: '/test-suites' }
@@ -147,11 +142,6 @@ const TestSuiteBrowser = () => {
   if (error) {
     return (
       <Layout
-        testSuites={testSuites}
-        onSuiteSelect={handleSuiteSelect}
-        onTestCaseSelect={handleTestCaseSelect}
-        selectedSuiteId={selectedSuiteId}
-        selectedTestCaseId={selectedTestCaseId}
         onSearch={handleLayoutSearch}
         breadcrumbs={[
           { label: 'Test Suite Browser', href: '/test-suites' }
@@ -169,11 +159,6 @@ const TestSuiteBrowser = () => {
 
   return (
     <Layout
-      testSuites={testSuites}
-      onSuiteSelect={handleSuiteSelect}
-      onTestCaseSelect={handleTestCaseSelect}
-      selectedSuiteId={selectedSuiteId}
-      selectedTestCaseId={selectedTestCaseId}
       onSearch={handleLayoutSearch}
       breadcrumbs={[
         { label: 'Test Suite Browser', href: '/test-suites' }
@@ -313,10 +298,10 @@ const TestSuiteBrowser = () => {
 
       {/* Main Content - Modern Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6" data-element="testsuites-main-content">
-        {/* Test Suite Tree - Compact Design */}
+        {/* Test Suite Tree - Modern Design */}
         <div className="xl:col-span-1" data-element="testsuites-tree-section">
-          <Card elevation="sm" className="h-full" data-element="testsuites-tree-card">
-            <Card.Header className="pb-3" data-element="testsuites-tree-header">
+          <div className="bg-white rounded-apple border border-apple-gray-2 h-full" data-element="testsuites-tree-container">
+            <div className="p-4 border-b border-apple-gray-2" data-element="testsuites-tree-header">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="testsuites-tree-title">
                   Test Suites
@@ -325,8 +310,8 @@ const TestSuiteBrowser = () => {
                   {filteredTestSuites.length}
                 </Badge>
               </div>
-            </Card.Header>
-            <Card.Body className="p-0" data-element="testsuites-tree-body">
+            </div>
+            <div className="p-0" data-element="testsuites-tree-body">
               <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
                 <TestSuiteTree
                   testSuites={filteredTestSuites}
@@ -338,8 +323,8 @@ const TestSuiteBrowser = () => {
                   onToggleExpansion={toggleSuiteExpansion}
                 />
               </div>
-            </Card.Body>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Details Panel - Enhanced Design */}
@@ -351,8 +336,8 @@ const TestSuiteBrowser = () => {
               onDelete={handleDeleteSuite}
             />
           ) : (
-            <Card elevation="sm" className="h-full" data-element="testsuites-empty-state">
-              <Card.Body className="flex items-center justify-center py-12">
+            <div className="bg-white rounded-apple border border-apple-gray-2 h-full" data-element="testsuites-empty-state">
+              <div className="flex items-center justify-center py-12">
                 <div className="text-center" data-element="testsuites-empty-content">
                   <Folder className="w-16 h-16 text-apple-gray-3 mx-auto mb-4" />
                   <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
@@ -362,8 +347,8 @@ const TestSuiteBrowser = () => {
                     Select a test suite from the tree to view its details, statistics, and manage its content.
                   </p>
                 </div>
-              </Card.Body>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
       </div>

@@ -4,11 +4,6 @@ import TopNav from './TopNav';
 
 const Layout = ({ 
   children,
-  testSuites = [],
-  onSuiteSelect,
-  onTestCaseSelect,
-  selectedSuiteId,
-  selectedTestCaseId,
   onSearch,
   breadcrumbs = [],
   actions = [],
@@ -24,11 +19,6 @@ const Layout = ({
     <div className="min-h-screen bg-apple-gray-1 font-sf flex">
       {/* Sidebar */}
       <Sidebar
-        testSuites={testSuites}
-        onSuiteSelect={onSuiteSelect}
-        onTestCaseSelect={onTestCaseSelect}
-        selectedSuiteId={selectedSuiteId}
-        selectedTestCaseId={selectedTestCaseId}
         onSearch={onSearch}
         isOpen={sidebarOpen}
         onToggle={toggleSidebar}

@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
 import { X, Search, Folder, FileText, BarChart3, Settings, Upload, FolderOpen } from 'lucide-react';
 import { Button, Input } from '../ui';
-import TestSuiteTree from '../test-cases/TestSuiteTree';
 
 const Sidebar = ({ 
-  testSuites = [],
-  onSuiteSelect,
-  onTestCaseSelect,
-  selectedSuiteId,
-  selectedTestCaseId,
   onSearch,
   isOpen = true,
   onToggle
@@ -80,7 +74,7 @@ const Sidebar = ({
         </div>
 
         {/* Navigation */}
-        <div className="px-6 py-2 flex-shrink-0" data-element="sidebar-navigation">
+        <div className="flex-1 overflow-y-auto px-6 py-4" data-element="sidebar-navigation">
           <nav className="space-y-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -101,22 +95,6 @@ const Sidebar = ({
               );
             })}
           </nav>
-        </div>
-
-        {/* Test Suite Tree */}
-        <div className="flex-1 overflow-y-auto px-6 py-4" data-element="sidebar-test-suites">
-          <div className="mb-3">
-            <h3 className="text-sm font-medium text-apple-gray-7 mb-2" data-element="sidebar-test-suites-title">
-              Test Suites
-            </h3>
-          </div>
-          <TestSuiteTree
-            testSuites={testSuites}
-            onSuiteSelect={onSuiteSelect}
-            onTestCaseSelect={onTestCaseSelect}
-            selectedSuiteId={selectedSuiteId}
-            selectedTestCaseId={selectedTestCaseId}
-          />
         </div>
 
         {/* Footer */}
