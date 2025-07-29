@@ -1,29 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, ChevronDown, Folder, FolderOpen, FileText, Users, Calendar, Hash, BarChart3, User, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Filter, ChevronDown, Folder, FolderOpen, FileText, Users, Calendar, Hash, BarChart3, User } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import TestSuiteTree from '../components/test-cases/TestSuiteTree';
-import SuiteDetailsPanel from '../components/test-cases/SuiteDetailsPanel';
 import SuiteDetailsDialog from '../components/test-cases/SuiteDetailsDialog';
 import { testSuitesAPI, projectsAPI } from '../services/api';
 
 const TestSuiteBrowser = () => {
   const navigate = useNavigate();
+  // State management
   const [testSuites, setTestSuites] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedSuiteId, setSelectedSuiteId] = useState(null);
-  const [selectedTestCaseId, setSelectedTestCaseId] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSuite, setSelectedSuite] = useState(null);
-  
-  // New state for modern design
-  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
-  const [viewMode, setViewMode] = useState('tree'); // 'tree', 'list', 'grid'
   const [expandedSuites, setExpandedSuites] = useState(new Set());
   const [showFilterPanel, setShowFilterPanel] = useState(false);
 
@@ -48,84 +38,59 @@ const TestSuiteBrowser = () => {
 
   const fetchData = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      
       // Fetch projects and test suites in parallel
       const [projectsResponse, testSuitesResponse] = await Promise.all([
         projectsAPI.getAll(),
-        testSuitesAPI.getAll(true)
+        testSuitesAPI.getAll(true) // Get hierarchical data with test cases
       ]);
+
+      // Ensure we have arrays
+      const projectsData = Array.isArray(projectsResponse.data) ? projectsResponse.data : 
+                          Array.isArray(projectsResponse.data.data) ? projectsResponse.data.data : [];
       
-      const projectsData = projectsResponse.data.data || projectsResponse.data || [];
-      const hierarchicalSuites = testSuitesResponse.data.data || testSuitesResponse.data || [];
-      
+      const testSuitesData = Array.isArray(testSuitesResponse.data) ? testSuitesResponse.data : 
+                            Array.isArray(testSuitesResponse.data.data) ? testSuitesResponse.data.data : [];
+
       setProjects(projectsData);
-      setTestSuites(hierarchicalSuites);
-      
-      // Set first project as default if available and no project is currently selected
+      setTestSuites(testSuitesData);
+
+      // Set default project if none selected
       if (projectsData.length > 0 && !selectedProjectId) {
-        const defaultProjectId = projectsData[0].id.toString();
-        setSelectedProjectId(defaultProjectId);
-        console.log('Setting default project:', defaultProjectId);
+        const defaultProject = projectsData[0];
+        setSelectedProjectId(defaultProject.id.toString());
       }
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Failed to load test suites');
-    } finally {
-      setLoading(false);
+      // Set empty arrays on error
+      setProjects([]);
+      setTestSuites([]);
     }
   };
 
   // Filter test suites by selected project
-  const filteredTestSuites = testSuites.filter(suite => {
-    // Temporarily show all suites for debugging
-    console.log(`Suite ${suite.id}: ${suite.name} (project ${suite.project_id})`);
-    return true;
-    
-    // Original filtering logic (commented out for debugging)
-    /*
-    if (!selectedProjectId) {
-      console.log('No project selected, showing all suites');
-      return true;
-    }
-    const matches = suite.project_id?.toString() === selectedProjectId;
-    console.log(`Suite ${suite.id} (project ${suite.project_id}) matches selected project ${selectedProjectId}: ${matches}`);
-    return matches;
-    */
-  });
+  const filteredTestSuites = (testSuites || []).filter(suite => 
+    suite.project_id && suite.project_id.toString() === selectedProjectId
+  );
 
   // Handle suite selection
   const handleSuiteSelect = (suite) => {
     console.log('Selected suite:', suite);
-    setSelectedSuiteId(suite.id);
-    setSelectedSuite(suite);
+    // setSelectedSuiteId(suite.id); // Removed
+    // setSelectedSuite(suite); // Removed
   };
 
   // Handle test case selection from tree
   const handleTestCaseSelect = (testCase) => {
     console.log('Selected test case from tree:', testCase);
-    setSelectedTestCaseId(testCase.id);
+    // setSelectedTestCaseId(testCase.id); // Removed
     // Navigate to test case detail page
     navigate(`/testcases/${testCase.id}`);
   };
 
   // Handle search from layout
   const handleLayoutSearch = (query) => {
-    setSearchQuery(query);
+    // setSearchQuery(query); // Removed
     // TODO: Implement global search
-  };
-
-  // Suite action handlers
-  const handleEditSuite = (suite) => {
-    console.log('Edit suite:', suite);
-    setSuiteToEdit(suite);
-    setIsSuiteDetailsDialogOpen(true);
-  };
-
-  const handleDeleteSuite = (suite) => {
-    console.log('Delete suite:', suite);
-    // TODO: Implement suite deletion with confirmation
   };
 
   // Project selection handler
@@ -133,8 +98,8 @@ const TestSuiteBrowser = () => {
     setSelectedProjectId(projectId);
     setShowProjectDropdown(false);
     // Reset selected suite when changing projects
-    setSelectedSuiteId(null);
-    setSelectedSuite(null);
+    // setSelectedSuiteId(null); // Removed
+    // setSelectedSuite(null); // Removed
   };
 
   // Toggle suite expansion
@@ -150,43 +115,7 @@ const TestSuiteBrowser = () => {
   };
 
   // Get selected project name
-  const selectedProject = projects.find(p => p.id.toString() === selectedProjectId);
-
-  if (loading) {
-    return (
-      <Layout
-        onSearch={handleLayoutSearch}
-        breadcrumbs={[
-          { label: 'Test Suite Browser', href: '/test-suites' }
-        ]}
-      >
-        <div className="flex items-center justify-center py-12" data-element="testsuites-loading-container">
-          <div className="text-center" data-element="testsuites-loading-content">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-apple-blue mx-auto mb-4" data-element="testsuites-loading-spinner"></div>
-            <p className="text-apple-gray-5" data-element="testsuites-loading-text">Loading test suites...</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (error) {
-    return (
-      <Layout
-        onSearch={handleLayoutSearch}
-        breadcrumbs={[
-          { label: 'Test Suite Browser', href: '/test-suites' }
-        ]}
-      >
-        <Card className="max-w-md mx-auto" data-element="testsuites-error-card">
-          <Card.Body className="text-center" data-element="testsuites-error-content">
-            <p className="text-error mb-4" data-element="testsuites-error-message">{error}</p>
-            <Button onClick={fetchData} data-element="testsuites-error-retry-button">Try Again</Button>
-          </Card.Body>
-        </Card>
-      </Layout>
-    );
-  }
+  const selectedProject = (projects || []).find(p => p.id.toString() === selectedProjectId);
 
   return (
     <Layout
@@ -200,21 +129,7 @@ const TestSuiteBrowser = () => {
           variant: 'primary',
           icon: <Plus className="w-4 h-4" />,
           onClick: () => console.log('Add test suite')
-        },
-        ...(selectedSuite ? [
-          {
-            label: 'Edit Suite',
-            variant: 'outline',
-            icon: <Edit className="w-4 h-4" />,
-            onClick: () => handleEditSuite(selectedSuite)
-          },
-          {
-            label: 'Delete Suite',
-            variant: 'outline',
-            icon: <Trash2 className="w-4 h-4" />,
-            onClick: () => handleDeleteSuite(selectedSuite)
-          }
-        ] : [])
+        }
       ]}
       showSearch={false}
     >
@@ -294,58 +209,41 @@ const TestSuiteBrowser = () => {
       {/* Main Content - Modern Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6" data-element="testsuites-main-content">
         {/* Test Suite Tree - Modern Design */}
-        <div className="xl:col-span-4" data-element="testsuites-tree-section">
+        <div className="xl:col-span-5" data-element="testsuites-tree-section">
           <div className="bg-white rounded-apple border border-apple-gray-2 h-full" data-element="testsuites-tree-container">
             <div className="p-4 border-b border-apple-gray-2" data-element="testsuites-tree-header">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-sf font-semibold text-apple-gray-7" data-element="testsuites-tree-title">
                   Test Suites
                 </h3>
-                <Badge variant="outline" size="sm">
-                  {filteredTestSuites.length}
+                <Badge variant="outline" size="sm" className="ml-auto">
+                  {filteredTestSuites.length} {filteredTestSuites.length === 1 ? 'suite' : 'suites'}
                 </Badge>
               </div>
             </div>
-            <div className="p-0" data-element="testsuites-tree-body">
-              <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+            <div className="p-4 overflow-y-auto max-h-[calc(100vh-300px)]" data-element="testsuites-tree-body">
+              {filteredTestSuites.length > 0 ? (
                 <TestSuiteTree
                   testSuites={filteredTestSuites}
                   onSuiteSelect={handleSuiteSelect}
                   onTestCaseSelect={handleTestCaseSelect}
-                  selectedSuiteId={selectedSuiteId}
-                  selectedTestCaseId={selectedTestCaseId}
                   expandedSuites={expandedSuites}
                   onToggleExpansion={toggleSuiteExpansion}
                   onViewSuite={handleViewSuite}
                 />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Details Panel - Compact Design */}
-        <div className="xl:col-span-1" data-element="testsuites-details-section">
-          {selectedSuite ? (
-            <SuiteDetailsPanel
-              suite={selectedSuite}
-              onEdit={handleEditSuite}
-              onDelete={handleDeleteSuite}
-            />
-          ) : (
-            <div className="bg-white rounded-apple border border-apple-gray-2 h-full" data-element="testsuites-empty-state">
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center" data-element="testsuites-empty-content">
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full py-12" data-element="testsuites-empty-state">
                   <Folder className="w-16 h-16 text-apple-gray-3 mx-auto mb-4" />
                   <h3 className="text-lg font-sf font-semibold text-apple-gray-6 mb-2">
-                    No Test Suite Selected
+                    No Test Suites Found
                   </h3>
-                  <p className="text-apple-gray-4 max-w-md">
-                    Select a test suite from the tree to view its details
+                  <p className="text-apple-gray-4 max-w-md text-center mx-auto">
+                    It looks like there are no test suites in this project yet. Click "Add Test Suite" to get started.
                   </p>
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
