@@ -355,7 +355,7 @@ const ProjectDetail = () => {
 
       {/* Project Status and Metadata */}
       <div className="mb-8" data-element="project-status-section">
-        <Card elevation="sm" hover={false} data-element="project-status-card">
+        <Card elevation="sm" className="transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5" data-element="project-status-card">
           <div className="p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -402,6 +402,7 @@ const ProjectDetail = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           <Card 
             elevation="sm" 
+            hover={false}
             className="group cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
             onClick={() => navigate(`/testcases?project=${id}`)}
             data-element="statistics-test-cases-card"
@@ -419,6 +420,7 @@ const ProjectDetail = () => {
 
           <Card 
             elevation="sm" 
+            hover={false}
             className="group cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
             onClick={() => navigate(`/test-suites?project=${id}`)}
             data-element="statistics-test-suites-card"
@@ -436,6 +438,7 @@ const ProjectDetail = () => {
 
           <Card 
             elevation="sm" 
+            hover={false}
             className="group cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
             onClick={() => navigate(`/import?project=${id}`)}
             data-element="statistics-import-logs-card"
@@ -453,6 +456,7 @@ const ProjectDetail = () => {
 
           <Card 
             elevation="sm" 
+            hover={false}
             className="group cursor-pointer transition-all duration-200 hover:shadow-apple-md hover:-translate-y-0.5"
             onClick={() => navigate(`/activities?project=${id}`)}
             data-element="statistics-activities-card"
