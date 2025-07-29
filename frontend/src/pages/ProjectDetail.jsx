@@ -18,6 +18,7 @@ import {
 import { Button, Card, Badge } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import { TestCasePreviewDialog } from '../components/test-cases';
+import { ProjectEditSlideOver, ProjectDeleteDialog } from '../components/projects';
 import { projectsAPI, testCasesAPI, testSuitesAPI } from '../services/api';
 import { showError } from '../utils/toast';
 
@@ -33,6 +34,8 @@ const ProjectDetail = () => {
   const [loadingTestData, setLoadingTestData] = useState(false);
   const [previewTestCase, setPreviewTestCase] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   useEffect(() => {
     fetchProjectDetails();
@@ -105,11 +108,19 @@ const ProjectDetail = () => {
   };
 
   const handleEdit = () => {
-    navigate(`/projects/${id}/edit`);
+    setIsEditOpen(true);
   };
 
   const handleDelete = () => {
-    navigate(`/projects/${id}/delete`);
+    setIsDeleteOpen(true);
+  };
+
+  const handleEditSave = (updatedProject) => {
+    setProject(updatedProject);
+  };
+
+  const handleDeleteConfirm = (deletedProjectId, deletedItems) => {
+    navigate('/projects');
   };
 
   const handleBack = () => {
@@ -774,6 +785,22 @@ const ProjectDetail = () => {
         isOpen={isPreviewOpen}
         onClose={handleClosePreview}
         onViewFull={handleViewFullTestCase}
+      />
+
+      {/* Project Edit Slide-over */}
+      <ProjectEditSlideOver
+        project={project}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSave={handleEditSave}
+      />
+
+      {/* Project Delete Dialog */}
+      <ProjectDeleteDialog
+        project={project}
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onDelete={handleDeleteConfirm}
       />
     </Layout>
   );

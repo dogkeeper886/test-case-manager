@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Eye, Edit, Trash2, FolderOpen, Users, Calendar, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
+import { ProjectCreateSlideOver } from '../components/projects';
 import { projectsAPI, testCasesAPI } from '../services/api';
 
 const Projects = () => {
@@ -13,6 +14,7 @@ const Projects = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -90,7 +92,11 @@ const Projects = () => {
   };
 
   const handleCreateProject = () => {
-    navigate('/projects/create');
+    setIsCreateOpen(true);
+  };
+
+  const handleCreateSave = (newProject) => {
+    setProjects(prev => [newProject, ...prev]);
   };
 
   const handleLayoutSearch = (query) => {
@@ -432,6 +438,13 @@ const Projects = () => {
           </Card>
       </div>
       )}
+
+      {/* Project Create Slide-over */}
+      <ProjectCreateSlideOver
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onSave={handleCreateSave}
+      />
     </Layout>
   );
 };
