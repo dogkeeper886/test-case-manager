@@ -25,8 +25,22 @@ const TestSuiteBrowser = () => {
   const fetchTestSuites = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await testSuitesAPI.getAll();
-      setTestSuites(response.data || []);
+      const flatSuites = response.data.data || response.data || [];
+      
+      // Build hierarchical structure from flat data
+      const buildHierarchy = (suites, parentId = null) => {
+        const children = suites.filter(suite => suite.parent_suite_id === parentId);
+        return children.map(suite => ({
+          ...suite,
+          test_suites: buildHierarchy(suites, suite.id),
+          test_cases: [] // Will be populated separately
+        }));
+      };
+      
+      const hierarchicalSuites = buildHierarchy(flatSuites);
+      setTestSuites(hierarchicalSuites);
     } catch (err) {
       console.error('Error fetching test suites:', err);
       setError('Failed to load test suites');
@@ -65,26 +79,6 @@ const TestSuiteBrowser = () => {
   const handleDeleteSuite = (suite) => {
     console.log('Delete suite:', suite);
     // TODO: Implement suite deletion with confirmation
-  };
-
-  const handleDuplicateSuite = (suite) => {
-    console.log('Duplicate suite:', suite);
-    // TODO: Implement suite duplication
-  };
-
-  const handleExportSuite = (suite) => {
-    console.log('Export suite:', suite);
-    // TODO: Implement suite export to TestLink XML
-  };
-
-  const handleArchiveSuite = (suite) => {
-    console.log('Archive suite:', suite);
-    // TODO: Implement suite archiving
-  };
-
-  const handleMoveSuite = (suite) => {
-    console.log('Move suite:', suite);
-    // TODO: Implement suite moving
   };
 
   if (loading) {
@@ -209,10 +203,6 @@ const TestSuiteBrowser = () => {
                 suite={selectedSuite}
                 onEdit={handleEditSuite}
                 onDelete={handleDeleteSuite}
-                onDuplicate={handleDuplicateSuite}
-                onExport={handleExportSuite}
-                onArchive={handleArchiveSuite}
-                onMove={handleMoveSuite}
               />
             </Card.Body>
           </Card>

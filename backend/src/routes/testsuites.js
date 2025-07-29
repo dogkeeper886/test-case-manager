@@ -5,25 +5,84 @@ const { query } = require('../services/database');
 // GET /api/testsuites - Get all test suites
 router.get('/', async (req, res) => {
   try {
-    const sql = `
-      SELECT 
-        ts.*,
-        p.name as project_name,
-        COUNT(tc.id) as test_case_count
-      FROM test_suites ts
-      LEFT JOIN projects p ON ts.project_id = p.id
-      LEFT JOIN test_cases tc ON ts.id = tc.test_suite_id
-      GROUP BY ts.id, p.name
-      ORDER BY ts.created_at DESC
-    `;
+    // Check if hierarchical data is requested
+    const hierarchical = req.query.hierarchical === 'true';
     
-    const result = await query(sql);
-    
-    res.json({
-      success: true,
-      data: result.rows,
-      total: result.rows.length
-    });
+    if (hierarchical) {
+      // Get hierarchical test suites with nested structure
+      const sql = `
+        SELECT 
+          ts.*,
+          p.name as project_name
+        FROM test_suites ts
+        LEFT JOIN projects p ON ts.project_id = p.id
+        ORDER BY ts.parent_suite_id NULLS FIRST, ts.node_order, ts.name
+      `;
+      
+      const result = await query(sql);
+      
+      // Build hierarchical structure
+      const buildHierarchy = (suites, parentId = null) => {
+        const children = suites.filter(suite => suite.parent_suite_id === parentId);
+        return children.map(suite => ({
+          ...suite,
+          test_suites: buildHierarchy(suites, suite.id),
+          test_cases: [] // Will be populated separately
+        }));
+      };
+      
+      const hierarchicalData = buildHierarchy(result.rows);
+      
+      // Get test cases for each suite
+      const testCasesSql = `
+        SELECT 
+          tc.*,
+          tc.test_suite_id
+        FROM test_cases tc
+        ORDER BY tc.test_suite_id, tc.id
+      `;
+      
+      const testCasesResult = await query(testCasesSql);
+      
+      // Add test cases to suites
+      const addTestCasesToSuites = (suites) => {
+        suites.forEach(suite => {
+          suite.test_cases = testCasesResult.rows.filter(tc => tc.test_suite_id === suite.id);
+          if (suite.test_suites && suite.test_suites.length > 0) {
+            addTestCasesToSuites(suite.test_suites);
+          }
+        });
+      };
+      
+      addTestCasesToSuites(hierarchicalData);
+      
+      res.json({
+        success: true,
+        data: hierarchicalData,
+        total: hierarchicalData.length
+      });
+    } else {
+      // Return flat structure (original behavior)
+      const sql = `
+        SELECT 
+          ts.*,
+          p.name as project_name,
+          COUNT(tc.id) as test_case_count
+        FROM test_suites ts
+        LEFT JOIN projects p ON ts.project_id = p.id
+        LEFT JOIN test_cases tc ON ts.id = tc.test_suite_id
+        GROUP BY ts.id, p.name
+        ORDER BY ts.created_at DESC
+      `;
+      
+      const result = await query(sql);
+      
+      res.json({
+        success: true,
+        data: result.rows,
+        total: result.rows.length
+      });
+    }
   } catch (error) {
     console.error('Error fetching test suites:', error);
     res.status(500).json({ error: error.message });

@@ -92,7 +92,9 @@ export const testCasesAPI = {
 
 export const testSuitesAPI = {
   // Get all test suites
-  getAll: () => api.get('/api/testsuites'),
+  getAll: (hierarchical = false) => api.get('/api/testsuites', { 
+    params: { hierarchical: hierarchical.toString() } 
+  }),
   
   // Get test suite by ID
   getById: (id) => api.get(`/api/testsuites/${id}`),

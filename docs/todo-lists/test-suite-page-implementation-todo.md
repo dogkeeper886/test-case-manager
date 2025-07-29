@@ -44,10 +44,6 @@ This todo tracks the active implementation of test suite page enhancements based
 - [x] **Suite Actions** ✅ **COMPLETED**
   - [x] Edit suite details button
   - [x] Delete suite with confirmation
-  - [x] Duplicate/copy suite functionality
-  - [x] Export suite to TestLink XML
-  - [x] Archive/unarchive suite
-  - [x] Move suite to different parent
 
 #### **1.1.2 Suite Content Preview** 🔄 **PLANNED**
 - [ ] **Test Cases List**
@@ -72,17 +68,13 @@ This todo tracks the active implementation of test suite page enhancements based
   - [ ] Design Apple-style modal form
   - [ ] Add suite name and description fields
   - [ ] Include parent suite selection
-  - [ ] Add custom fields support
-  - [ ] Include TestLink compatibility fields
   - [ ] Add validation and error handling
 
 #### **1.2.2 Edit Test Suite**
 - [ ] **Inline Editing**
   - [ ] Edit suite name inline in tree
   - [ ] Quick edit description
-  - [ ] Change parent suite with drag-and-drop
-  - [ ] Add/remove custom fields
-  - [ ] Update TestLink metadata
+  - [ ] Change parent suite selection
 
 ### **1.3 Test Suite Tree Enhancement** 🔄 **PLANNED**
 
@@ -92,16 +84,6 @@ This todo tracks the active implementation of test suite page enhancements based
   - [ ] Search within tree with highlighting
   - [ ] Expand/collapse all functionality
   - [ ] Remember expanded state per user
-  - [ ] Virtual scrolling for large trees
-  - [ ] Drag-and-drop suite reordering
-
-#### **1.3.2 Tree Interactions**
-- [ ] **Multi-Selection**
-  - [ ] Select multiple suites with Ctrl/Cmd+click
-  - [ ] Range selection with Shift+click
-  - [ ] Select all child suites
-  - [ ] Bulk operations on selected suites
-  - [ ] Copy/paste suite structure
 
 ## 🎨 **Phase 2: Apple Design Enhancement** 🔄 **PLANNED**
 
@@ -142,12 +124,10 @@ This todo tracks the active implementation of test suite page enhancements based
 - [ ] Create suite creation modal
 - [ ] Implement suite editing functionality
 - [ ] Add suite deletion with confirmation
-- [ ] Implement suite duplication
 
 ### **Step 4: Tree Enhancement** 🔄 **PLANNED**
 - [ ] Add search functionality to tree
 - [ ] Implement keyboard navigation
-- [ ] Add multi-selection support
 - [ ] Enhance tree visual design
 
 ### **Step 5: Testing & Polish** 🔄 **PLANNED**

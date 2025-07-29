@@ -2,10 +2,6 @@ import React from 'react';
 import { 
   Edit, 
   Trash2, 
-  Copy, 
-  Download, 
-  Archive, 
-  Move, 
   Calendar,
   Hash,
   Folder,
@@ -18,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Card, Badge, Button } from '../ui';
 
-const SuiteDetailsPanel = ({ suite, onEdit, onDelete, onDuplicate, onExport, onArchive, onMove }) => {
+const SuiteDetailsPanel = ({ suite, onEdit, onDelete }) => {
   if (!suite) {
     return (
       <div className="text-center py-8" data-element="suite-details-empty-state">
@@ -158,42 +154,6 @@ const SuiteDetailsPanel = ({ suite, onEdit, onDelete, onDuplicate, onExport, onA
             >
               <Edit className="w-4 h-4 mr-1" />
               Edit
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDuplicate?.(suite)}
-              data-element="suite-details-duplicate-button"
-            >
-              <Copy className="w-4 h-4 mr-1" />
-              Duplicate
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onExport?.(suite)}
-              data-element="suite-details-export-button"
-            >
-              <Download className="w-4 h-4 mr-1" />
-              Export
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onArchive?.(suite)}
-              data-element="suite-details-archive-button"
-            >
-              <Archive className="w-4 h-4 mr-1" />
-              Archive
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onMove?.(suite)}
-              data-element="suite-details-move-button"
-            >
-              <Move className="w-4 h-4 mr-1" />
-              Move
             </Button>
             <Button
               variant="destructive"
