@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import { Button, Card, Input, Textarea, Select } from '../ui';
 import { projectsAPI } from '../../services/api';
-import { toast } from '../../utils/toast';
+import { showSuccess, showError } from '../../utils/toast';
 
 const ProjectCreateForm = () => {
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ const ProjectCreateForm = () => {
         status: formData.status
       });
 
-      toast.success('Project created successfully!');
+      showSuccess('Project created successfully!');
       navigate(`/projects/${response.data.data.id}`);
     } catch (err) {
       console.error('Error creating project:', err);
@@ -74,10 +74,10 @@ const ProjectCreateForm = () => {
         if (err.response.data.error.includes('already exists')) {
           setErrors({ name: 'A project with this name already exists' });
         } else {
-          toast.error(err.response.data.error);
+          showError(err.response.data.error);
         }
       } else {
-        toast.error('Failed to create project. Please try again.');
+        showError('Failed to create project. Please try again.');
       }
     } finally {
       setLoading(false);

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Button, Card, Input } from '../ui';
 import { projectsAPI } from '../../services/api';
-import { toast } from '../../utils/toast';
+import { showSuccess, showError, showInfo } from '../../utils/toast';
 
 const ProjectDeleteDialog = () => {
   const { id } = useParams();
@@ -42,7 +42,7 @@ const ProjectDeleteDialog = () => {
       setStatistics(statsResponse.data.data);
     } catch (err) {
       console.error('Error fetching project data:', err);
-      toast.error('Failed to load project data');
+      showError('Failed to load project data');
       navigate('/projects');
     } finally {
       setInitialLoading(false);
@@ -51,7 +51,7 @@ const ProjectDeleteDialog = () => {
 
   const handleDelete = async () => {
     if (confirmationText !== project.name) {
-      toast.error('Please type the project name exactly to confirm deletion');
+      showError('Please type the project name exactly to confirm deletion');
       return;
     }
 
@@ -61,11 +61,11 @@ const ProjectDeleteDialog = () => {
       const response = await projectsAPI.delete(id);
       const deletionSummary = response.data.data;
       
-      toast.success(`Project "${project.name}" deleted successfully`);
+      showSuccess(`Project "${project.name}" deleted successfully`);
       
       // Show deletion summary
       const summaryMessage = `Deleted: ${deletionSummary.deletedItems.testCases} test cases, ${deletionSummary.deletedItems.testSuites} test suites, ${deletionSummary.deletedItems.importLogs} import logs, ${deletionSummary.deletedItems.activities} activities`;
-      toast.info(summaryMessage);
+      showInfo(summaryMessage);
       
       navigate('/projects');
     } catch (err) {
@@ -73,13 +73,13 @@ const ProjectDeleteDialog = () => {
       
       if (err.response?.data?.error) {
         if (err.response.data.error.includes('not found')) {
-          toast.error('Project not found');
+          showError('Project not found');
           navigate('/projects');
         } else {
-          toast.error(err.response.data.error);
+          showError(err.response.data.error);
         }
       } else {
-        toast.error('Failed to delete project. Please try again.');
+        showError('Failed to delete project. Please try again.');
       }
     } finally {
       setLoading(false);

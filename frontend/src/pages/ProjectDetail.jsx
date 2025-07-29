@@ -18,7 +18,7 @@ import {
 import { Button, Card, Badge } from '../components/ui';
 import Layout from '../components/layout/Layout';
 import { projectsAPI } from '../services/api';
-import { toast } from '../utils/toast';
+import { showSuccess, showError } from '../utils/toast';
 
 const ProjectDetail = () => {
   const { id } = useParams();

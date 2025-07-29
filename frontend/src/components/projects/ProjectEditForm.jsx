@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import { Button, Card, Input, Textarea, Select } from '../ui';
 import { projectsAPI } from '../../services/api';
-import { toast } from '../../utils/toast';
+import { showSuccess, showError } from '../../utils/toast';
 
 const ProjectEditForm = () => {
   const { id } = useParams();
@@ -36,7 +36,7 @@ const ProjectEditForm = () => {
       });
     } catch (err) {
       console.error('Error fetching project:', err);
-      toast.error('Failed to load project details');
+      showError('Failed to load project details');
       navigate('/projects');
     } finally {
       setInitialLoading(false);
@@ -93,7 +93,7 @@ const ProjectEditForm = () => {
         status: formData.status
       });
 
-      toast.success('Project updated successfully!');
+      showSuccess('Project updated successfully!');
       navigate(`/projects/${id}`);
     } catch (err) {
       console.error('Error updating project:', err);
@@ -102,13 +102,13 @@ const ProjectEditForm = () => {
         if (err.response.data.error.includes('already exists')) {
           setErrors({ name: 'A project with this name already exists' });
         } else if (err.response.data.error.includes('not found')) {
-          toast.error('Project not found');
+          showError('Project not found');
           navigate('/projects');
         } else {
-          toast.error(err.response.data.error);
+          showError(err.response.data.error);
         }
       } else {
-        toast.error('Failed to update project. Please try again.');
+        showError('Failed to update project. Please try again.');
       }
     } finally {
       setLoading(false);
