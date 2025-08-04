@@ -62,35 +62,62 @@ class LLMTestCaseService {
    * @returns {Promise<Object>} LLM settings
    */
   async loadLLMSettings() {
-    const result = await this.db.query(
-      'SELECT setting_value FROM app_settings WHERE setting_key = $1',
-      ['llm_config']
-    );
+    // Get individual settings (stored separately)
+    const result = await this.db.query(`
+      SELECT setting_key, setting_value, is_encrypted 
+      FROM app_settings 
+      WHERE setting_key LIKE 'llm_%'
+    `);
     
     if (result.rows.length === 0) {
       throw new Error('LLM settings not configured. Please configure in Settings.');
     }
     
-    const encryptedSettings = result.rows[0].setting_value;
+    const settings = {};
+    const crypto = require('crypto');
+    const ENCRYPTION_KEY = process.env.SETTINGS_ENCRYPTION_KEY || 'test-case-manager-encryption-key-2025-change-in-production';
     
-    // Decrypt settings (assuming they're stored encrypted)
-    let settings;
-    try {
-      // If settings are encrypted, decrypt them
-      if (typeof encryptedSettings === 'string' && encryptedSettings.includes('encrypted:')) {
-        const crypto = require('crypto');
-        const encryptionKey = process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
-        const [, encryptedData] = encryptedSettings.split('encrypted:');
-        const decipher = crypto.createDecipher('aes-256-cbc', encryptionKey);
-        let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+    // Decrypt function matching the settings route
+    function decrypt(text) {
+      if (!text) return null;
+      try {
+        const textParts = text.split(':');
+        const iv = Buffer.from(textParts.shift(), 'hex');
+        const encryptedText = textParts.join(':');
+        const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY);
+        let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
-        settings = JSON.parse(decrypted);
-      } else {
-        // Settings are stored as plain JSON
-        settings = typeof encryptedSettings === 'string' ? JSON.parse(encryptedSettings) : encryptedSettings;
+        return decrypted;
+      } catch (error) {
+        console.error('Decryption failed:', error);
+        return null;
       }
-    } catch (decryptError) {
-      throw new Error('Failed to decrypt LLM settings. Please reconfigure in Settings.');
+    }
+    
+    // Parse settings from database
+    result.rows.forEach(row => {
+      const key = row.setting_key.replace('llm_', '');
+      let value = row.setting_value;
+      
+      if (row.is_encrypted && value) {
+        value = decrypt(value);
+      }
+      
+      // Convert types
+      if (key === 'enabled') {
+        value = value === 'true';
+      } else if (key === 'temperature') {
+        value = parseFloat(value) || 0.1;
+      } else if (key === 'maxTokens') {
+        value = parseInt(value) || 4000;
+      }
+      
+      settings[key] = value;
+    });
+    
+    // Validate that required settings exist
+    if (!settings.provider || !settings.apiKey) {
+      throw new Error('LLM settings incomplete. Please configure provider and API key in Settings.');
     }
     
     return settings;
@@ -246,12 +273,22 @@ Extract test cases now:`;
   async callLLM(prompt) {
     try {
       if (this.provider === 'openai') {
-        const completion = await this.openai.chat.completions.create({
+        // Models that support JSON response format
+        const jsonSupportedModels = [
+          'gpt-4-turbo-preview', 
+          'gpt-4-turbo', 
+          'gpt-4-0125-preview',
+          'gpt-4-1106-preview',
+          'gpt-3.5-turbo-1106',
+          'gpt-3.5-turbo-0125'
+        ];
+        
+        const requestOptions = {
           model: this.model,
           messages: [
             {
               role: 'system',
-              content: 'You are a professional test case analyst. Always respond with valid JSON formatted test cases.'
+              content: 'You are a professional test case analyst. Always respond with valid JSON formatted test cases. Your response must be valid JSON only, no additional text.'
             },
             {
               role: 'user',
@@ -259,9 +296,15 @@ Extract test cases now:`;
             }
           ],
           max_tokens: this.maxTokens,
-          temperature: this.temperature,
-          response_format: { type: 'json_object' }
-        });
+          temperature: this.temperature
+        };
+        
+        // Only add response_format for supported models
+        if (jsonSupportedModels.some(supportedModel => this.model.includes(supportedModel))) {
+          requestOptions.response_format = { type: 'json_object' };
+        }
+        
+        const completion = await this.openai.chat.completions.create(requestOptions);
         
         return completion.choices[0].message.content;
       } else {
@@ -279,7 +322,16 @@ Extract test cases now:`;
    */
   parseTestCasesFromResponse(response) {
     try {
-      const parsed = JSON.parse(response);
+      // Clean the response to extract JSON if it's wrapped in other text
+      let jsonString = response.trim();
+      
+      // Look for JSON object in the response (handle cases where model adds extra text)
+      const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonString = jsonMatch[0];
+      }
+      
+      const parsed = JSON.parse(jsonString);
       
       if (!parsed.testCases || !Array.isArray(parsed.testCases)) {
         throw new Error('Invalid response format: missing testCases array');
@@ -293,8 +345,17 @@ Extract test cases now:`;
                testCase.steps.length > 0;
       });
       
+      if (validTestCases.length === 0) {
+        throw new Error('No valid test cases found in response');
+      }
+      
       return validTestCases;
     } catch (error) {
+      // Log the raw response for debugging
+      console.error('Failed to parse LLM response:', {
+        error: error.message,
+        response: response.substring(0, 500) + (response.length > 500 ? '...' : '')
+      });
       throw new Error(`Failed to parse LLM response: ${error.message}`);
     }
   }
