@@ -1,245 +1,167 @@
-# LLM Test Case Generation - Design Plan
+# MCP Test Case Manager - Design Plan
 
-## 🎯 Current Status: Implementation in Progress
+## 🎯 New Approach: MCP Server Architecture
 
-**Phase 0: LLM Settings Infrastructure** ✅ **COMPLETED**
-- ✅ **LLM Settings Modal** - Apple-designed interface accessible via TopNav settings icon
-- ✅ **Backend API Routes** - Complete settings management with encryption (`/api/settings/llm`)
-- ✅ **Database Schema** - Secure app_settings table with encrypted field support
-- ✅ **Connection Testing** - Real-time LLM provider connection validation
-- ✅ **Security** - API keys encrypted at rest using AES-256-CBC
-- ✅ **Multi-Provider Support** - OpenAI, Anthropic, Azure OpenAI ready
-- ✅ **Apple Design System** - Consistent UI/UX with gradient icons and proper spacing
+**Status: PIVOT TO MCP** - Abandoning complex in-app AI processing for a much simpler and more powerful approach.
 
-**Phase 1: Core Implementation** 🔄 **IN PROGRESS**
-- ✅ **Smart Import Backend Routes** - API endpoints for smart import and preview
-- ✅ **LLM Test Case Service** - Core service for generating test cases from documents
-- ✅ **Content Parser Service** - Multi-format document parsing (MD, TXT, PDF, DOCX)
-- ✅ **Frontend Smart Import Tab** - Basic UI integration with Import page
-- 🚨 **CURRENT ISSUE**: Project context handling for new project creation
-- 🚨 **CURRENT ISSUE**: Error handling and user experience refinements needed
+**Vision**: Transform the Test Case Manager into an MCP (Model Context Protocol) server that Claude Code can interact with directly, enabling users to leverage Claude's full AI capabilities for test case generation without the complexity of building AI infrastructure within the app.
 
-**Identified Issues & Solutions:**
-1. **"Project with ID null not found" Error**: LLM service expects valid projectId but new project flow passes null
-2. **Need Apple-style UX**: Current interface lacks progressive disclosure and elegant feedback
-3. **Error Handling**: Need graceful fallbacks and user-friendly error messages
+**Why MCP is Superior:**
+- ✅ **Zero AI Infrastructure** - No need to manage LLM providers, API keys, or timeouts
+- ✅ **Full Claude Capabilities** - Users get Claude's complete AI power, not a limited interface
+- ✅ **Separation of Concerns** - App focuses on test case management, Claude handles AI processing
+- ✅ **No Timeout Issues** - Claude Code handles long-running operations seamlessly
+- ✅ **Better UX** - Users work in Claude Code's excellent interface, not a custom chat UI
+- ✅ **Simplified Architecture** - Just expose CRUD operations via MCP tools
 
-## Overview
+## 🗑️ Removed Infrastructure (No Longer Needed)
 
-**Vision**: Transform unstructured test planning documents into structured, executable test cases using AI-powered analysis, seamlessly integrated with the existing Test Case Manager workflow.
+**Deprecated Components:**
+- ❌ **LLM Settings Modal** - Users configure AI in Claude Code, not in the app
+- ❌ **Backend LLM API Routes** - No need for `/api/settings/llm` endpoints
+- ❌ **Database LLM Schema** - Remove app_settings table LLM configurations
+- ❌ **Smart Import Components** - No frontend AI processing interface needed
+- ❌ **Content Parser Services** - Claude Code handles document processing
+- ❌ **LLM Provider Integrations** - No OpenAI/Anthropic client code needed
 
-**Problem**: Teams often write test plans in natural language formats (Word docs, markdown, plain text) but need structured test cases for execution and tracking. Manual conversion is time-consuming and error-prone.
+## 🏗️ MCP Server Implementation Plan
 
-**Solution**: Intelligent document processing that understands test scenarios in any format and generates properly structured test cases following existing patterns and conventions.
+### Core MCP Tools to Expose
 
-## Core Principles
+**Test Case Management Operations:**
+```javascript
+export const tools = {
+  // Project Operations
+  list_projects: () => /* Get all projects with metadata */,
+  get_project: (project_id) => /* Get specific project details */,
+  create_project: (name, description) => /* Create new project */,
+  
+  // Test Suite Operations  
+  list_test_suites: (project_id) => /* Get suites for project */,
+  create_test_suite: (project_id, suite_data) => /* Create new suite */,
+  
+  // Test Case CRUD
+  list_test_cases: (project_id, suite_id?) => /* Get test cases */,
+  get_test_case: (test_case_id) => /* Get specific test case */,
+  create_test_case: (project_id, test_case_data) => /* Create single test case */,
+  update_test_case: (test_case_id, updates) => /* Update existing test case */,
+  delete_test_case: (test_case_id) => /* Delete test case */,
+  
+  // Bulk Operations
+  import_test_cases: (project_id, test_cases_array) => /* Bulk import */,
+  export_test_cases: (project_id, format) => /* Export in various formats */
+};
+```
 
-### 1. **Seamless Integration**
-- Build on existing import infrastructure
-- Preserve familiar user workflows
+### User Workflow with MCP
+
+**AI-Powered Test Case Generation:**
+1. **User uploads document to Claude Code** (any format: MD, TXT, PDF, DOCX)
+2. **Claude processes with full AI capabilities** (no timeouts, streaming, complex UI)
+3. **Claude calls MCP tools to:**
+   - List existing projects: `list_projects()`
+   - Create new project if needed: `create_project(name, description)`
+   - Import generated test cases: `import_test_cases(project_id, test_cases)`
+4. **User views results in Test Case Manager** (clean, focused interface)
+
+**Benefits:**
+- Users get Claude's full document processing power
+- No complex frontend AI interface needed
+- No timeout/streaming complications
+- App stays focused on test case management
+- Much simpler codebase to maintain
+
+## MCP Server Architecture
+
+### Implementation Strategy
+
+**Phase 1: MCP Server Development** (This Week)
+- Create MCP server that exposes Test Case Manager operations
+- Implement core tools: projects, test suites, test cases CRUD
+- Add bulk import/export capabilities
+- Test integration with Claude Code
+
+**Phase 2: Enhanced Operations** (Next Week)  
+- Add advanced search and filtering tools
+- Implement test case relationship management
+- Add reporting and analytics tools
+- Performance optimization
+
+### Technical Implementation
+
+**MCP Server Structure:**
+```
+test-case-manager-mcp/
+├── package.json
+├── src/
+│   ├── index.js           // MCP server entry point
+│   ├── tools/
+│   │   ├── projects.js    // Project operations
+│   │   ├── testSuites.js  // Test suite operations
+│   │   ├── testCases.js   // Test case CRUD
+│   │   └── bulk.js        // Batch operations
+│   ├── database/
+│   │   └── connection.js  // Database connection
+│   └── utils/
+│       └── validation.js  // Data validation
+└── README.md
+```
+
+**Database Integration:**
+- Reuse existing PostgreSQL database
+- Connect directly to existing tables
 - Maintain data consistency and relationships
+- Leverage existing schema (no changes needed)
 
-### 2. **Format Flexibility**
-- Support multiple input formats: markdown, text, PDF, Word docs
-- Handle unstructured content gracefully
-- Extract meaningful test scenarios regardless of format
+## Success Criteria
 
-### 3. **Quality & Control**
-- Provide preview before import
-- Allow manual review and editing
-- Maintain traceability to source documents
+### Phase 1: MCP Server Ready (This Week)
+1. ✅ **Core Tools Implementation** - All CRUD operations working
+2. ✅ **Claude Code Integration** - Server discoverable and functional
+3. ✅ **Database Connectivity** - Reliable connection to existing database
+4. ✅ **Documentation** - Clear usage instructions for Claude Code users
 
-## User Experience Design
+### Phase 2: Production Ready (Next Week)
+1. ✅ **Advanced Operations** - Search, filtering, relationships
+2. ✅ **Performance** - Fast response times for large datasets
+3. ✅ **Error Handling** - Graceful failure management
+4. ✅ **Testing** - Comprehensive test coverage
 
-### Primary Use Case
-1. **Upload**: Drag & drop test plan document (any format)
-2. **Preview**: Review AI-generated test cases with confidence scores
-3. **Refine**: Edit, approve, or reject individual test cases
-4. **Import**: Add to project using existing import strategies
+### User Experience Benefits
+**For Users:**
+- Use Claude Code's superior AI interface instead of custom chat
+- No learning curve - familiar Claude interaction patterns
+- Access to Claude's full document processing capabilities
+- Seamless integration with existing test case management workflow
 
-### Interface Integration
-- Add "Smart Import" tab to existing Import page
-- Consistent visual design with current TestLink import
-- Progressive disclosure: simple upload → detailed preview → batch actions
+**For Developers:**
+- Dramatically simplified codebase (remove ~70% of AI-related code)
+- No timeout/streaming complexity to maintain
+- Focus on core test case management features
+- Standard MCP patterns, well-documented approach
 
-## Technical Architecture
+## MCP Architecture
 
-### System Components
-
+### System Flow
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   File Input    │ => │  Content Parser  │ => │  LLM Processor  │
-│  (.md,.txt,     │    │  Extract text &  │    │  Identify test  │
-│   .pdf,.docx)   │    │  preserve format │    │  scenarios      │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+│   User uploads  │ => │  Claude Code     │ => │  Claude AI      │
+│   document to   │    │  receives file   │    │  processes      │
+│   Claude Code   │    │  & processes     │    │  with full      │
+└─────────────────┘    └──────────────────┘    │  capabilities   │
+                                                └─────────────────┘
                                                          │
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Import Service │ <= │  Validation &    │ <= │  Test Case      │
-│  Use existing   │    │  Quality Check   │    │  Generator      │
-│  pipeline       │    │  Ensure schema   │    │  Map to schema  │
+│  Test Case      │ <= │  MCP Server      │ <= │  Claude calls   │
+│  Manager shows  │    │  receives data   │    │  MCP tools to   │
+│  imported cases │    │  via tools       │    │  import cases   │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
 ### Data Flow
-1. **Content Extraction**: Parse various file formats into text
-2. **LLM Analysis**: Extract test scenarios, steps, and expected results  
-3. **Schema Mapping**: Convert to existing test_cases table structure
-4. **Validation**: Ensure data quality and completeness
-5. **Import Pipeline**: Use existing TestLinkImportService patterns
+1. **Document Upload**: User uploads to Claude Code (any format)
+2. **AI Processing**: Claude processes with full capabilities  
+3. **MCP Tool Calls**: Claude calls test case management tools
+4. **Database Operations**: MCP server executes CRUD operations
+5. **User Views Results**: Test Case Manager shows imported data
 
-## Implementation Strategy
-
-### Phase 1: Critical Fixes (Immediate Priority)
-**Goal**: Fix current blocking issues
-
-- 🚨 **Project Context Fix**: Handle null projectId for new project creation flow
-- 🚨 **Error Handling**: Add graceful error recovery and user-friendly messages
-- 🚨 **LLM Settings Integration**: Ensure smart import uses configured LLM settings
-- 🚨 **Progress Tracking**: Add loading states and progress indicators
-
-### Phase 2: Apple-Style User Experience (High Priority)
-**Goal**: Transform interface with Apple design principles
-
-- 🍎 **Progressive Disclosure**: Start simple, reveal complexity gradually
-- 🍎 **Immediate Feedback**: Real-time validation and progress indicators
-- 🍎 **Elegant Interactions**: Apple-style animations and transitions
-- 🍎 **Visual Hierarchy**: Clear information architecture and typography
-
-### Phase 3: Advanced Features (Medium Priority)
-**Goal**: Production-ready smart import
-
-- **Intelligent Defaults**: Auto-detect document types and suggest strategies
-- **Batch Operations**: Edit multiple test cases efficiently
-- **Quality Scoring**: Advanced confidence metrics and validation
-- **Contextual Help**: Tooltips, examples, and guided workflows
-
-### Phase 4: Polish & Optimization (Low Priority)
-**Goal**: Performance and refinements
-
-- **Performance**: Optimize LLM calls and file processing
-- **Analytics**: Track usage patterns and success metrics
-- **Documentation**: User guides and best practices
-- **Accessibility**: WCAG compliance and keyboard navigation
-
-## Technical Specifications
-
-### LLM Service Design
-```javascript
-class LLMTestCaseService {
-  async generateTestCases(content, projectId, options = {}) {
-    // Parse content and extract test scenarios
-    // Return structured test cases matching schema
-  }
-  
-  async previewGeneration(content, projectId) {
-    // Generate preview without saving
-    // Include confidence scores
-  }
-}
-```
-
-### API Extensions
-```javascript
-// New endpoints extending existing import.js
-POST /api/import/smart-import          // Main generation endpoint
-POST /api/import/smart-import/preview  // Preview without import
-POST /api/import/supported-formats     // List supported file types
-```
-
-### Database Integration
-- **Reuse existing schema**: No new tables required
-- **Leverage relationships**: project_id → test_suite_id → test_cases
-- **Maintain audit trail**: Import history and source tracking
-
-## Quality Assurance
-
-### Validation Criteria
-- **Completeness**: All required fields populated
-- **Consistency**: Format matches existing test cases
-- **Traceability**: Link back to source document sections
-- **Accuracy**: Manual spot-checks of generated content
-
-### Success Metrics
-- **Conversion Rate**: % of input documents successfully processed
-- **User Acceptance**: % of generated test cases approved without edits
-- **Time Savings**: Reduction in manual test case creation time
-- **Quality Score**: Consistency with manually created test cases
-
-## Risk Mitigation
-
-### Technical Risks
-- **LLM Output Quality**: Implement validation and confidence scoring
-- **Format Support**: Start with common formats, expand gradually
-- **Performance**: Async processing for large documents
-
-### User Experience Risks  
-- **Adoption**: Integrate seamlessly with existing workflows
-- **Trust**: Provide clear preview and editing capabilities
-- **Learning Curve**: Maintain familiar import process patterns
-
-## 🍎 Apple Design Principles Integration
-
-### 1. **Progressive Disclosure**
-- **Simple Start**: Single drag-and-drop area
-- **Smart Reveals**: Show complexity only when needed
-- **Guided Flow**: Clear next steps at each stage
-
-### 2. **Immediate Feedback**
-- **Real-time Validation**: Instant file format checking
-- **Progress Indicators**: Apple-style progress rings
-- **Status Communication**: Clear success/error states
-
-### 3. **Elegant Interactions**
-- **Smooth Animations**: Fluid transitions between states
-- **Haptic Feedback**: Visual feedback for actions
-- **Consistent Patterns**: Familiar interaction models
-
-### 4. **Visual Hierarchy**
-- **Typography**: SF Pro Display font system
-- **Color System**: Apple-inspired color palette
-- **Spacing**: Consistent 8px grid system
-- **Shadows**: Subtle depth and elevation
-
-## Success Criteria
-
-### Phase 1: Critical Fixes ✅ TARGET: Immediate
-1. 🚨 **Fix null project context** - Handle new project creation flow
-2. 🚨 **Error recovery** - Graceful handling of LLM API failures
-3. 🚨 **Settings integration** - Use configured LLM providers
-4. 🚨 **Progress feedback** - Loading states and user communication
-
-### Phase 2: Apple UX ⏳ TARGET: This Week
-1. 🍎 **Apple-style dropzone** - Beautiful file upload interface
-2. 🍎 **Progress indicators** - Elegant loading animations
-3. 🍎 **Preview cards** - Clean test case presentation
-4. 🍎 **Smooth transitions** - Fluid state changes
-
-### Phase 3: Production Ready ⏳ TARGET: Next Week
-1. 📝 **Multi-format support** - MD, TXT, PDF, DOCX processing
-2. 🎯 **High accuracy** - >80% generated test cases require minimal editing
-3. ⚡ **Fast processing** - <10 seconds for typical documents
-4. 🔄 **Seamless integration** - Perfect fit with existing import workflow
-
-### Infrastructure Requirements (Completed ✅)
-1. ✅ **LLM Settings Management** - Complete settings interface with encryption
-2. ✅ **Backend API Infrastructure** - Settings routes with secure storage
-3. ✅ **Database Schema** - App settings table with encryption support
-4. ✅ **Connection Testing** - Real-time LLM provider validation
-5. ✅ **Apple Design Integration** - Settings modal following design system
-
-## Future Enhancements
-
-### Advanced Features
-- **Test Suite Organization**: Automatically group related test cases
-- **Requirement Traceability**: Link test cases to specific requirements
-- **Template Learning**: Improve generation based on user corrections
-- **Multi-language Support**: Handle documents in different languages
-
-### Integration Opportunities
-- **CI/CD Integration**: Generate test cases from requirement changes
-- **Version Control**: Track test plan document evolution
-- **Collaborative Review**: Team approval workflows for generated content
-
----
-
-*This plan follows Apple's design philosophy: focus on user experience first, build with existing patterns, and deliver incremental value through well-defined phases.*

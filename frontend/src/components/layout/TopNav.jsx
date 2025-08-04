@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { Menu, Bell, Settings, User, Search } from 'lucide-react';
+import React from 'react';
+import { Menu, Bell, User, Search } from 'lucide-react';
 import { Button, Input } from '../ui';
-import LLMSettingsModal from '../settings/LLMSettingsModal';
 
 const TopNav = ({ 
   onMenuToggle,
@@ -10,14 +9,7 @@ const TopNav = ({
   showSearch = true,
   actions = []
 }) => {
-  const [showLLMSettings, setShowLLMSettings] = useState(false);
-
   return (
-    <>
-      <LLMSettingsModal 
-        isOpen={showLLMSettings} 
-        onClose={() => setShowLLMSettings(false)} 
-      />
     <div className="bg-white border-b border-apple-gray-2 px-6 py-4 sticky top-0 z-30 h-16" data-element="topnav-container">
       <div className="flex items-center justify-between" data-element="topnav-content">
         {/* Left Section */}
@@ -99,14 +91,6 @@ const TopNav = ({
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-apple-red rounded-full"></span>
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<Settings className="w-4 h-4" />}
-            onClick={() => setShowLLMSettings(true)}
-            data-element="topnav-settings"
-            title="LLM Settings"
-          />
 
           <div className="flex items-center space-x-2" data-element="topnav-user">
             <div className="w-8 h-8 bg-apple-blue rounded-full flex items-center justify-center" data-element="topnav-user-avatar">
@@ -119,7 +103,6 @@ const TopNav = ({
         </div>
       </div>
     </div>
-    </>
   );
 };
 

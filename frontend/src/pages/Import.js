@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Trash2, Plus, AlertCircle, CheckCircle, Clock, Brain } from 'lucide-react';
+import { Upload, FileText, Trash2, Plus, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
-import SmartImportTab from '../components/import/SmartImportTab';
 import { importAPI, projectsAPI } from '../services/api';
 import { showSuccess, showError, showWarning, showInfo } from '../utils/toast';
 
@@ -549,18 +548,6 @@ const Import = () => {
               >
                 TestLink Import
               </button>
-              <button
-                onClick={() => setActiveTab('smart')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center space-x-2 ${
-                  activeTab === 'smart'
-                    ? 'border-apple-blue text-apple-blue'
-                    : 'border-transparent text-apple-gray-5 hover:text-apple-gray-7 hover:border-apple-gray-3'
-                }`}
-                data-element="smart-tab"
-              >
-                <Brain className="w-4 h-4" />
-                <span>Smart Import</span>
-              </button>
             </nav>
           </Card.Header>
           
@@ -638,45 +625,6 @@ const Import = () => {
                 </div>
               </div>
             </div>
-            </Card.Body>
-          )}
-          
-          {/* Smart Import Tab Content */}
-          {activeTab === 'smart' && (
-            <Card.Body className="p-8" data-element="smart-import-body">
-              <SmartImportTab
-                projects={projects}
-                selectedProjectId={selectedProjectId}
-                onImportComplete={async () => {
-                  // If new project was created, refresh projects list first
-                  if (showNewProjectForm) {
-                    try {
-                      const projectsResponse = await projectsAPI.getAll();
-                      const projectsData = projectsResponse.data.data || [];
-                      setProjects(projectsData);
-                      
-                      // Find and select the newly created project
-                      const newProject = projectsData.find(p => p.name === newProjectName.trim());
-                      if (newProject) {
-                        setSelectedProjectId(newProject.id.toString());
-                      }
-                      
-                      // Reset new project form
-                      setShowNewProjectForm(false);
-                      setNewProjectName('');
-                      setNewProjectDescription('');
-                    } catch (error) {
-                      console.error('Failed to refresh projects after smart import:', error);
-                    }
-                  }
-                  
-                  // Then refresh import history
-                  await fetchImportHistory();
-                }}
-                showNewProjectForm={showNewProjectForm}
-                newProjectName={newProjectName}
-                newProjectDescription={newProjectDescription}
-              />
             </Card.Body>
           )}
         </Card>

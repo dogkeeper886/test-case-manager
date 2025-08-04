@@ -217,18 +217,6 @@ export const importAPI = {
   // Get cleanup status
   getCleanupStatus: () => api.get('/api/import/cleanup/status'),
   
-  // Smart Import - LLM powered test case generation
-  smartImport: (formData) => api.post('/api/import/smart-import', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  
-  // Smart Import Preview - preview without importing
-  smartImportPreview: (formData) => api.post('/api/import/smart-import/preview', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  
-  // Get supported formats for smart import
-  getSupportedFormats: () => api.get('/api/import/supported-formats'),
 };
 
 export const activitiesAPI = {
@@ -253,46 +241,5 @@ export const activitiesAPI = {
   log: (activityData) => api.post('/api/activities/log', activityData),
 };
 
-export const settingsAPI = {
-  // Get LLM settings
-  getLLMSettings: () => api.get('/api/settings/llm'),
-  
-  // Update LLM settings
-  updateLLMSettings: async (data) => {
-    try {
-      // Create a clean copy to avoid any potential circular references
-      const cleanData = JSON.parse(JSON.stringify(data));
-      
-      // Try axios first
-      try {
-        return await api.put('/api/settings/llm', cleanData);
-      } catch (axiosError) {
-        console.warn('Axios failed, trying native fetch:', axiosError);
-        
-        // Fallback to native fetch if axios has issues
-        const response = await fetch(`${api.defaults.baseURL}/api/settings/llm`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-          },
-          body: JSON.stringify(cleanData)
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return { data: await response.json() };
-      }
-    } catch (error) {
-      console.error('Error in updateLLMSettings:', error);
-      throw error;
-    }
-  },
-  
-  // Test LLM connection
-  testLLMConnection: (data) => api.post('/api/settings/llm/test', data),
-};
 
 export default api; 
