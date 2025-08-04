@@ -28,6 +28,7 @@ app.use('/api/reports', require('./routes/reports'));
 app.use('/api/import', require('./routes/import'));
 app.use('/api/activities', require('./routes/activities'));
 app.use('/api/migrations', require('./routes/migrations'));
+app.use('/api/settings', require('./routes/settings'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

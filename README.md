@@ -31,7 +31,14 @@ A comprehensive test case management system that generates test cases from desig
 
 ## 🧠 Smart Import (LLM-Powered Test Case Generation)
 
-### ✅ **New Feature: AI-Powered Test Case Generation**
+### ✅ **LLM Settings & Configuration**
+- **Settings Modal**: Apple-designed settings interface accessible via TopNav settings icon
+- **Secure API Key Storage**: Encrypted storage of LLM provider API keys
+- **Connection Testing**: Real-time validation of LLM provider connections
+- **Provider Support**: OpenAI (GPT-4, GPT-3.5), Anthropic Claude (planned)
+- **Advanced Settings**: Temperature control, token limits, and model selection
+
+### ✅ **AI-Powered Test Case Generation**
 - **Multiple Format Support**: Process markdown (.md), text (.txt), PDF (.pdf), and Word (.docx) documents
 - **Intelligent Content Parsing**: Extract test scenarios from unstructured documents using advanced NLP
 - **Structured Test Case Generation**: Convert natural language test plans into executable test cases
@@ -40,11 +47,12 @@ A comprehensive test case management system that generates test cases from desig
 - **Import Strategy Options**: Choose how to handle existing test cases (update, skip, create new)
 
 ### 📋 **How Smart Import Works**
-1. **Upload Document**: Drag & drop test plan documents in any supported format
-2. **AI Analysis**: LLM analyzes content to identify test scenarios, steps, and expected results
-3. **Preview Generated**: Review extracted test cases with confidence scores
-4. **Edit & Refine**: Modify generated test cases as needed before importing
-5. **Import to Project**: Add test cases to selected project with chosen import strategy
+1. **Configure LLM Settings**: Click the settings icon in TopNav to configure your LLM provider and API key
+2. **Upload Document**: Drag & drop test plan documents in any supported format
+3. **AI Analysis**: LLM analyzes content to identify test scenarios, steps, and expected results
+4. **Preview Generated**: Review extracted test cases with confidence scores
+5. **Edit & Refine**: Modify generated test cases as needed before importing
+6. **Import to Project**: Add test cases to selected project with chosen import strategy
 
 ### 🎯 **Best Results Tips**
 - Include clear test scenarios with numbered steps
@@ -382,6 +390,14 @@ This ensures your data persists even when containers are recreated.
 - `POST /api/import/validate` - Validate TestLink XML format
 - `GET /api/import/status/:id` - Get import status
 - `GET /api/import/logs/:projectId` - Get import history
+
+### ✅ **Smart Import & LLM Endpoints**
+- `POST /api/import/smart-import` - Generate and import test cases from documents
+- `POST /api/import/smart-import/preview` - Preview generated test cases without importing
+- `GET /api/import/supported-formats` - Get supported file formats for smart import
+- `GET /api/settings/llm` - Get LLM configuration settings
+- `PUT /api/settings/llm` - Update LLM configuration settings
+- `POST /api/settings/llm/test` - Test LLM provider connection
 
 ### 🔄 **Pending Endpoints**
 - `POST /api/documents/upload` - Upload and parse document
