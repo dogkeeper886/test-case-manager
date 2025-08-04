@@ -49,20 +49,32 @@ export const tools = {
   
   // Bulk Operations
   import_test_cases: (project_id, test_cases_array) => /* Bulk import */,
-  export_test_cases: (project_id, format) => /* Export in various formats */
+  import_from_xml: (project_id, xml_content, format) => /* Import from XML (TestLink, etc.) */,
+  export_test_cases: (project_id, format) => /* Export in various formats */,
+  
+  // XML Import Operations
+  parse_testlink_xml: (xml_content) => /* Parse TestLink XML and extract test cases */,
+  validate_xml_structure: (xml_content, format) => /* Validate XML structure before import */
 };
 ```
 
 ### User Workflow with MCP
 
 **AI-Powered Test Case Generation:**
-1. **User uploads document to Claude Code** (any format: MD, TXT, PDF, DOCX)
+1. **User uploads document to Claude Code** (any format: MD, TXT, PDF, DOCX, XML)
 2. **Claude processes with full AI capabilities** (no timeouts, streaming, complex UI)
 3. **Claude calls MCP tools to:**
    - List existing projects: `list_projects()`
    - Create new project if needed: `create_project(name, description)`
    - Import generated test cases: `import_test_cases(project_id, test_cases)`
 4. **User views results in Test Case Manager** (clean, focused interface)
+
+**XML Import Workflow:**
+1. **User uploads XML file to Claude Code** (TestLink, custom XML formats)
+2. **Claude validates XML structure:** `validate_xml_structure(xml_content, format)`
+3. **Claude parses XML content:** `parse_testlink_xml(xml_content)`
+4. **Claude imports parsed data:** `import_from_xml(project_id, xml_content, format)`
+5. **User reviews imported test cases** in Test Case Manager
 
 **Benefits:**
 - Users get Claude's full document processing power
@@ -99,7 +111,8 @@ test-case-manager-mcp/
 │   │   ├── projects.js    // Project operations
 │   │   ├── testSuites.js  // Test suite operations
 │   │   ├── testCases.js   // Test case CRUD
-│   │   └── bulk.js        // Batch operations
+│   │   ├── bulk.js        // Batch operations
+│   │   └── xmlImport.js   // XML parsing and import
 │   ├── database/
 │   │   └── connection.js  // Database connection
 │   └── utils/

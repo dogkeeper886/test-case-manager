@@ -37,7 +37,7 @@
 mkdir test-case-manager-mcp
 cd test-case-manager-mcp
 npm init -y
-npm install @modelcontextprotocol/sdk pg dotenv
+npm install @modelcontextprotocol/sdk pg dotenv fast-xml-parser
 ```
 
 **Project Structure:**
@@ -51,7 +51,8 @@ test-case-manager-mcp/
 │   │   ├── projects.js    // Project CRUD operations
 │   │   ├── testSuites.js  // Test suite operations
 │   │   ├── testCases.js   // Test case CRUD operations
-│   │   └── bulk.js        // Bulk import/export operations
+│   │   ├── bulk.js        // Bulk import/export operations
+│   │   └── xmlImport.js   // XML parsing and import operations
 │   ├── database/
 │   │   └── connection.js  // PostgreSQL connection
 │   └── utils/
@@ -82,7 +83,13 @@ test-case-manager-mcp/
 
 4. **Bulk Operations**
    - `import_test_cases(project_id, test_cases_array)` - Bulk import
+   - `import_from_xml(project_id, xml_content, format)` - Import from XML files
    - `export_test_cases(project_id, format)` - Export test cases
+
+5. **XML Import Operations**
+   - `parse_testlink_xml(xml_content)` - Parse TestLink XML format
+   - `validate_xml_structure(xml_content, format)` - Validate XML before parsing
+   - `list_xml_formats()` - Get supported XML import formats
 
 ### Phase 3: Database Integration
 
@@ -131,6 +138,14 @@ export default pool;
     {
       "name": "import_test_cases",
       "description": "Bulk import multiple test cases into a project"
+    },
+    {
+      "name": "import_from_xml",
+      "description": "Import test cases from XML files (TestLink, custom formats)"
+    },
+    {
+      "name": "parse_testlink_xml",
+      "description": "Parse TestLink XML and extract test case data"
     }
   ]
 }
