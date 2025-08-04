@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Trash2, Plus, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Upload, FileText, Trash2, Plus, AlertCircle, CheckCircle, Clock, Brain } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../components/ui';
 import Layout from '../components/layout/Layout';
+import SmartImportTab from '../components/import/SmartImportTab';
 import { importAPI, projectsAPI } from '../services/api';
 import { showSuccess, showError, showWarning, showInfo } from '../utils/toast';
 
 const Import = () => {
+  const [activeTab, setActiveTab] = useState('testlink');
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [importHistory, setImportHistory] = useState([]);
@@ -45,61 +47,62 @@ const Import = () => {
     fetchData();
   }, []);
 
+  // Function to fetch import history
+  const fetchImportHistory = async () => {
+    // Show all projects if:
+    // 1. showAllProjects is true, OR
+    // 2. No project is selected AND not creating new project, OR
+    // 3. Creating new project (showAllProjects should be true)
+    const shouldShowAllProjects = showAllProjects || 
+                                 (!selectedProjectId && !showNewProjectForm) ||
+                                 showNewProjectForm;
+    
+    if (!selectedProjectId && !shouldShowAllProjects) return;
+    
+    try {
+      setLoadingHistory(true);
+      setHistoryError(null);
+      
+      let response;
+      if (shouldShowAllProjects) {
+        response = await importAPI.getAllLogs();
+      } else {
+        response = await importAPI.getLogs(selectedProjectId);
+      }
+      
+      const logs = response.data.data || [];
+      
+      // Transform API data to match UI format
+      const transformedHistory = logs.map(log => ({
+        id: log.id,
+        filename: log.file_name || 'Unknown file',
+        size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
+        uploaded: new Date(log.started_at).toLocaleDateString(),
+        status: log.status === 'completed' ? 'Completed' : 
+                log.status === 'failed' ? 'Failed' : 
+                log.status === 'processing' ? 'Processing' : 'Unknown',
+        testCases: log.imported_test_cases || 0,
+        testSuites: log.imported_test_suites || 0,
+        projects: 1,
+        duration: log.duration || '--',
+        error: log.errors?.[0] || null,
+        strategy: log.strategy || 'unknown',
+        projectId: log.project_id,
+        projectName: log.project_name || `Project ${log.project_id}`
+      }));
+      
+      setImportHistory(transformedHistory);
+    } catch (error) {
+      console.error('Failed to fetch import history:', error);
+      setHistoryError('Failed to load import history');
+      setImportHistory([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
   // Fetch import history when selected project changes or view mode changes
   useEffect(() => {
-    const fetchImportHistory = async () => {
-      // Show all projects if:
-      // 1. showAllProjects is true, OR
-      // 2. No project is selected AND not creating new project, OR
-      // 3. Creating new project (showAllProjects should be true)
-      const shouldShowAllProjects = showAllProjects || 
-                                   (!selectedProjectId && !showNewProjectForm) ||
-                                   showNewProjectForm;
-      
-      if (!selectedProjectId && !shouldShowAllProjects) return;
-      
-      try {
-        setLoadingHistory(true);
-        setHistoryError(null);
-        
-        let response;
-        if (shouldShowAllProjects) {
-          response = await importAPI.getAllLogs();
-        } else {
-          response = await importAPI.getLogs(selectedProjectId);
-        }
-        
-        const logs = response.data.data || [];
-        
-        // Transform API data to match UI format
-        const transformedHistory = logs.map(log => ({
-          id: log.id,
-          filename: log.file_name || 'Unknown file',
-          size: log.file_size ? `${(log.file_size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
-          uploaded: new Date(log.started_at).toLocaleDateString(),
-          status: log.status === 'completed' ? 'Completed' : 
-                  log.status === 'failed' ? 'Failed' : 
-                  log.status === 'processing' ? 'Processing' : 'Unknown',
-          testCases: log.imported_test_cases || 0,
-          testSuites: log.imported_test_suites || 0,
-          projects: 1,
-          duration: log.duration || '--',
-          error: log.errors?.[0] || null,
-          strategy: log.strategy || 'unknown',
-          projectId: log.project_id,
-          projectName: log.project_name || `Project ${log.project_id}`
-        }));
-        
-        setImportHistory(transformedHistory);
-      } catch (error) {
-        console.error('Failed to fetch import history:', error);
-        setHistoryError('Failed to load import history');
-        setImportHistory([]);
-      } finally {
-        setLoadingHistory(false);
-      }
-    };
-
     fetchImportHistory();
   }, [selectedProjectId, showAllProjects, showNewProjectForm]);
 
@@ -530,10 +533,40 @@ const Import = () => {
         </Card>
       </div>
 
-      {/* Import Area */}
-      <div className="mb-8" data-element="import-upload-section">
-        <Card elevation="sm" hover={false} data-element="import-upload-card">
-          <Card.Body className="p-8" data-element="import-upload-body">
+      {/* Import Tabs */}
+      <div className="mb-8" data-element="import-tabs-section">
+        <Card elevation="sm" hover={false} data-element="import-tabs-card">
+          <Card.Header className="border-b border-apple-gray-2" data-element="import-tabs-header">
+            <nav className="flex space-x-8" data-element="import-tabs-nav">
+              <button
+                onClick={() => setActiveTab('testlink')}
+                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  activeTab === 'testlink'
+                    ? 'border-apple-blue text-apple-blue'
+                    : 'border-transparent text-apple-gray-5 hover:text-apple-gray-7 hover:border-apple-gray-3'
+                }`}
+                data-element="testlink-tab"
+              >
+                TestLink Import
+              </button>
+              <button
+                onClick={() => setActiveTab('smart')}
+                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center space-x-2 ${
+                  activeTab === 'smart'
+                    ? 'border-apple-blue text-apple-blue'
+                    : 'border-transparent text-apple-gray-5 hover:text-apple-gray-7 hover:border-apple-gray-3'
+                }`}
+                data-element="smart-tab"
+              >
+                <Brain className="w-4 h-4" />
+                <span>Smart Import</span>
+              </button>
+            </nav>
+          </Card.Header>
+          
+          {/* TestLink Import Tab Content */}
+          {activeTab === 'testlink' && (
+            <Card.Body className="p-8" data-element="testlink-import-body">
             <div
               className={`relative border-2 border-dashed rounded-apple-lg p-8 text-center transition-all duration-200 ${
                 dragActive
@@ -605,7 +638,19 @@ const Import = () => {
                 </div>
               </div>
             </div>
-          </Card.Body>
+            </Card.Body>
+          )}
+          
+          {/* Smart Import Tab Content */}
+          {activeTab === 'smart' && (
+            <Card.Body className="p-8" data-element="smart-import-body">
+              <SmartImportTab
+                projects={projects}
+                selectedProjectId={selectedProjectId}
+                onImportComplete={fetchImportHistory}
+              />
+            </Card.Body>
+          )}
         </Card>
       </div>
 

@@ -60,14 +60,14 @@ router.get('/:id', async (req, res) => {
 // POST /api/projects - Create new project
 router.post('/', async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, status } = req.body;
     
     if (!name) {
       return res.status(400).json({ error: 'Project name is required' });
     }
     
     const service = initializeProjectService(req.app.locals.db);
-    const project = await service.createProject(name, description || '');
+    const project = await service.createProject(name, description || '', status || 'active');
     
     res.status(201).json({
       message: 'Project created successfully',

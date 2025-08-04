@@ -14,6 +14,7 @@ A comprehensive test case management system that generates test cases from desig
 ### ✅ **Completed Features**
 - **Document Upload & Processing**: Upload design documents (PDF, Word, Markdown) and automatically extract requirements
 - **AI-Powered Test Case Generation**: Generate test cases from parsed requirements using LLM integration
+- **Smart Import**: LLM-powered test case generation from unstructured documents (markdown, text, PDF, Word)
 - **Test Case Management**: Create, edit, organize, and execute test cases with full CRUD operations
 - **TestLink Integration**: Import from and export to TestLink XML format for seamless integration with existing test management systems
 - **Project Organization**: Organize test cases by projects and test suites with hierarchical structure
@@ -27,6 +28,29 @@ A comprehensive test case management system that generates test cases from desig
 - **Document Management**: Real data integration for document upload/download functionality
 - **Activity Feed**: Recent activity tracking with real data
 - **Reports Page**: Test execution reporting with real data integration
+
+## 🧠 Smart Import (LLM-Powered Test Case Generation)
+
+### ✅ **New Feature: AI-Powered Test Case Generation**
+- **Multiple Format Support**: Process markdown (.md), text (.txt), PDF (.pdf), and Word (.docx) documents
+- **Intelligent Content Parsing**: Extract test scenarios from unstructured documents using advanced NLP
+- **Structured Test Case Generation**: Convert natural language test plans into executable test cases
+- **Preview & Edit**: Review and modify generated test cases before importing
+- **Confidence Scoring**: AI confidence indicators for each generated test case
+- **Import Strategy Options**: Choose how to handle existing test cases (update, skip, create new)
+
+### 📋 **How Smart Import Works**
+1. **Upload Document**: Drag & drop test plan documents in any supported format
+2. **AI Analysis**: LLM analyzes content to identify test scenarios, steps, and expected results
+3. **Preview Generated**: Review extracted test cases with confidence scores
+4. **Edit & Refine**: Modify generated test cases as needed before importing
+5. **Import to Project**: Add test cases to selected project with chosen import strategy
+
+### 🎯 **Best Results Tips**
+- Include clear test scenarios with numbered steps
+- Use keywords like "verify", "ensure", "test case", "expected result"
+- Structure documents with headings and bullet points
+- Provide context about the system being tested
 
 ## 🎨 TestLink Integration
 
@@ -447,6 +471,59 @@ docker compose cp ../database/migrations/001_testlink_import_schema.sql postgres
 docker compose exec postgres psql -U postgres -d testcasemanager -f /tmp/001_testlink_import_schema.sql
 ```
 
+## 🧠 Smart Import Configuration
+
+### Environment Setup
+To enable Smart Import (LLM-powered test case generation), add these environment variables to your backend:
+
+```bash
+# Create backend/.env file
+OPENAI_API_KEY=your_openai_api_key_here
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4-turbo-preview
+LLM_MAX_TOKENS=4000
+LLM_TEMPERATURE=0.1
+```
+
+### Dependencies
+The Smart Import feature requires additional backend dependencies:
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Install additional dependencies
+npm install pdf-parse mammoth marked openai
+```
+
+### Docker Setup with Smart Import
+If using Docker, add environment variables to your `docker-compose.yml`:
+
+```yaml
+services:
+  backend:
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LLM_PROVIDER=openai
+      - LLM_MODEL=gpt-4-turbo-preview
+      - LLM_MAX_TOKENS=4000
+      - LLM_TEMPERATURE=0.1
+```
+
+### Usage
+1. Navigate to **Import** page
+2. Select **Smart Import** tab  
+3. Choose a project
+4. Upload test plan document (.md, .txt, .pdf, .docx)
+5. Review generated test cases
+6. Edit as needed and import
+
+### Supported Document Formats
+- **Markdown** (.md): Test plans with structured headings
+- **Plain Text** (.txt): Simple text-based test documentation  
+- **PDF** (.pdf): Test specification documents
+- **Word Documents** (.docx): Microsoft Word test plans
+
 ### Database Management
 
 #### Connection Details
@@ -753,7 +830,7 @@ MAX_FILE_SIZE=10485760
 - [ ] **Unit Testing**: Comprehensive test suite implementation
 
 ### Future Enhancements
-- [ ] **AI Integration**: OpenAI API for test case generation
+- [x] **AI Integration**: OpenAI API for test case generation *(Completed)*
 - [ ] **Advanced Reporting**: Custom report generation
 - [ ] **User Authentication**: JWT-based authentication system
 - [ ] **Team Collaboration**: Multi-user support

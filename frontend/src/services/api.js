@@ -216,6 +216,19 @@ export const importAPI = {
   
   // Get cleanup status
   getCleanupStatus: () => api.get('/api/import/cleanup/status'),
+  
+  // Smart Import - LLM powered test case generation
+  smartImport: (formData) => api.post('/api/import/smart-import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  
+  // Smart Import Preview - preview without importing
+  smartImportPreview: (formData) => api.post('/api/import/smart-import/preview', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  
+  // Get supported formats for smart import
+  getSupportedFormats: () => api.get('/api/import/supported-formats'),
 };
 
 export const activitiesAPI = {

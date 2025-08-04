@@ -7,9 +7,10 @@ class ProjectService {
    * Create a new project
    * @param {string} name - Project name
    * @param {string} description - Project description
+   * @param {string} status - Project status (active, inactive, archived)
    * @returns {Promise<Object>} Created project
    */
-  async createProject(name, description = '') {
+  async createProject(name, description = '', status = 'active') {
     try {
       // Check if project name already exists
       const existingProject = await this.db.query(
@@ -24,7 +25,7 @@ class ProjectService {
       // Create the project
       const result = await this.db.query(
         'INSERT INTO projects (name, description, status) VALUES ($1, $2, $3) RETURNING *',
-        [name, description, 'active']
+        [name, description, status]
       );
 
       return result.rows[0];

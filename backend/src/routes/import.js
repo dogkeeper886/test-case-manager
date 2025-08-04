@@ -5,6 +5,7 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const TestLinkImportService = require('../services/TestLinkImportService');
 const ActivityService = require('../services/ActivityService');
+const LLMTestCaseService = require('../services/LLMTestCaseService');
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ const storage = multer.diskStorage({
   }
 });
 
+// Configure multer for TestLink XML files
 const upload = multer({ 
   storage: storage,
   fileFilter: function (req, file, cb) {
@@ -28,6 +30,31 @@ const upload = multer({
       cb(null, true);
     } else {
       cb(new Error('Only XML files are allowed'), false);
+    }
+  },
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  }
+});
+
+// Configure multer for smart import (multiple file types)
+const smartUpload = multer({
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = [
+      'application/xml', 'text/xml',
+      'text/markdown', 'text/plain',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    const allowedExtensions = ['.xml', '.md', '.txt', '.pdf', '.docx'];
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    
+    if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Unsupported file format. Supported: .xml, .md, .txt, .pdf, .docx'), false);
     }
   },
   limits: {
@@ -624,6 +651,174 @@ router.get('/cleanup/status', async (req, res) => {
       details: error.message 
     });
   }
+});
+
+// POST /api/import/smart-import - Smart import with LLM generation
+router.post('/smart-import', smartUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { projectId, strategy = 'update_existing' } = req.body;
+    
+    if (!projectId) {
+      return res.status(400).json({ error: 'Project ID is required' });
+    }
+
+    // Initialize LLM service
+    const llmService = new LLMTestCaseService(req.app.locals.db);
+    
+    // Generate test cases from file
+    const result = await llmService.generateFromFile(
+      req.file.path,
+      req.file.originalname,
+      parseInt(projectId),
+      { strategy }
+    );
+
+    if (result.testCases.length === 0) {
+      return res.status(400).json({ 
+        error: 'No test cases detected', 
+        details: 'The document does not contain recognizable test scenarios. Please ensure your document has clear test cases with steps and expected results.' 
+      });
+    }
+
+    // Use existing import service to save test cases
+    const importService = initializeImportService(req.app.locals.db);
+    const importResult = await importService.importGeneratedTestCases(
+      result.testCases,
+      parseInt(projectId),
+      strategy
+    );
+
+    // Clean up uploaded file
+    try {
+      await fs.unlink(req.file.path);
+    } catch (cleanupError) {
+      console.warn('Failed to cleanup uploaded file:', cleanupError);
+    }
+
+    // Log activity
+    await ActivityService.logImportActivity(
+      'smart_import_complete',
+      `Smart import completed successfully. Generated ${result.testCases.length} test cases from ${req.file.originalname}`,
+      {
+        fileName: req.file.originalname,
+        projectId: parseInt(projectId),
+        generatedTestCases: result.testCases.length,
+        averageConfidence: result.statistics.averageConfidence,
+        sourceFormat: result.sourceMetadata.extension,
+        strategy: strategy
+      }
+    );
+
+    res.status(201).json({
+      message: 'Smart import completed successfully',
+      data: {
+        ...importResult,
+        generatedCount: result.testCases.length,
+        averageConfidence: result.statistics.averageConfidence,
+        sourceFormat: result.sourceMetadata.extension
+      }
+    });
+
+  } catch (error) {
+    // Clean up uploaded file on error
+    if (req.file) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup uploaded file on error:', cleanupError);
+      }
+    }
+
+    console.error('Smart import error:', error);
+    res.status(500).json({ 
+      error: 'Smart import failed', 
+      details: error.message 
+    });
+  }
+});
+
+// POST /api/import/smart-import/preview - Preview smart import without importing
+router.post('/smart-import/preview', smartUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { projectId } = req.body;
+    
+    if (!projectId) {
+      return res.status(400).json({ error: 'Project ID is required' });
+    }
+
+    // Initialize LLM service
+    const llmService = new LLMTestCaseService(req.app.locals.db);
+    
+    // Generate preview (don't save to database)
+    const result = await llmService.generateFromFile(
+      req.file.path,
+      req.file.originalname,
+      parseInt(projectId),
+      { preview: true }
+    );
+
+    // Clean up uploaded file
+    try {
+      await fs.unlink(req.file.path);
+    } catch (cleanupError) {
+      console.warn('Failed to cleanup uploaded file:', cleanupError);
+    }
+
+    res.json({
+      message: 'Smart import preview completed',
+      data: {
+        testCases: result.testCases,
+        statistics: result.statistics,
+        sourceMetadata: result.sourceMetadata,
+        generationMetadata: result.generationMetadata
+      }
+    });
+
+  } catch (error) {
+    // Clean up uploaded file on error
+    if (req.file) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup uploaded file on error:', cleanupError);
+      }
+    }
+
+    console.error('Smart import preview error:', error);
+    res.status(500).json({ 
+      error: 'Preview failed', 
+      details: error.message 
+    });
+  }
+});
+
+// GET /api/import/supported-formats - List supported file formats for smart import
+router.get('/supported-formats', (req, res) => {
+  const llmService = new LLMTestCaseService();
+  const formats = llmService.getSupportedFormats();
+  
+  res.json({
+    message: 'Supported file formats for smart import',
+    data: {
+      formats: [
+        { extension: '.md', type: 'Markdown', description: 'Markdown documents with test scenarios' },
+        { extension: '.txt', type: 'Plain Text', description: 'Plain text test plans' },
+        { extension: '.pdf', type: 'PDF', description: 'PDF documents containing test specifications' },
+        { extension: '.docx', type: 'Word Document', description: 'Microsoft Word test plan documents' }
+      ],
+      maxFileSize: '50MB',
+      processing: 'AI-powered test case extraction',
+      note: 'Documents should contain clear test scenarios with steps and expected results for best results'
+    }
+  });
 });
 
 // Error handling middleware for multer errors
