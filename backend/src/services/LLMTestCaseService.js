@@ -5,18 +5,95 @@ class LLMTestCaseService {
   constructor(db, options = {}) {
     this.db = db;
     this.contentParser = new ContentParserService();
+    this.initialized = false;
     
-    // Initialize LLM provider
-    this.provider = options.provider || process.env.LLM_PROVIDER || 'openai';
-    this.model = options.model || process.env.LLM_MODEL || 'gpt-4-turbo-preview';
-    this.maxTokens = options.maxTokens || parseInt(process.env.LLM_MAX_TOKENS) || 4000;
-    this.temperature = options.temperature || parseFloat(process.env.LLM_TEMPERATURE) || 0.1;
-    
-    if (this.provider === 'openai') {
-      this.openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
+    // Store options for later initialization
+    this.options = options;
+  }
+
+  /**
+   * Initialize LLM service with settings from database
+   * @returns {Promise<void>}
+   */
+  async init() {
+    if (this.initialized) return;
+
+    try {
+      // Load LLM settings from database
+      const settings = await this.loadLLMSettings();
+      
+      this.provider = this.options.provider || settings.provider || 'openai';
+      this.model = this.options.model || settings.model || 'gpt-4-turbo-preview';
+      this.maxTokens = this.options.maxTokens || settings.maxTokens || 4000;
+      this.temperature = this.options.temperature || settings.temperature || 0.1;
+      
+      // Initialize provider
+      if (this.provider === 'openai') {
+        this.openai = new OpenAI({
+          apiKey: settings.apiKey
+        });
+      } else if (this.provider === 'anthropic') {
+        // Future: Add Anthropic initialization
+        throw new Error('Anthropic provider not yet implemented');
+      }
+      
+      this.initialized = true;
+    } catch (error) {
+      // Fallback to environment variables if database settings fail
+      console.warn('Failed to load LLM settings from database, falling back to environment variables:', error.message);
+      
+      this.provider = this.options.provider || process.env.LLM_PROVIDER || 'openai';
+      this.model = this.options.model || process.env.LLM_MODEL || 'gpt-4-turbo-preview';
+      this.maxTokens = this.options.maxTokens || parseInt(process.env.LLM_MAX_TOKENS) || 4000;
+      this.temperature = this.options.temperature || parseFloat(process.env.LLM_TEMPERATURE) || 0.1;
+      
+      if (this.provider === 'openai') {
+        this.openai = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY
+        });
+      }
+      
+      this.initialized = true;
     }
+  }
+
+  /**
+   * Load LLM settings from database
+   * @returns {Promise<Object>} LLM settings
+   */
+  async loadLLMSettings() {
+    const result = await this.db.query(
+      'SELECT setting_value FROM app_settings WHERE setting_key = $1',
+      ['llm_config']
+    );
+    
+    if (result.rows.length === 0) {
+      throw new Error('LLM settings not configured. Please configure in Settings.');
+    }
+    
+    const encryptedSettings = result.rows[0].setting_value;
+    
+    // Decrypt settings (assuming they're stored encrypted)
+    let settings;
+    try {
+      // If settings are encrypted, decrypt them
+      if (typeof encryptedSettings === 'string' && encryptedSettings.includes('encrypted:')) {
+        const crypto = require('crypto');
+        const encryptionKey = process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
+        const [, encryptedData] = encryptedSettings.split('encrypted:');
+        const decipher = crypto.createDecipher('aes-256-cbc', encryptionKey);
+        let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        settings = JSON.parse(decrypted);
+      } else {
+        // Settings are stored as plain JSON
+        settings = typeof encryptedSettings === 'string' ? JSON.parse(encryptedSettings) : encryptedSettings;
+      }
+    } catch (decryptError) {
+      throw new Error('Failed to decrypt LLM settings. Please reconfigure in Settings.');
+    }
+    
+    return settings;
   }
 
   /**
@@ -29,6 +106,9 @@ class LLMTestCaseService {
    */
   async generateFromFile(filePath, originalName, projectId, options = {}) {
     try {
+      // Ensure service is initialized
+      await this.init();
+      
       // Parse the file content
       const parsedContent = await this.contentParser.parseFile(filePath, originalName);
       
@@ -51,6 +131,9 @@ class LLMTestCaseService {
    */
   async generateTestCases(parsedContent, projectId, options = {}) {
     try {
+      // Ensure service is initialized
+      await this.init();
+      
       // Get project context for better generation
       const projectContext = await this.getProjectContext(projectId);
       
@@ -97,11 +180,16 @@ class LLMTestCaseService {
   buildGenerationPrompt(parsedContent, projectContext, options = {}) {
     const { content, testPatterns, format } = parsedContent;
     
-    return `You are an expert test case analyst. Extract structured test cases from the following ${format} document.
+    // Handle missing or invalid project context gracefully
+    const projectName = projectContext?.name || 'Unknown Project';
+    const testSuites = projectContext?.testSuites || [];
+    const suitesText = testSuites.length > 0 ? testSuites.map(ts => ts.name).join(', ') : 'None';
+    
+    return `You are an expert test case analyst. Extract structured test cases from the following ${format || 'document'} document.
 
 PROJECT CONTEXT:
-- Project: ${projectContext.name}
-- Existing test suites: ${projectContext.testSuites.map(ts => ts.name).join(', ') || 'None'}
+- Project: ${projectName}
+- Existing test suites: ${suitesText}
 - Testing standards: Follow structured test case format with clear steps and expected results
 
 DOCUMENT CONTENT:
@@ -325,12 +413,22 @@ Extract test cases now:`;
 
   /**
    * Get project context for better generation
-   * @param {number} projectId - Project ID
+   * @param {number} projectId - Project ID (can be null for new project creation)
    * @returns {Promise<Object>} Project context
    */
   async getProjectContext(projectId) {
     try {
-      // Get project details
+      // Handle null projectId (new project creation flow)
+      if (!projectId || projectId === null) {
+        return {
+          id: null,
+          name: 'New Project',
+          description: 'Smart import into new project',
+          testSuites: []
+        };
+      }
+      
+      // Get project details for existing project
       const projectResult = await this.db.query('SELECT * FROM projects WHERE id = $1', [projectId]);
       const project = projectResult.rows[0];
       

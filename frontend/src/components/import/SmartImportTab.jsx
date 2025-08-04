@@ -1,17 +1,29 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, FileText, Brain, CheckCircle, AlertCircle, Clock, Eye, Edit3, Trash2 } from 'lucide-react';
+import { Upload, FileText, Brain, CheckCircle, AlertCircle, Clock, Eye, Edit3, Trash2, Sparkles } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../ui';
 import { importAPI } from '../../services/api';
 import { showSuccess, showError, showInfo } from '../../utils/toast';
+import './apple-smart-import.css';
 
-const SmartImportTab = ({ projects, selectedProjectId, onImportComplete }) => {
+const SmartImportTab = ({ projects, selectedProjectId, onImportComplete, showNewProjectForm, newProjectName, newProjectDescription }) => {
   const [dragActive, setDragActive] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [preview, setPreview] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [editingTestCase, setEditingTestCase] = useState(null);
+  const [currentStage, setCurrentStage] = useState('');
+  const [progress, setProgress] = useState(0);
   const fileInputRef = useRef(null);
+
+  // Apple-style processing stages
+  const processingStages = [
+    { key: 'uploading', label: 'Uploading document...', progress: 20 },
+    { key: 'parsing', label: 'Analyzing content...', progress: 40 },
+    { key: 'generating', label: 'Generating test cases...', progress: 70 },
+    { key: 'preparing', label: 'Preparing preview...', progress: 90 },
+    { key: 'ready', label: 'Ready!', progress: 100 }
+  ];
 
   const supportedFormats = [
     { ext: '.md', type: 'Markdown', desc: 'Markdown test plans' },
@@ -41,9 +53,30 @@ const SmartImportTab = ({ projects, selectedProjectId, onImportComplete }) => {
     }
   }, []);
 
+  // Apple-style progress simulation
+  const simulateProgress = async (stages) => {
+    for (let i = 0; i < stages.length; i++) {
+      const stage = stages[i];
+      setCurrentStage(stage.label);
+      setProgress(stage.progress);
+      
+      // Simulate processing time with realistic delays
+      if (stage.key === 'uploading') await new Promise(resolve => setTimeout(resolve, 500));
+      else if (stage.key === 'parsing') await new Promise(resolve => setTimeout(resolve, 800));
+      else if (stage.key === 'generating') await new Promise(resolve => setTimeout(resolve, 1200));
+      else if (stage.key === 'preparing') await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  };
+
   const handleFileUpload = async (file) => {
-    if (!selectedProjectId) {
+    // Check if we have either a selected project or new project form filled
+    if (!selectedProjectId && !showNewProjectForm) {
       showError('Please select a project first');
+      return;
+    }
+
+    if (showNewProjectForm && !newProjectName?.trim()) {
+      showError('Please enter a project name for the new project');
       return;
     }
 
@@ -64,15 +97,29 @@ const SmartImportTab = ({ projects, selectedProjectId, onImportComplete }) => {
 
     setSelectedFile(file);
     setProcessing(true);
+    setProgress(0);
     
     try {
-      // Generate preview first
+      // Start Apple-style progress animation
+      const progressPromise = simulateProgress(processingStages);
+      
+      // Generate preview
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('projectId', selectedProjectId);
+      
+      // Add project information based on mode
+      if (showNewProjectForm) {
+        formData.append('newProjectName', newProjectName.trim());
+        formData.append('newProjectDescription', newProjectDescription?.trim() || '');
+      } else {
+        formData.append('projectId', selectedProjectId);
+      }
 
       const response = await importAPI.smartImportPreview(formData);
       const previewData = response.data.data;
+      
+      // Ensure progress completes
+      await progressPromise;
       
       if (previewData.testCases.length === 0) {
         showInfo('No test cases were detected in this document. Please ensure your document contains clear test scenarios with steps and expected results.');
@@ -89,6 +136,8 @@ const SmartImportTab = ({ projects, selectedProjectId, onImportComplete }) => {
       showError(`Failed to process document: ${errorMessage}`);
     } finally {
       setProcessing(false);
+      setCurrentStage('');
+      setProgress(0);
     }
   };
 
@@ -103,13 +152,24 @@ const SmartImportTab = ({ projects, selectedProjectId, onImportComplete }) => {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('projectId', selectedProjectId);
       formData.append('strategy', strategy);
+      
+      // Add project information based on mode
+      if (showNewProjectForm) {
+        formData.append('newProjectName', newProjectName.trim());
+        formData.append('newProjectDescription', newProjectDescription?.trim() || '');
+      } else {
+        formData.append('projectId', selectedProjectId);
+      }
 
       const response = await importAPI.smartImport(formData);
       const result = response.data.data;
       
-      showSuccess(`Successfully imported ${result.generatedCount} test cases!`);
+      const successMessage = showNewProjectForm 
+        ? `Successfully imported ${result.generatedCount} test cases into new project "${newProjectName}"!`
+        : `Successfully imported ${result.generatedCount} test cases!`;
+      
+      showSuccess(successMessage);
       setShowPreview(false);
       setPreview(null);
       setSelectedFile(null);
@@ -160,63 +220,67 @@ const SmartImportTab = ({ projects, selectedProjectId, onImportComplete }) => {
 
   return (
     <div className="space-y-6">
-      {/* Upload Area */}
-      <Card className={`border-2 border-dashed transition-all duration-200 ${
-        dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
-      }`}>
+      {/* Apple-style Upload Area */}
+      <Card className={`apple-dropzone ${dragActive ? 'apple-dropzone-active' : ''} ${processing ? 'apple-dropzone-processing' : ''}`}>
         <div 
-          className="p-8 text-center"
+          className="apple-dropzone-inner"
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
         >
-          <Brain className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Smart Test Case Generation</h3>
-          <p className="text-gray-600 mb-6">
-            Upload test plan documents in any format. AI will extract and structure test cases automatically.
-          </p>
-          
-          <Button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={processing}
-            className="mb-6"
-          >
-            {processing ? (
-              <>
-                <Clock className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
+          {processing ? (
+            <AppleProgressIndicator 
+              progress={progress} 
+              stage={currentStage}
+              stages={processingStages}
+            />
+          ) : (
+            <>
+              <div className="apple-icon-container">
+                <Brain className="apple-brain-icon" />
+                <Sparkles className="apple-sparkles-icon" />
+                <div className="apple-icon-glow"></div>
+              </div>
+              
+              <h3 className="apple-heading">Smart Test Case Generation</h3>
+              <p className="apple-subtext">
+                Drop your document here, or click to browse
+              </p>
+              
+              <Button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={processing}
+                className="apple-upload-button"
+              >
                 <Upload className="w-4 h-4 mr-2" />
                 Choose Document
-              </>
-            )}
-          </Button>
-          
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={supportedFormats.map(f => f.ext).join(',')}
-            onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0])}
-            className="hidden"
-          />
-          
-          {/* Supported Formats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            {supportedFormats.map((format) => (
-              <div key={format.ext} className="text-center p-3 bg-gray-50 rounded-lg">
-                <FileText className="w-6 h-6 text-gray-500 mx-auto mb-1" />
-                <div className="text-sm font-medium text-gray-700">{format.type}</div>
-                <div className="text-xs text-gray-500">{format.ext}</div>
+              </Button>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={supportedFormats.map(f => f.ext).join(',')}
+                onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0])}
+                className="hidden"
+              />
+              
+              {/* Apple-style Format Badges */}
+              <div className="apple-formats-grid">
+                {supportedFormats.map((format) => (
+                  <div key={format.ext} className="apple-format-badge">
+                    <FileText className="apple-format-icon" />
+                    <span className="apple-format-ext">{format.ext}</span>
+                    <span className="apple-format-type">{format.type}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          
-          <div className="text-sm text-gray-500">
-            Maximum file size: 50MB • Drag and drop supported
-          </div>
+              
+              <div className="apple-upload-meta">
+                Maximum 50MB • Drag and drop supported
+              </div>
+            </>
+          )}
         </div>
       </Card>
 
@@ -245,6 +309,69 @@ const SmartImportTab = ({ projects, selectedProjectId, onImportComplete }) => {
           onCancel={() => setEditingTestCase(null)}
         />
       )}
+    </div>
+  );
+};
+
+// Apple-style Progress Indicator Component
+const AppleProgressIndicator = ({ progress, stage, stages }) => {
+  const circumference = 2 * Math.PI * 45; // radius = 45
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  return (
+    <div className="apple-progress-container">
+      <div className="apple-progress-ring">
+        <svg className="apple-progress-svg" viewBox="0 0 100 100">
+          {/* Background circle */}
+          <circle
+            className="apple-progress-bg"
+            cx="50"
+            cy="50"
+            r="45"
+            fill="none"
+            stroke="rgba(0, 122, 255, 0.1)"
+            strokeWidth="3"
+          />
+          {/* Progress circle */}
+          <circle
+            className="apple-progress-circle"
+            cx="50"
+            cy="50"
+            r="45"
+            fill="none"
+            stroke="rgb(0, 122, 255)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            transform="rotate(-90 50 50)"
+            style={{
+              transition: 'stroke-dashoffset 0.5s ease-in-out'
+            }}
+          />
+        </svg>
+        <div className="apple-progress-center">
+          <Brain className="apple-progress-icon" />
+        </div>
+      </div>
+      
+      <div className="apple-progress-text">
+        <div className="apple-progress-stage">{stage}</div>
+        <div className="apple-progress-percent">{Math.round(progress)}%</div>
+      </div>
+      
+      {/* Progress dots */}
+      <div className="apple-progress-dots">
+        {stages.map((stageItem, index) => (
+          <div
+            key={stageItem.key}
+            className={`apple-progress-dot ${
+              progress >= stageItem.progress ? 'apple-progress-dot-active' : ''
+            }`}
+          />
+        ))}
+      </div>
     </div>
   );
 };
@@ -347,39 +474,61 @@ const PreviewSection = ({ preview, onConfirm, onCancel, onEdit, onRemove, proces
 
 const TestCasePreviewCard = ({ testCase, index, onEdit, onRemove }) => {
   const [expanded, setExpanded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   
   const confidence = testCase.confidence || 0.5;
-  const confidenceColor = confidence >= 0.8 ? 'text-green-600 bg-green-100' : 
-                         confidence >= 0.6 ? 'text-yellow-600 bg-yellow-100' : 
-                         'text-red-600 bg-red-100';
+  const getConfidenceColor = (conf) => {
+    if (conf >= 0.8) return 'apple-confidence-high';
+    if (conf >= 0.6) return 'apple-confidence-medium';
+    return 'apple-confidence-low';
+  };
+  
+  const getConfidenceIcon = (conf) => {
+    if (conf >= 0.8) return <CheckCircle className="w-4 h-4" />;
+    if (conf >= 0.6) return <AlertCircle className="w-4 h-4" />;
+    return <AlertCircle className="w-4 h-4" />;
+  };
 
   return (
-    <div className="border rounded-lg bg-gray-50">
-      <div className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-2">
-              <h4 className="font-medium text-gray-900">{testCase.title}</h4>
-              <Badge className={`text-xs ${confidenceColor}`}>
-                {Math.round(confidence * 100)}%
-              </Badge>
+    <div 
+      className={`apple-test-card ${isHovered ? 'apple-test-card-hovered' : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="apple-test-card-content">
+        <div className="apple-test-card-header">
+          <div className="apple-test-card-title-section">
+            <div className="apple-test-card-title-row">
+              <h4 className="apple-test-card-title">{testCase.title}</h4>
+              <div className={`apple-confidence-ring ${getConfidenceColor(confidence)}`}>
+                <div className="apple-confidence-inner">
+                  {getConfidenceIcon(confidence)}
+                  <span className="apple-confidence-text">{Math.round(confidence * 100)}%</span>
+                </div>
+              </div>
             </div>
             
-            <p className="text-sm text-gray-600 mb-2">{testCase.description}</p>
+            <p className="apple-test-card-description">{testCase.description}</p>
             
-            <div className="flex items-center space-x-4 text-xs text-gray-500">
-              <span>{testCase.steps?.length || 0} steps</span>
-              <span>Priority: {testCase.priority}</span>
-              <span>Type: {testCase.testType}</span>
+            <div className="apple-test-card-metadata">
+              <span className="apple-metadata-badge apple-badge-steps">
+                {testCase.steps?.length || 0} steps
+              </span>
+              <span className="apple-metadata-badge apple-badge-priority">
+                {testCase.priority}
+              </span>
+              <span className="apple-metadata-badge apple-badge-type">
+                {testCase.testType}
+              </span>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2 ml-4">
+          <div className="apple-test-card-actions">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setExpanded(!expanded)}
-              className="text-gray-500 hover:text-gray-700"
+              className="apple-action-button apple-action-view"
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -387,7 +536,7 @@ const TestCasePreviewCard = ({ testCase, index, onEdit, onRemove }) => {
               variant="ghost"
               size="sm"
               onClick={onEdit}
-              className="text-blue-500 hover:text-blue-700"
+              className="apple-action-button apple-action-edit"
             >
               <Edit3 className="w-4 h-4" />
             </Button>
@@ -395,7 +544,7 @@ const TestCasePreviewCard = ({ testCase, index, onEdit, onRemove }) => {
               variant="ghost"
               size="sm"
               onClick={onRemove}
-              className="text-red-500 hover:text-red-700"
+              className="apple-action-button apple-action-remove"
             >
               <Trash2 className="w-4 h-4" />
             </Button>

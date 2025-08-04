@@ -1,6 +1,6 @@
 # LLM Test Case Generation - Design Plan
 
-## 🎯 Current Status: Infrastructure Complete
+## 🎯 Current Status: Implementation in Progress
 
 **Phase 0: LLM Settings Infrastructure** ✅ **COMPLETED**
 - ✅ **LLM Settings Modal** - Apple-designed interface accessible via TopNav settings icon
@@ -11,7 +11,18 @@
 - ✅ **Multi-Provider Support** - OpenAI, Anthropic, Azure OpenAI ready
 - ✅ **Apple Design System** - Consistent UI/UX with gradient icons and proper spacing
 
-The foundation is now complete for implementing the actual test case generation features.
+**Phase 1: Core Implementation** 🔄 **IN PROGRESS**
+- ✅ **Smart Import Backend Routes** - API endpoints for smart import and preview
+- ✅ **LLM Test Case Service** - Core service for generating test cases from documents
+- ✅ **Content Parser Service** - Multi-format document parsing (MD, TXT, PDF, DOCX)
+- ✅ **Frontend Smart Import Tab** - Basic UI integration with Import page
+- 🚨 **CURRENT ISSUE**: Project context handling for new project creation
+- 🚨 **CURRENT ISSUE**: Error handling and user experience refinements needed
+
+**Identified Issues & Solutions:**
+1. **"Project with ID null not found" Error**: LLM service expects valid projectId but new project flow passes null
+2. **Need Apple-style UX**: Current interface lacks progressive disclosure and elegant feedback
+3. **Error Handling**: Need graceful fallbacks and user-friendly error messages
 
 ## Overview
 
@@ -78,29 +89,37 @@ The foundation is now complete for implementing the actual test case generation 
 
 ## Implementation Strategy
 
-### Phase 1: Foundation (Week 1)
-**Goal**: Basic content parsing and LLM integration
+### Phase 1: Critical Fixes (Immediate Priority)
+**Goal**: Fix current blocking issues
 
-- **Content Parser Service**: Handle markdown, text, PDF extraction
-- **LLM Integration**: Create service for test case extraction
-- **Schema Mapping**: Convert LLM output to test_cases format
-- **Basic API Endpoint**: `/api/import/smart-import`
+- 🚨 **Project Context Fix**: Handle null projectId for new project creation flow
+- 🚨 **Error Handling**: Add graceful error recovery and user-friendly messages
+- 🚨 **LLM Settings Integration**: Ensure smart import uses configured LLM settings
+- 🚨 **Progress Tracking**: Add loading states and progress indicators
 
-### Phase 2: User Interface (Week 2)  
-**Goal**: Seamless user experience
+### Phase 2: Apple-Style User Experience (High Priority)
+**Goal**: Transform interface with Apple design principles
 
-- **Frontend Integration**: Add Smart Import tab to Import page
-- **Preview Interface**: Show generated test cases before import
-- **Edit Capabilities**: Allow refinement of generated content
-- **Progress Indicators**: Real-time feedback during processing
+- 🍎 **Progressive Disclosure**: Start simple, reveal complexity gradually
+- 🍎 **Immediate Feedback**: Real-time validation and progress indicators
+- 🍎 **Elegant Interactions**: Apple-style animations and transitions
+- 🍎 **Visual Hierarchy**: Clear information architecture and typography
 
-### Phase 3: Quality & Polish (Week 3)
-**Goal**: Production-ready feature
+### Phase 3: Advanced Features (Medium Priority)
+**Goal**: Production-ready smart import
 
-- **Advanced Validation**: Quality checks and confidence scoring
-- **Batch Operations**: Approve/reject multiple test cases
-- **Error Handling**: Graceful fallbacks and error messages
-- **Documentation**: User guides and API documentation
+- **Intelligent Defaults**: Auto-detect document types and suggest strategies
+- **Batch Operations**: Edit multiple test cases efficiently
+- **Quality Scoring**: Advanced confidence metrics and validation
+- **Contextual Help**: Tooltips, examples, and guided workflows
+
+### Phase 4: Polish & Optimization (Low Priority)
+**Goal**: Performance and refinements
+
+- **Performance**: Optimize LLM calls and file processing
+- **Analytics**: Track usage patterns and success metrics
+- **Documentation**: User guides and best practices
+- **Accessibility**: WCAG compliance and keyboard navigation
 
 ## Technical Specifications
 
@@ -158,20 +177,48 @@ POST /api/import/supported-formats     // List supported file types
 - **Trust**: Provide clear preview and editing capabilities
 - **Learning Curve**: Maintain familiar import process patterns
 
+## 🍎 Apple Design Principles Integration
+
+### 1. **Progressive Disclosure**
+- **Simple Start**: Single drag-and-drop area
+- **Smart Reveals**: Show complexity only when needed
+- **Guided Flow**: Clear next steps at each stage
+
+### 2. **Immediate Feedback**
+- **Real-time Validation**: Instant file format checking
+- **Progress Indicators**: Apple-style progress rings
+- **Status Communication**: Clear success/error states
+
+### 3. **Elegant Interactions**
+- **Smooth Animations**: Fluid transitions between states
+- **Haptic Feedback**: Visual feedback for actions
+- **Consistent Patterns**: Familiar interaction models
+
+### 4. **Visual Hierarchy**
+- **Typography**: SF Pro Display font system
+- **Color System**: Apple-inspired color palette
+- **Spacing**: Consistent 8px grid system
+- **Shadows**: Subtle depth and elevation
+
 ## Success Criteria
 
-### MVP Requirements
-1. ⏳ Process markdown and text files
-2. ⏳ Generate basic test cases (title, steps, expected results)
-3. ⏳ Integrate with existing import pipeline
-4. ⏳ Provide preview functionality
+### Phase 1: Critical Fixes ✅ TARGET: Immediate
+1. 🚨 **Fix null project context** - Handle new project creation flow
+2. 🚨 **Error recovery** - Graceful handling of LLM API failures
+3. 🚨 **Settings integration** - Use configured LLM providers
+4. 🚨 **Progress feedback** - Loading states and user communication
 
-### Full Feature Requirements
-1. ⏳ Support PDF and Word document formats
-2. ⏳ Advanced test case structure recognition
-3. ⏳ Confidence scoring and quality indicators
-4. ⏳ Batch editing and approval workflows
-5. ⏳ Complete UI integration with existing Import page
+### Phase 2: Apple UX ⏳ TARGET: This Week
+1. 🍎 **Apple-style dropzone** - Beautiful file upload interface
+2. 🍎 **Progress indicators** - Elegant loading animations
+3. 🍎 **Preview cards** - Clean test case presentation
+4. 🍎 **Smooth transitions** - Fluid state changes
+
+### Phase 3: Production Ready ⏳ TARGET: Next Week
+1. 📝 **Multi-format support** - MD, TXT, PDF, DOCX processing
+2. 🎯 **High accuracy** - >80% generated test cases require minimal editing
+3. ⚡ **Fast processing** - <10 seconds for typical documents
+4. 🔄 **Seamless integration** - Perfect fit with existing import workflow
 
 ### Infrastructure Requirements (Completed ✅)
 1. ✅ **LLM Settings Management** - Complete settings interface with encryption

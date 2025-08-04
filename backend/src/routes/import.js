@@ -660,10 +660,30 @@ router.post('/smart-import', smartUpload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const { projectId, strategy = 'update_existing' } = req.body;
+    const { projectId, newProjectName, newProjectDescription, strategy = 'update_existing' } = req.body;
     
-    if (!projectId) {
-      return res.status(400).json({ error: 'Project ID is required' });
+    // Validate that we have either a project ID or new project details
+    if (!projectId && !newProjectName) {
+      return res.status(400).json({ error: 'Either projectId or newProjectName is required' });
+    }
+
+    // Handle project creation (similar to TestLink import)
+    let actualProjectId = projectId ? parseInt(projectId) : null;
+    let projectCreated = false;
+    
+    if (!actualProjectId && newProjectName) {
+      try {
+        const ProjectService = require('../services/ProjectService');
+        const projectService = new ProjectService(req.app.locals.db);
+        const newProject = await projectService.createProject(newProjectName.trim(), newProjectDescription?.trim() || '');
+        actualProjectId = newProject.id;
+        projectCreated = true;
+      } catch (projectError) {
+        return res.status(400).json({ 
+          error: 'Failed to create project', 
+          details: projectError.message 
+        });
+      }
     }
 
     // Initialize LLM service
@@ -673,7 +693,7 @@ router.post('/smart-import', smartUpload.single('file'), async (req, res) => {
     const result = await llmService.generateFromFile(
       req.file.path,
       req.file.originalname,
-      parseInt(projectId),
+      actualProjectId,
       { strategy }
     );
 
@@ -688,7 +708,7 @@ router.post('/smart-import', smartUpload.single('file'), async (req, res) => {
     const importService = initializeImportService(req.app.locals.db);
     const importResult = await importService.importGeneratedTestCases(
       result.testCases,
-      parseInt(projectId),
+      actualProjectId,
       strategy
     );
 
@@ -705,7 +725,7 @@ router.post('/smart-import', smartUpload.single('file'), async (req, res) => {
       `Smart import completed successfully. Generated ${result.testCases.length} test cases from ${req.file.originalname}`,
       {
         fileName: req.file.originalname,
-        projectId: parseInt(projectId),
+        projectId: actualProjectId,
         generatedTestCases: result.testCases.length,
         averageConfidence: result.statistics.averageConfidence,
         sourceFormat: result.sourceMetadata.extension,
@@ -719,7 +739,8 @@ router.post('/smart-import', smartUpload.single('file'), async (req, res) => {
         ...importResult,
         generatedCount: result.testCases.length,
         averageConfidence: result.statistics.averageConfidence,
-        sourceFormat: result.sourceMetadata.extension
+        sourceFormat: result.sourceMetadata.extension,
+        projectCreated: projectCreated
       }
     });
 
@@ -748,20 +769,48 @@ router.post('/smart-import/preview', smartUpload.single('file'), async (req, res
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const { projectId } = req.body;
+    const { projectId, newProjectName, newProjectDescription } = req.body;
     
-    if (!projectId) {
-      return res.status(400).json({ error: 'Project ID is required' });
+    // Validate that we have either a project ID or new project details
+    if (!projectId && !newProjectName) {
+      return res.status(400).json({ error: 'Either projectId or newProjectName is required' });
+    }
+
+    // Handle new project creation validation (similar to TestLink preview)
+    let actualProjectId = projectId ? parseInt(projectId) : null;
+    
+    if (!actualProjectId && newProjectName) {
+      // Initialize project service for validation
+      const ProjectService = require('../services/ProjectService');
+      const projectService = new ProjectService(req.app.locals.db);
+      
+      // Check if project name already exists
+      const existingProject = await projectService.db.query(
+        'SELECT id FROM projects WHERE name = $1',
+        [newProjectName.trim()]
+      );
+      
+      if (existingProject.rows.length > 0) {
+        return res.status(400).json({ 
+          error: 'Project name already exists', 
+          details: `A project with the name "${newProjectName}" already exists. Please choose a different name.`
+        });
+      }
+      
+      // For preview, we don't create the project yet, just validate the name
+      // Set actualProjectId to null for preview mode with new project
+      actualProjectId = null;
     }
 
     // Initialize LLM service
     const llmService = new LLMTestCaseService(req.app.locals.db);
     
     // Generate preview (don't save to database)
+    // Pass null projectId for new projects since we're only previewing
     const result = await llmService.generateFromFile(
       req.file.path,
       req.file.originalname,
-      parseInt(projectId),
+      actualProjectId,
       { preview: true }
     );
 

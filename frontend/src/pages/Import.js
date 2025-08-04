@@ -647,7 +647,35 @@ const Import = () => {
               <SmartImportTab
                 projects={projects}
                 selectedProjectId={selectedProjectId}
-                onImportComplete={fetchImportHistory}
+                onImportComplete={async () => {
+                  // If new project was created, refresh projects list first
+                  if (showNewProjectForm) {
+                    try {
+                      const projectsResponse = await projectsAPI.getAll();
+                      const projectsData = projectsResponse.data.data || [];
+                      setProjects(projectsData);
+                      
+                      // Find and select the newly created project
+                      const newProject = projectsData.find(p => p.name === newProjectName.trim());
+                      if (newProject) {
+                        setSelectedProjectId(newProject.id.toString());
+                      }
+                      
+                      // Reset new project form
+                      setShowNewProjectForm(false);
+                      setNewProjectName('');
+                      setNewProjectDescription('');
+                    } catch (error) {
+                      console.error('Failed to refresh projects after smart import:', error);
+                    }
+                  }
+                  
+                  // Then refresh import history
+                  await fetchImportHistory();
+                }}
+                showNewProjectForm={showNewProjectForm}
+                newProjectName={newProjectName}
+                newProjectDescription={newProjectDescription}
               />
             </Card.Body>
           )}
