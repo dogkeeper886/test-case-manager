@@ -16,8 +16,8 @@ CREATE INDEX IF NOT EXISTS idx_app_settings_key ON app_settings(setting_key);
 -- Insert default LLM settings
 INSERT INTO app_settings (setting_key, setting_value, is_encrypted) VALUES
   ('llm_provider', 'openai', false),
-  ('llm_model', 'gpt-4-turbo-preview', false),
+  ('llm_model', 'gpt-4.1', false),
   ('llm_temperature', '0.1', false),
-  ('llm_maxTokens', '4000', false),
+  ('llm_maxTokens', '16000', false),
   ('llm_enabled', 'false', false)
 ON CONFLICT (setting_key) DO NOTHING;

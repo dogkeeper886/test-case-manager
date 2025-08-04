@@ -23,8 +23,8 @@ class LLMTestCaseService {
       const settings = await this.loadLLMSettings();
       
       this.provider = this.options.provider || settings.provider || 'openai';
-      this.model = this.options.model || settings.model || 'gpt-4-turbo-preview';
-      this.maxTokens = this.options.maxTokens || settings.maxTokens || 4000;
+      this.model = this.options.model || settings.model || 'gpt-4.1';
+      this.maxTokens = this.options.maxTokens || settings.maxTokens || 16000;
       this.temperature = this.options.temperature || settings.temperature || 0.1;
       
       // Initialize provider
@@ -43,8 +43,8 @@ class LLMTestCaseService {
       console.warn('Failed to load LLM settings from database, falling back to environment variables:', error.message);
       
       this.provider = this.options.provider || process.env.LLM_PROVIDER || 'openai';
-      this.model = this.options.model || process.env.LLM_MODEL || 'gpt-4-turbo-preview';
-      this.maxTokens = this.options.maxTokens || parseInt(process.env.LLM_MAX_TOKENS) || 4000;
+      this.model = this.options.model || process.env.LLM_MODEL || 'gpt-4.1';
+      this.maxTokens = this.options.maxTokens || parseInt(process.env.LLM_MAX_TOKENS) || 16000;
       this.temperature = this.options.temperature || parseFloat(process.env.LLM_TEMPERATURE) || 0.1;
       
       if (this.provider === 'openai') {
@@ -275,12 +275,24 @@ Extract test cases now:`;
       if (this.provider === 'openai') {
         // Models that support JSON response format
         const jsonSupportedModels = [
+          'gpt-4.1',
+          'gpt-4.1-mini',
+          'gpt-4.1-nano',
+          'o4-mini',
+          'o1',
+          'o1-mini',
+          'o1-pro',
+          'o3-mini',
+          'chatgpt-4o-latest',
+          'gpt-4o',
+          'gpt-4o-mini',
           'gpt-4-turbo-preview', 
           'gpt-4-turbo', 
           'gpt-4-0125-preview',
           'gpt-4-1106-preview',
           'gpt-3.5-turbo-1106',
-          'gpt-3.5-turbo-0125'
+          'gpt-3.5-turbo-0125',
+          'gpt-3.5-turbo'
         ];
         
         const requestOptions = {

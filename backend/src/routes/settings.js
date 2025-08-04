@@ -52,9 +52,9 @@ router.get('/llm', async (req, res) => {
     const settings = {
       provider: 'openai',
       apiKey: '',
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4.1',
       temperature: 0.1,
-      maxTokens: 4000,
+      maxTokens: 16000,
       enabled: false
     };
     

@@ -22,9 +22,9 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
   const [settings, setSettings] = useState({
     provider: 'openai',
     apiKey: '',
-    model: 'gpt-4-turbo-preview',
+    model: 'gpt-4.1',
     temperature: 0.1,
-    maxTokens: 4000,
+    maxTokens: 16000,
     enabled: false
   });
   const [loading, setLoading] = useState(false);
@@ -48,9 +48,9 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
       const loadedSettings = {
         provider: settingsData.provider || 'openai',
         apiKey: settingsData.apiKey || '',
-        model: settingsData.model || 'gpt-4-turbo-preview',
+        model: settingsData.model || 'gpt-4.1',
         temperature: settingsData.temperature || 0.1,
-        maxTokens: settingsData.maxTokens || 4000,
+        maxTokens: settingsData.maxTokens || 16000,
         enabled: settingsData.enabled || false
       };
       setSettings(loadedSettings);
@@ -130,9 +130,9 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
       const settingsToSave = {
         provider: String(settings.provider || 'openai'),
         apiKey: String(settings.apiKey || ''),
-        model: String(settings.model || 'gpt-4-turbo-preview'),
+        model: String(settings.model || 'gpt-4.1'),
         temperature: Number(settings.temperature || 0.1),
-        maxTokens: Number(settings.maxTokens || 4000),
+        maxTokens: Number(settings.maxTokens || 16000),
         enabled: true // Connection successful, enable LLM features
       };
       
@@ -153,9 +153,9 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
       const settingsToSave = {
         provider: String(settings.provider || 'openai'),
         apiKey: String(settings.apiKey || ''),
-        model: String(settings.model || 'gpt-4-turbo-preview'),
+        model: String(settings.model || 'gpt-4.1'),
         temperature: Number(settings.temperature || 0.1),
-        maxTokens: Number(settings.maxTokens || 4000),
+        maxTokens: Number(settings.maxTokens || 16000),
         enabled: Boolean(connectionStatus === 'connected') // Save the actual connection state
       };
       
@@ -345,7 +345,19 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
                       >
                         {settings.provider === 'openai' && (
                           <>
-                            <option value="gpt-4-turbo-preview">GPT-4 Turbo</option>
+                            <option value="gpt-4.1">GPT-4.1 (Latest)</option>
+                            <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+                            <option value="gpt-4.1-nano">GPT-4.1 Nano</option>
+                            <option value="o4-mini">O4 Mini</option>
+                            <option value="o1">O1</option>
+                            <option value="o1-mini">O1 Mini</option>
+                            <option value="o1-pro">O1 Pro</option>
+                            <option value="o3-mini">O3 Mini</option>
+                            <option value="chatgpt-4o-latest">ChatGPT-4o Latest</option>
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                            <option value="gpt-4-turbo-preview">GPT-4 Turbo Preview</option>
                             <option value="gpt-4">GPT-4</option>
                             <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                           </>
@@ -417,7 +429,7 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
                       <Input
                         type="number"
                         value={settings.maxTokens}
-                        onChange={(e) => handleInputChange('maxTokens', parseInt(e.target.value) || 4000)}
+                        onChange={(e) => handleInputChange('maxTokens', parseInt(e.target.value) || 16000)}
                         min="1000"
                         max="8000"
                         disabled={connectionStatus === 'connected'}
