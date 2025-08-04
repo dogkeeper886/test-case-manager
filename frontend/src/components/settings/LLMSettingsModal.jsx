@@ -96,21 +96,23 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
           maxTokens: settings.maxTokens
         };
         const response = await settingsAPI.testLLMConnection(testSettings);
-        if (response.data.success) {
+        // Handle nested response structure: response.data.data
+        const testData = response.data.data || response.data;
+        if (testData.success) {
           setConnectionStatus('connected');
           setSettings(prev => ({ ...prev, enabled: true }));
           setTestResult({
             success: true,
-            message: response.data.message,
-            model: response.data.model,
-            tokens: response.data.tokens
+            message: testData.message,
+            model: testData.model,
+            tokens: testData.tokens
           });
           showSuccess('Connected to LLM service successfully');
         } else {
           setConnectionStatus('error');
           setTestResult({
             success: false,
-            message: response.data.message || 'Connection failed'
+            message: testData.message || 'Connection failed'
           });
         }
       } catch (error) {
@@ -161,11 +163,13 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
         maxTokens: settings.maxTokens
       };
       const response = await settingsAPI.testLLMConnection(testSettings);
+      // Handle nested response structure: response.data.data
+      const testData = response.data.data || response.data;
       setTestResult({
         success: true,
-        message: response.data.message,
-        model: response.data.model,
-        tokens: response.data.tokens
+        message: testData.message,
+        model: testData.model,
+        tokens: testData.tokens
       });
     } catch (error) {
       setTestResult({
