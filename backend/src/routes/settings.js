@@ -81,11 +81,11 @@ router.get('/llm', async (req, res) => {
       settings[key] = value;
     });
     
-    console.log('Final settings being returned:', settings);
-    
     // Don't send the actual API key to frontend (send masked version)
     if (settings.apiKey) {
+      console.log('Masking API key for frontend:', `${settings.apiKey.substring(0, 10)}...${settings.apiKey.slice(-4)}`);
       settings.apiKey = '***' + settings.apiKey.slice(-4);
+      console.log('Masked API key:', settings.apiKey);
     }
     
     res.json({
@@ -108,7 +108,15 @@ router.put('/llm', async (req, res) => {
     const db = req.app.locals.db;
     const { provider, apiKey, model, temperature, maxTokens, enabled } = req.body;
     
-    console.log('Received LLM settings update:', { provider, apiKey: apiKey ? '***' : 'empty', model, temperature, maxTokens, enabled });
+    console.log('Received LLM settings update:', { 
+      provider, 
+      apiKey: apiKey ? '***' : 'empty', 
+      model, 
+      temperature, 
+      maxTokens, 
+      enabled: enabled,
+      enabledType: typeof enabled 
+    });
     
     // Validate input
     if (provider && !['openai', 'anthropic', 'azure'].includes(provider)) {
@@ -199,21 +207,7 @@ router.post('/llm/test', async (req, res) => {
   try {
     const { provider, apiKey, model, temperature, maxTokens } = req.body;
     
-    console.log('=== LLM Test Connection Debug ===');
-    console.log('Request body:', { 
-      provider, 
-      apiKey: apiKey ? `${apiKey.substring(0, 10)}...${apiKey.slice(-4)}` : 'empty',
-      model, 
-      temperature, 
-      maxTokens 
-    });
-    
     if (!provider || !apiKey || !model) {
-      console.log('Missing required fields:', { 
-        provider: !!provider, 
-        apiKey: !!apiKey, 
-        model: !!model 
-      });
       return res.status(400).json({ 
         error: 'Provider, API key, and model are required for testing' 
       });
@@ -225,33 +219,22 @@ router.post('/llm/test', async (req, res) => {
     if (provider === 'openai') {
       // Handle API key - use provided key or get stored encrypted key
       let actualApiKey = apiKey;
-      console.log('API key check - starts with ***?', apiKey.startsWith('***'));
       
       if (apiKey.startsWith('***')) {
-        console.log('Using stored encrypted API key');
         actualApiKey = await getStoredAPIKey('llm_apiKey', req.app.locals.db);
         if (!actualApiKey) {
-          console.log('No stored API key found');
           return res.status(400).json({ 
             error: 'Invalid API key',
             message: 'No stored API key found' 
           });
         }
-        console.log('Retrieved stored API key:', actualApiKey ? `${actualApiKey.substring(0, 10)}...${actualApiKey.slice(-4)}` : 'empty');
-      } else {
-        console.log('Using provided API key directly');
       }
-      
-      console.log('Creating OpenAI client with key:', actualApiKey ? `${actualApiKey.substring(0, 10)}...${actualApiKey.slice(-4)}` : 'empty');
       
       testClient = new OpenAI({
         apiKey: actualApiKey
       });
       
-      console.log('OpenAI client created successfully');
-      
       // Test with a simple completion
-      console.log('Making API call to OpenAI with model:', model);
       const completion = await testClient.chat.completions.create({
         model: model,
         messages: [
@@ -266,12 +249,6 @@ router.post('/llm/test', async (req, res) => {
         ],
         max_tokens: 50,
         temperature: temperature || 0.1
-      });
-      
-      console.log('OpenAI API call successful:', {
-        model: completion.model,
-        usage: completion.usage,
-        response: completion.choices[0]?.message?.content
       });
       
       testResponse = {

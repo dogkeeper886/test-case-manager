@@ -55,11 +55,9 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
       };
       setSettings(loadedSettings);
       
-      // Update connection status based on settings
-      if (loadedSettings.enabled && loadedSettings.apiKey && !loadedSettings.apiKey.startsWith('***')) {
-        setConnectionStatus('connected');
-      } else if (loadedSettings.enabled && loadedSettings.apiKey) {
-        setConnectionStatus('connected'); // API key is masked but exists
+      // Update connection status based on saved enabled state
+      if (loadedSettings.enabled && loadedSettings.apiKey) {
+        setConnectionStatus('connected'); // Previously connected and saved
       } else {
         setConnectionStatus('disconnected');
       }
@@ -74,12 +72,12 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
 
   const handleConnect = async () => {
     if (connectionStatus === 'connected') {
-      // Disconnect
+      // Disconnect - this is just a test/preview action, doesn't change saved state
       setConnectionStatus('disconnected');
-      setSettings(prev => ({ ...prev, enabled: false }));
       setTestResult(null);
+      showSuccess('Disconnected. Click Save to persist changes.');
     } else {
-      // Connect
+      // Connect - test the connection
       if (!settings.apiKey || !settings.provider || !settings.model) {
         showError('Please fill in all required fields before connecting');
         return;
@@ -100,14 +98,15 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
         const testData = response.data.data || response.data;
         if (testData.success) {
           setConnectionStatus('connected');
-          setSettings(prev => ({ ...prev, enabled: true }));
           setTestResult({
             success: true,
             message: testData.message,
             model: testData.model,
             tokens: testData.tokens
           });
-          showSuccess('Connected to LLM service successfully');
+          
+          // Auto-save after successful connection (Apple-like behavior)
+          await autoSaveAfterConnection();
         } else {
           setConnectionStatus('error');
           setTestResult({
@@ -126,22 +125,47 @@ const LLMSettingsModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const autoSaveAfterConnection = async () => {
     try {
-      // Create completely fresh primitive values to avoid any potential circular references
       const settingsToSave = {
         provider: String(settings.provider || 'openai'),
         apiKey: String(settings.apiKey || ''),
         model: String(settings.model || 'gpt-4-turbo-preview'),
         temperature: Number(settings.temperature || 0.1),
         maxTokens: Number(settings.maxTokens || 4000),
-        enabled: Boolean(settings.enabled)
+        enabled: true // Connection successful, enable LLM features
       };
       
+      await settingsAPI.updateLLMSettings(settingsToSave);
+      showSuccess('Connected successfully! LLM features are now enabled.');
+      
+    } catch (error) {
+      console.error('Failed to auto-save after connection:', error);
+      showError('Connection successful but failed to save settings. Please save manually.');
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      // Create completely fresh primitive values to avoid any potential circular references
+      // Save the connection state based on current connection status
+      const settingsToSave = {
+        provider: String(settings.provider || 'openai'),
+        apiKey: String(settings.apiKey || ''),
+        model: String(settings.model || 'gpt-4-turbo-preview'),
+        temperature: Number(settings.temperature || 0.1),
+        maxTokens: Number(settings.maxTokens || 4000),
+        enabled: Boolean(connectionStatus === 'connected') // Save the actual connection state
+      };
       
       await settingsAPI.updateLLMSettings(settingsToSave);
-      showSuccess('LLM settings saved successfully');
+      
+      if (connectionStatus === 'connected') {
+        showSuccess('LLM settings saved successfully. AI features are now enabled!');
+      } else {
+        showSuccess('LLM settings saved successfully.');
+      }
       onClose();
     } catch (error) {
       console.error('Failed to save LLM settings:', error);
