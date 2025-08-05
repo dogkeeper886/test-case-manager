@@ -1,13 +1,66 @@
 # Test Case Management System
 
-A comprehensive test case management system with full TestLink XML format compatibility for industry-standard test case management workflows.
+A comprehensive test case management system with MCP (Model Context Protocol) integration and full TestLink XML compatibility.
 
 ## 🚀 Key Features
+- **MCP Integration**: Full Model Context Protocol support with HTTP and STDIO transports
 - **Test Case Management**: Create, edit, organize, and execute test cases with full CRUD operations
-- **TestLink Integration**: Import from and export to TestLink XML format for seamless integration with existing test management systems
+- **TestLink Integration**: Import from and export to TestLink XML format for seamless integration
 - **Project Organization**: Organize test cases by projects and test suites with hierarchical structure
 - **Docker Support**: Containerized deployment with persistent database storage
-- **Apple-Style UI**: Modern, responsive interface with smooth animations and micro-interactions
+
+## 🔌 MCP (Model Context Protocol) Integration
+
+### Available MCP Tools
+- **Project Management**: List, get, create projects
+- **Test Suite Management**: List, create test suites within projects  
+- **Test Case Management**: List, create test cases with full metadata
+- **TestLink XML Import**: Import test cases from TestLink XML format
+- **Bulk Operations**: Import multiple test cases simultaneously
+
+### MCP Server Modes
+```bash
+# STDIO transport (for MCP clients like Claude Code)
+cd backend && npm run mcp
+
+# HTTP transport (integrated with main backend)
+cd backend && npm start
+# or with Docker:
+cd docker && docker compose up -d
+```
+
+### MCP HTTP Endpoints (Integrated)
+- **MCP Endpoint**: `http://localhost:3001/mcp` (JSON-RPC 2.0)
+- **MCP Health**: `http://localhost:3001/mcp/health`
+- **API Health**: `http://localhost:3001/api/health`
+- **Frontend**: `http://localhost:3000`
+
+### MCP Configuration for IDEs
+
+#### HTTP Transport (Cursor/Claude Code)
+```json
+{
+  "mcpServers": {
+    "test-case-manager": {
+      "command": "http://localhost:3001/mcp",
+      "args": []
+    }
+  }
+}
+```
+
+#### STDIO Transport (Recommended)
+```json
+{
+  "mcpServers": {
+    "test-case-manager": {
+      "command": "node",
+      "args": ["src/mcp-server.mjs"],
+      "cwd": "/absolute/path/to/test-case-manager/backend"
+    }
+  }
+}
+```
 
 ## 🎨 TestLink Integration
 
@@ -28,86 +81,6 @@ A comprehensive test case management system with full TestLink XML format compat
 - Priority levels and status tracking
 - Version control and external IDs
 - Import logging and error tracking
-
-## 🏗️ Tech Stack
-
-### Backend
-- **Node.js** with Express.js
-- **PostgreSQL** database (Docker container with persistent volume)
-- **Sequelize** ORM
-- **Multer** for file uploads
-- **Document Processing Libraries**:
-  - mammoth (Word documents)
-  - pdf-parse (PDF documents)
-  - marked (Markdown documents)
-- **XML Processing**:
-  - xml2js (TestLink XML parsing and generation)
-  - html-entities (HTML content handling)
-- **JWT** for authentication
-
-### Frontend
-- **React 18** with functional components and hooks
-- **React Router v6** for navigation
-- **React Query** for data fetching
-- **Tailwind CSS** with Apple-inspired design system
-- **Lucide React** for icons (SF Symbols alternative)
-- **React Hook Form** for form management
-- **React Dropzone** for file uploads
-- **React Toastify** for notifications
-- **Zustand** for state management
-- **Framer Motion** for animations
-
-### Infrastructure
-- **Docker** for containerization
-- **Docker Compose** for multi-container orchestration
-- **Persistent Volumes** for database data storage
-- **Environment-based Configuration** for different deployment scenarios
-
-## 🏗️ Project Structure
-
-```
-test-case-manager/
-├── backend/                    # Node.js/Express backend
-│   ├── src/
-│   │   ├── routes/            # API routes (testcases, projects, testsuites, import)
-│   │   ├── services/          # Business logic (TestLinkImportService)
-│   │   ├── utils/             # Utility functions (TestLinkXMLParser)
-│   │   └── index.js           # Main entry point
-│   ├── uploads/               # File upload directory
-│   └── package.json           # Backend dependencies
-├── frontend/                   # React frontend
-│   ├── src/
-│   │   ├── components/        # React components
-│   │   │   ├── layout/        # Layout components (Layout, Sidebar, TopNav)
-│   │   │   ├── test-cases/    # Test case components (TestSuiteTree)
-│   │   │   └── ui/            # Base UI components (Button, Card, Badge, Input)
-│   │   ├── pages/             # Page components (Dashboard, TestCases, TestSuites, Projects)
-│   │   ├── services/          # API services
-│   │   ├── stores/            # Zustand stores (testCaseStore)
-│   │   └── styles/            # CSS styles
-│   └── package.json           # Frontend dependencies
-├── database/                   # Database schema and migrations
-│   ├── schema.sql             # Base database schema
-│   ├── migrations/            # Database migrations
-│   │   └── 001_testlink_import_schema.sql
-│   └── data/                  # Persistent database data
-├── docker/                     # Docker configuration
-│   ├── docker-compose.yml     # Production setup
-│   ├── docker-compose.dev.yml # Development setup
-│   ├── Dockerfile.backend     # Backend container
-│   ├── Dockerfile.frontend    # Frontend container
-│   └── init.sql               # Database initialization
-├── testlink-samples/          # TestLink XML sample files
-│   ├── README.md              # Sample files documentation
-│   └── Network Control Profile.testsuite-deep.xml
-├── docs/                      # Comprehensive documentation
-│   ├── phase-4-completion-summary.md
-│   ├── high-priority-completion-summary.md
-│   ├── testlink-import-summary.md
-│   ├── web-ui-progress.md
-│   └── [many more documentation files]
-└── scripts/                   # Utility scripts
-```
 
 ## 🚀 Getting Started
 
@@ -174,24 +147,6 @@ docker compose up -d
 - If containers won't start, try `docker compose down -v` to reset volumes
 - For code changes, use `docker compose up -d --build` to rebuild containers
 
-### Development Environment
-
-The application uses Docker for all development and production environments. No local Node.js or npm installation is required.
-
-**For Development:**
-```bash
-# Start development environment with hot reloading
-cd docker
-docker compose -f docker-compose.dev.yml up --build
-```
-
-**For Production:**
-```bash
-# Start production environment
-cd docker
-docker compose up -d
-```
-
 ### Docker Configuration
 
 The Docker setup includes:
@@ -210,21 +165,6 @@ volumes:
 ```
 
 This ensures your data persists even when containers are recreated.
-
-## 🌐 Available Pages
-
-### ✅ **Fully Functional Pages**
-1. **Dashboard**: http://localhost:3000/ - Real statistics from database
-2. **Test Cases**: http://localhost:3000/testcases - 183 real test cases with full CRUD
-3. **Test Suites**: http://localhost:3000/test-suites - Hierarchical browser with 37 suites
-4. **Projects**: http://localhost:3000/projects - 7 real projects with statistics
-5. **Component Test**: http://localhost:3000/test - UI component showcase
-
-### 🔄 **Pages Needing Real Data Integration**
-6. **Reports**: http://localhost:3000/reports - Test execution reporting
-7. **Documents**: http://localhost:3000/documents - Document management
-8. **Import**: http://localhost:3000/import - TestLink import interface
-9. **Settings**: http://localhost:3000/settings - System configuration
 
 ## 🔌 API Endpoints
 
@@ -252,45 +192,6 @@ This ensures your data persists even when containers are recreated.
 - `POST /api/import/validate` - Validate TestLink XML format
 - `GET /api/import/status/:id` - Get import status
 - `GET /api/import/logs/:projectId` - Get import history
-
-### ✅ **Smart Import & LLM Endpoints**
-- `POST /api/import/smart-import` - Generate and import test cases from documents
-- `POST /api/import/smart-import/preview` - Preview generated test cases without importing
-- `GET /api/import/supported-formats` - Get supported file formats for smart import
-- `GET /api/settings/llm` - Get LLM configuration settings
-- `PUT /api/settings/llm` - Update LLM configuration settings
-- `POST /api/settings/llm/test` - Test LLM provider connection
-
-### 🔄 **Pending Endpoints**
-- `POST /api/documents/upload` - Upload and parse document
-- `GET /api/documents/:id` - Get document details
-- `POST /api/documents/:id/generate-tests` - Generate test cases from document
-- `GET /api/reports/test-coverage` - Get test coverage report
-- `GET /api/reports/execution-summary` - Get test execution summary
-- `GET /api/reports/export` - Export reports in various formats
-
-## 🎨 UI Features
-
-### ✅ **Apple-Style Design System**
-- **Color Palette**: Apple grays and blue accent colors
-- **Typography**: SF Pro font stack
-- **Spacing**: 8px grid system
-- **Shadows**: Elevation system with proper depth
-- **Animations**: Smooth micro-interactions and transitions
-- **Icons**: Lucide React (SF Symbols alternative)
-
-### ✅ **Layout Components**
-- **Sidebar**: 320px width, collapsible on mobile
-- **Top Navigation**: Fixed header with breadcrumbs
-- **Content Area**: Responsive padding and spacing
-- **Mobile**: Overlay sidebar with hamburger menu
-
-### ✅ **Interactive Features**
-- **Test Suite Tree**: Expandable/collapsible hierarchical view
-- **Search & Filtering**: Real-time search across all content
-- **Status Badges**: Visual indicators for test case status and priority
-- **Responsive Design**: Works on mobile, tablet, and desktop
-- **Loading States**: Proper loading and error handling
 
 ## 📊 Database Schema
 
@@ -349,58 +250,6 @@ docker compose cp ../database/migrations/001_testlink_import_schema.sql postgres
 docker compose exec postgres psql -U postgres -d testcasemanager -f /tmp/001_testlink_import_schema.sql
 ```
 
-## 🧠 Smart Import Configuration
-
-### Environment Setup
-To enable Smart Import (LLM-powered test case generation), add these environment variables to your backend:
-
-```bash
-# Create backend/.env file
-OPENAI_API_KEY=your_openai_api_key_here
-LLM_PROVIDER=openai
-LLM_MODEL=gpt-4-turbo-preview
-LLM_MAX_TOKENS=4000
-LLM_TEMPERATURE=0.1
-```
-
-### Dependencies
-The Smart Import feature requires additional backend dependencies:
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Install additional dependencies
-npm install pdf-parse mammoth marked openai
-```
-
-### Docker Setup with Smart Import
-If using Docker, add environment variables to your `docker-compose.yml`:
-
-```yaml
-services:
-  backend:
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LLM_PROVIDER=openai
-      - LLM_MODEL=gpt-4-turbo-preview
-      - LLM_MAX_TOKENS=4000
-      - LLM_TEMPERATURE=0.1
-```
-
-### Usage
-1. Navigate to **Import** page
-2. Select **Smart Import** tab  
-3. Choose a project
-4. Upload test plan document (.md, .txt, .pdf, .docx)
-5. Review generated test cases
-6. Edit as needed and import
-
-### Supported Document Formats
-- **Markdown** (.md): Test plans with structured headings
-- **Plain Text** (.txt): Simple text-based test documentation  
-- **PDF** (.pdf): Test specification documents
-- **Word Documents** (.docx): Microsoft Word test plans
 
 ### Database Management
 
@@ -607,36 +456,20 @@ docker compose logs -f
 docker compose down
 ```
 
-## 📈 Performance Results
-
-### Load Times
-- **Initial Load**: < 2 seconds
-- **Component Rendering**: < 100ms
-- **API Response**: < 200ms
-- **Tree Expansion**: < 50ms
-
-### Responsive Performance
-- **Desktop**: Smooth animations and interactions
-- **Tablet**: Responsive grid adjustments
-- **Mobile**: Touch-optimized interface
-
 ## 🎯 Usage
 
-1. **Create a Project**: Start by creating a new project to organize your test cases.
+### Web Interface
+1. **Create a Project**: Start by creating a new project to organize your test cases
+2. **Import TestLink Files**: Import existing test cases from TestLink XML files  
+3. **Organize Test Cases**: Group related test cases into test suites and assign priorities
+4. **Execute Tests**: Mark test cases as passed, failed, or blocked, and track execution history
+5. **Export to TestLink**: Export your test cases to TestLink XML format for use in other systems
 
-2. **Upload Documents**: Upload design documents (requirements, specifications, user stories) in PDF, Word, or Markdown format.
-
-3. **Generate Test Cases**: Use the AI-powered generation feature to automatically create test cases from your uploaded documents.
-
-4. **Import TestLink Files**: Import existing test cases from TestLink XML files for seamless integration.
-
-5. **Organize Test Cases**: Group related test cases into test suites and assign priorities.
-
-6. **Execute Tests**: Mark test cases as passed, failed, or blocked, and track execution history.
-
-7. **Export to TestLink**: Export your test cases to TestLink XML format for use in other systems.
-
-8. **Generate Reports**: Create comprehensive reports to analyze test coverage and execution metrics.
+### MCP Integration
+1. **Connect via MCP Client**: Use any MCP-compatible client to connect via STDIO or HTTP
+2. **Manage Projects**: Create and list projects using MCP tools
+3. **Bulk Import**: Import multiple test cases programmatically
+4. **TestLink Integration**: Import TestLink XML content directly through MCP tools
 
 ## 🔧 Environment Variables
 
@@ -658,12 +491,9 @@ DB_PASSWORD=your_password
 PORT=3001
 NODE_ENV=development
 
-# JWT configuration
-JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRES_IN=24h
-
-# OpenAI API (for test case generation)
-OPENAI_API_KEY=your-openai-api-key
+# MCP configuration
+MCP_TRANSPORT=combined  # stdio, http, or combined
+MCP_HTTP_PORT=3001      # HTTP transport port
 
 # File upload configuration
 UPLOAD_DIR=uploads
@@ -672,46 +502,6 @@ MAX_FILE_SIZE=10485760
 
 **Note**: The application is configured to work with Docker by default. No local environment setup is required.
 
-## 🎉 Recent Achievements
-
-### ✅ **Phase 4 Complete** (December 2024)
-- Complete Apple-style layout system
-- Hierarchical test suite browser
-- Responsive design for all devices
-- Real-time data integration
-- Smooth animations and interactions
-
-### ✅ **TestLink Integration Complete**
-- Full XML import/export functionality
-- Complex hierarchical structure support
-- Custom fields and metadata handling
-- Import logging and error tracking
-- Validation and error handling
-
-### ✅ **Real Database Integration**
-- 183 test cases with full CRUD operations
-- 7 projects with real statistics
-- 37 test suites with hierarchy
-- Remote access capability
-- Data persistence across container restarts
-
-## 🚧 Next Steps
-
-### High Priority
-- [ ] **Document Management**: Real data integration for document upload/download
-- [ ] **Reports Page**: Test execution reporting with real data
-- [ ] **Activity Feed**: Recent activity tracking with real data
-
-### Medium Priority
-- [ ] **Test Execution**: Implement test execution tracking
-- [ ] **Export Functionality**: Export to TestLink XML format
-- [ ] **Unit Testing**: Comprehensive test suite implementation
-
-### Future Enhancements
-- [x] **AI Integration**: OpenAI API for test case generation *(Completed)*
-- [ ] **Advanced Reporting**: Custom report generation
-- [ ] **User Authentication**: JWT-based authentication system
-- [ ] **Team Collaboration**: Multi-user support
 
 ## 🤝 Contributing
 
@@ -728,7 +518,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🆘 Support
 
 For support and questions, please open an issue in the GitHub repository.
-
----
-
-**🎉 The test case management system is now production-ready with core functionality, TestLink integration, and a modern Apple-style user interface!**

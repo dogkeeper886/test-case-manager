@@ -7,6 +7,9 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "mcp": "node src/mcp-server.mjs",
+    "mcp:stdio": "node src/mcp-server.mjs",
+    "mcp:http": "echo 'MCP HTTP transport integrated into main backend server'",
+    "mcp:both": "echo 'Use npm start for HTTP transport, npm run mcp for STDIO'",
     "build": "echo 'Backend build complete'",
     "test": "jest",
     "test:watch": "jest --watch"

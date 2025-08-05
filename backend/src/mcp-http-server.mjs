@@ -572,7 +572,51 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     service: 'Test Case Manager MCP HTTP Server',
+    transport: 'HTTP',
     timestamp: new Date().toISOString()
+  });
+});
+
+// MCP Health check endpoint specifically for MCP transport
+app.get('/mcp/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    service: 'Test Case Manager MCP HTTP Server',
+    transport: 'HTTP',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// MCP SSE endpoint - for Server-Sent Events transport
+app.get('/mcp/sse', (req, res) => {
+  console.log('📡 MCP SSE Connection established');
+  
+  // Set SSE headers
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Cache-Control'
+  });
+
+  // Send initial connection event
+  res.write('event: open\n');
+  res.write('data: {"type": "connection_established"}\n\n');
+
+  // Handle client disconnect
+  req.on('close', () => {
+    console.log('📡 MCP SSE Connection closed');
+  });
+
+  // Keep connection alive with periodic pings
+  const pingInterval = setInterval(() => {
+    res.write('event: ping\n');
+    res.write('data: {"type": "ping"}\n\n');
+  }, 30000);
+
+  req.on('close', () => {
+    clearInterval(pingInterval);
   });
 });
 
