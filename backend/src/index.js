@@ -2,25 +2,58 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const compression = require('compression');
 const { pool, testConnection } = require('./services/database');
 const MigrationService = require('./services/MigrationService');
-const { createMCPMiddleware } = require('./middleware/mcpHandler');
+const { errorHandler } = require('./middleware/errorHandler');
+const { rateLimitMiddleware } = require('./middleware/rateLimiter');
+const requestTimeout = require('./middleware/requestTimeout');
+const config = require('./config/apiConfig');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = config.port;
 
-// Middleware
-app.use(helmet());
-app.use(cors());
-app.use(morgan('combined'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Security and performance middleware
+if (config.security.enableHelmet) {
+  app.use(helmet());
+}
+
+if (config.performance.enableCompression) {
+  app.use(compression());
+}
+
+// CORS configuration
+app.use(cors({
+  origin: config.security.corsOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Request logging
+app.use(morgan(config.logging.format));
+
+// Request timeout
+app.use(requestTimeout());
+
+// Rate limiting
+app.use(rateLimitMiddleware());
+
+// Body parsing
+app.use(express.json({ 
+  limit: '10mb',
+  type: 'application/json'
+}));
+app.use(express.urlencoded({ 
+  extended: true,
+  limit: '10mb'
+}));
 
 // Set up database connection in app locals
 app.locals.db = pool;
 
-// Routes
+// Routes - Current API (maintain backward compatibility)
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/testcases', require('./routes/testcases'));
 app.use('/api/testsuites', require('./routes/testsuites'));
@@ -30,56 +63,17 @@ app.use('/api/import', require('./routes/import'));
 app.use('/api/activities', require('./routes/activities'));
 app.use('/api/migrations', require('./routes/migrations'));
 
+// V1 API Routes - Enhanced versions
+app.use('/api/v1/test-cases', require('./routes/v1/testcases'));
+app.use('/api/v1/projects', require('./routes/v1/projects'));
+app.use('/api/v1/test-suites', require('./routes/v1/testsuites'));
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// MCP HTTP transport endpoint
-app.post('/mcp', createMCPMiddleware(pool));
 
-// MCP SSE endpoint - for Server-Sent Events transport
-app.get('/mcp/sse', (req, res) => {
-  console.log('📡 MCP SSE Connection established');
-  
-  // Set SSE headers
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Cache-Control'
-  });
-
-  // Send initial connection event
-  res.write('event: open\n');
-  res.write('data: {"type": "connection_established"}\n\n');
-
-  // Handle client disconnect
-  req.on('close', () => {
-    console.log('📡 MCP SSE Connection closed');
-  });
-
-  // Keep connection alive with periodic pings
-  const pingInterval = setInterval(() => {
-    res.write('event: ping\n');
-    res.write('data: {"type": "ping"}\n\n');
-  }, 30000);
-
-  req.on('close', () => {
-    clearInterval(pingInterval);
-  });
-});
-
-// MCP health check endpoint
-app.get('/mcp/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    service: 'Test Case Manager MCP HTTP Server',
-    transport: 'HTTP',
-    timestamp: new Date().toISOString()
-  });
-});
 
 // 404 handler
 app.use((req, res) => {
@@ -87,10 +81,7 @@ app.use((req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
+app.use(errorHandler);
 
 app.listen(PORT, '0.0.0.0', async () => {
   console.log(`Server is running on port ${PORT} and accepting connections from all interfaces`);

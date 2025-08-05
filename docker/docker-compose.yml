@@ -16,7 +16,7 @@ services:
       - testcase-network
     restart: unless-stopped
 
-  # Backend API (includes integrated MCP HTTP transport)
+  # Backend API
   backend:
     build:
       context: ../backend

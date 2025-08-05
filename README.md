@@ -1,66 +1,70 @@
 # Test Case Management System
 
-A comprehensive test case management system with MCP (Model Context Protocol) integration and full TestLink XML compatibility.
+A comprehensive test case management system with full TestLink XML compatibility and RESTful API.
 
 ## 🚀 Key Features
-- **MCP Integration**: Full Model Context Protocol support with HTTP and STDIO transports
+- **RESTful API**: Complete REST API for test case management operations
 - **Test Case Management**: Create, edit, organize, and execute test cases with full CRUD operations
 - **TestLink Integration**: Import from and export to TestLink XML format for seamless integration
 - **Project Organization**: Organize test cases by projects and test suites with hierarchical structure
 - **Docker Support**: Containerized deployment with persistent database storage
 
-## 🔌 MCP (Model Context Protocol) Integration
+## 🔌 Separated MCP Server
 
-### Available MCP Tools
-- **Project Management**: List, get, create projects
-- **Test Suite Management**: List, create test suites within projects  
-- **Test Case Management**: List, create test cases with full metadata
-- **TestLink XML Import**: Import test cases from TestLink XML format
-- **Bulk Operations**: Import multiple test cases simultaneously
+### MCP Server Setup
+The Test Case Manager now includes a separated MCP server that runs independently via Docker.
 
-### MCP Server Modes
+#### Building the MCP Server Image
 ```bash
-# STDIO transport (for MCP clients like Claude Code)
-cd backend && npm run mcp
-
-# HTTP transport (integrated with main backend)
-cd backend && npm start
-# or with Docker:
-cd docker && docker compose up -d
+cd mcp-server
+./build-image.sh
 ```
 
-### MCP HTTP Endpoints (Integrated)
-- **MCP Endpoint**: `http://localhost:3001/mcp` (JSON-RPC 2.0)
-- **MCP Health**: `http://localhost:3001/mcp/health`
-- **API Health**: `http://localhost:3001/api/health`
+#### Claude Code Configuration
+Add this to your Claude Code MCP configuration (`~/.claude/mcp_servers.json`):
+
+```json
+{
+  "mcpServers": {
+    "test-case-manager": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm", "--network", "host",
+        "-e", "API_BASE_URL=http://YOUR_TEST_CASE_MANAGER_IP:3001/api",
+        "test-case-manager-mcp-server:latest"
+      ]
+    }
+  }
+}
+```
+
+Replace `YOUR_TEST_CASE_MANAGER_IP` with the actual IP address where your test case manager backend is running.
+
+#### Verify MCP Connection
+Once configured, verify the MCP server is working with Claude Code:
+
+```bash
+claude mcp list
+```
+
+You should see:
+```
+test-case-manager: docker run -i --rm --network host -e API_BASE_URL=http://YOUR_TEST_CASE_MANAGER_IP:3001/api test-case-manager-mcp-server:latest - ✓ Connected
+```
+
+#### Available MCP Tools
+- `list_projects` - List all projects
+- `create_project` - Create a new project  
+- `list_test_cases` - List test cases (optionally by project)
+- `create_test_case` - Create a new test case
+- `list_test_suites` - List test suites (optionally by project)
+- `create_test_suite` - Create a new test suite
+
+## 🔌 API Endpoints
+
+### Core API
+- **Health Check**: `http://localhost:3001/api/health`
 - **Frontend**: `http://localhost:3000`
-
-### MCP Configuration for IDEs
-
-#### HTTP Transport (Cursor/Claude Code)
-```json
-{
-  "mcpServers": {
-    "test-case-manager": {
-      "command": "http://localhost:3001/mcp",
-      "args": []
-    }
-  }
-}
-```
-
-#### STDIO Transport (Recommended)
-```json
-{
-  "mcpServers": {
-    "test-case-manager": {
-      "command": "node",
-      "args": ["src/mcp-server.mjs"],
-      "cwd": "/absolute/path/to/test-case-manager/backend"
-    }
-  }
-}
-```
 
 ## 🎨 TestLink Integration
 
@@ -465,11 +469,11 @@ docker compose down
 4. **Execute Tests**: Mark test cases as passed, failed, or blocked, and track execution history
 5. **Export to TestLink**: Export your test cases to TestLink XML format for use in other systems
 
-### MCP Integration
-1. **Connect via MCP Client**: Use any MCP-compatible client to connect via STDIO or HTTP
-2. **Manage Projects**: Create and list projects using MCP tools
-3. **Bulk Import**: Import multiple test cases programmatically
-4. **TestLink Integration**: Import TestLink XML content directly through MCP tools
+### API Integration
+1. **RESTful API**: Use standard HTTP REST API endpoints for all operations
+2. **Manage Projects**: Create and list projects using API endpoints
+3. **Bulk Import**: Import multiple test cases via TestLink XML upload
+4. **TestLink Integration**: Import/export TestLink XML content through API endpoints
 
 ## 🔧 Environment Variables
 
@@ -491,9 +495,8 @@ DB_PASSWORD=your_password
 PORT=3001
 NODE_ENV=development
 
-# MCP configuration
-MCP_TRANSPORT=combined  # stdio, http, or combined
-MCP_HTTP_PORT=3001      # HTTP transport port
+# API configuration
+API_PORT=3001          # HTTP API port
 
 # File upload configuration
 UPLOAD_DIR=uploads

@@ -1,0 +1,741 @@
+openapi: 3.0.3
+info:
+  title: Test Case Manager API
+  description: RESTful API for Test Case Management System with TestLink integration
+  version: 1.0.0
+  contact:
+    name: Test Case Manager
+    url: http://192.168.4.121:3000
+servers:
+  - url: http://192.168.4.121:3001/api
+    description: Production server
+  - url: http://localhost:3001/api
+    description: Development server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      tags: [System]
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "OK"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /projects:
+    get:
+      summary: List all projects
+      tags: [Projects]
+      responses:
+        '200':
+          description: Projects retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Projects retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      summary: Create a new project
+      tags: [Projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [active, inactive]
+                  default: active
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /projects/{id}:
+    get:
+      summary: Get project by ID
+      tags: [Projects]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Project retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      summary: Update project
+      tags: [Projects]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [active, inactive]
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      summary: Delete project
+      tags: [Projects]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Project deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /testsuites:
+    get:
+      summary: List test suites
+      tags: [Test Suites]
+      parameters:
+        - name: project_id
+          in: query
+          description: Filter by project ID
+          schema:
+            type: integer
+        - name: parent_suite_id
+          in: query
+          description: Filter by parent test suite ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Test suites retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TestSuite'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      summary: Create a new test suite
+      tags: [Test Suites]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project_id, name]
+              properties:
+                project_id:
+                  type: integer
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                parent_suite_id:
+                  type: integer
+                  nullable: true
+      responses:
+        '201':
+          description: Test suite created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TestSuite'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /testsuites/{id}:
+    get:
+      summary: Get test suite by ID
+      tags: [Test Suites]
+      parameters:
+        - $ref: '#/components/parameters/TestSuiteId'
+      responses:
+        '200':
+          description: Test suite retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TestSuite'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      summary: Update test suite
+      tags: [Test Suites]
+      parameters:
+        - $ref: '#/components/parameters/TestSuiteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                parent_suite_id:
+                  type: integer
+                  nullable: true
+      responses:
+        '200':
+          description: Test suite updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TestSuite'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      summary: Delete test suite
+      tags: [Test Suites]
+      parameters:
+        - $ref: '#/components/parameters/TestSuiteId'
+      responses:
+        '200':
+          description: Test suite deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /testcases:
+    get:
+      summary: List test cases
+      tags: [Test Cases]
+      parameters:
+        - name: projectId
+          in: query
+          description: Filter by project ID
+          schema:
+            type: integer
+        - name: test_suite_id
+          in: query
+          description: Filter by test suite ID
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [pending, passed, failed, blocked, not_run]
+        - name: priority
+          in: query
+          description: Filter by priority
+          schema:
+            type: string
+            enum: [low, medium, high]
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: offset
+          in: query
+          description: Number of results to skip
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Test cases retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TestCase'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      summary: Create a new test case
+      tags: [Test Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestCaseInput'
+      responses:
+        '201':
+          description: Test case created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TestCase'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /testcases/{id}:
+    get:
+      summary: Get test case by ID
+      tags: [Test Cases]
+      parameters:
+        - $ref: '#/components/parameters/TestCaseId'
+      responses:
+        '200':
+          description: Test case retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TestCase'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      summary: Update test case
+      tags: [Test Cases]
+      parameters:
+        - $ref: '#/components/parameters/TestCaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestCaseInput'
+      responses:
+        '200':
+          description: Test case updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TestCase'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      summary: Delete test case
+      tags: [Test Cases]
+      parameters:
+        - $ref: '#/components/parameters/TestCaseId'
+      responses:
+        '200':
+          description: Test case deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /import/testlink:
+    post:
+      summary: Import TestLink XML file
+      tags: [Import]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [projectId, xmlFile]
+              properties:
+                projectId:
+                  type: integer
+                  description: Target project ID
+                xmlFile:
+                  type: string
+                  format: binary
+                  description: TestLink XML file
+      responses:
+        '200':
+          description: Import started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  importId:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  parameters:
+    ProjectId:
+      name: id
+      in: path
+      required: true
+      description: Project ID
+      schema:
+        type: integer
+
+    TestSuiteId:
+      name: id
+      in: path
+      required: true
+      description: Test Suite ID
+      schema:
+        type: integer
+
+    TestCaseId:
+      name: id
+      in: path
+      required: true
+      description: Test Case ID
+      schema:
+        type: integer
+
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 8
+        name:
+          type: string
+          example: "Phase 3"
+        description:
+          type: string
+          example: ""
+        status:
+          type: string
+          enum: [active, inactive]
+          example: "active"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TestSuite:
+      type: object
+      properties:
+        id:
+          type: integer
+        project_id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        parent_suite_id:
+          type: integer
+          nullable: true
+        external_id:
+          type: string
+          nullable: true
+        node_order:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TestCase:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1279
+        test_suite_id:
+          type: integer
+          example: 105
+        title:
+          type: string
+          example: "(D)Ad-WiFi-Client-Iso(RC)WiFi_AP(RE)(All Venues) Enable isolation in AP"
+        description:
+          type: string
+        prerequisites:
+          type: string
+        execution_type:
+          type: integer
+          enum: [1, 2]
+          description: "1=Manual, 2=Automated"
+        external_id:
+          type: string
+          nullable: true
+        internal_id:
+          type: string
+          nullable: true
+        version:
+          type: integer
+        priority:
+          type: integer
+          enum: [1, 2, 3]
+          description: "1=Low, 2=Medium, 3=High"
+        importance:
+          type: integer
+          enum: [1, 2, 3]
+        is_open:
+          type: boolean
+        active:
+          type: boolean
+        status:
+          type: integer
+          enum: [1, 2, 3, 4, 5]
+          description: "1=Not Run, 2=Passed, 3=Failed, 4=Blocked, 5=Pending"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        test_suite_name:
+          type: string
+          example: "Network Control -> Client Isolation"
+        project_name:
+          type: string
+          example: "Phase 3"
+
+    TestCaseInput:
+      type: object
+      required: [title, test_steps, expected_result]
+      properties:
+        project_id:
+          type: integer
+        test_suite_id:
+          type: integer
+          nullable: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        prerequisites:
+          type: string
+        test_steps:
+          type: string
+        expected_result:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+        execution_type:
+          type: integer
+          enum: [1, 2]
+          default: 1
+        importance:
+          type: integer
+          enum: [1, 2, 3]
+          default: 2
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+tags:
+  - name: System
+    description: System health and status
+  - name: Projects
+    description: Project management operations
+  - name: Test Suites
+    description: Test suite management operations
+  - name: Test Cases
+    description: Test case management operations
+  - name: Import
+    description: TestLink import operations
