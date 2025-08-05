@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
+import express from 'express';
+import cors from 'cors';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   CallToolRequestSchema,
   ErrorCode,
@@ -9,12 +10,12 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 
-// Import existing backend services using dynamic import from CommonJS module
+// Import database connection from CommonJS module
 const { pool } = await import('./services/database.js').then(m => m.default || m);
 
-console.error('🚀 Starting Test Case Manager MCP Server (Integrated)...');
+console.error('🚀 Starting Test Case Manager MCP HTTP Server...');
 
-// Tool definitions
+// Reuse the same tools and server logic from mcp-server.mjs
 const TOOLS = {
   // Project Management Tools
   list_projects: {
@@ -225,21 +226,7 @@ const TOOLS = {
   }
 };
 
-// Create server instance
-const server = new Server(
-  {
-    name: 'test-case-manager-integrated',
-    version: '1.0.0',
-    description: 'Integrated MCP Server for Test Case Manager - Uses existing backend services'
-  },
-  {
-    capabilities: {
-      tools: {}
-    }
-  }
-);
-
-// Helper functions using existing services
+// Helper functions (reused from mcp-server.mjs)
 async function listProjects() {
   try {
     const result = await pool.query('SELECT * FROM projects ORDER BY created_at DESC');
@@ -481,85 +468,197 @@ async function importTestCases(projectId, testCasesArray) {
   }
 }
 
-// List tools handler
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: Object.values(TOOLS)
-  };
+// Create MCP Server
+function createMCPServer() {
+  const server = new Server(
+    {
+      name: 'test-case-manager-http',
+      version: '1.0.0',
+      description: 'HTTP MCP Server for Test Case Manager - Uses existing backend services'
+    },
+    {
+      capabilities: {
+        tools: {}
+      }
+    }
+  );
+
+  // List tools handler
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    return {
+      tools: Object.values(TOOLS)
+    };
+  });
+
+  // Call tool handler
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params;
+    
+    try {
+      let result;
+      
+      switch (name) {
+        case 'list_projects':
+          result = await listProjects();
+          break;
+          
+        case 'get_project':
+          result = await getProject(args.project_id);
+          break;
+          
+        case 'create_project':
+          result = await createProject(args.name, args.description);
+          break;
+          
+        case 'list_test_suites':
+          result = await listTestSuites(args.project_id);
+          break;
+          
+        case 'create_test_suite':
+          result = await createTestSuite(args.project_id, args);
+          break;
+          
+        case 'list_test_cases':
+          result = await listTestCases(args.project_id, args.test_suite_id);
+          break;
+          
+        case 'create_test_case':
+          result = await createTestCase(args.project_id, args);
+          break;
+          
+        case 'import_from_testlink_xml':
+          result = await importFromTestLinkXML(args.project_id, args.xml_content);
+          break;
+          
+        case 'import_test_cases':
+          result = await importTestCases(args.project_id, args.test_cases);
+          break;
+          
+        default:
+          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
+      
+      return { 
+        content: [{ 
+          type: 'text', 
+          text: JSON.stringify(result, null, 2) 
+        }] 
+      };
+      
+    } catch (error) {
+      console.error(`Error in tool ${name}:`, error);
+      throw new McpError(ErrorCode.InternalError, `Tool execution failed: ${error.message}`);
+    }
+  });
+
+  return server;
+}
+
+// Express HTTP Server
+const app = express();
+
+// Middleware
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://192.168.4.121:3000', '*'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Mcp-Session-Id'],
+  credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    service: 'Test Case Manager MCP HTTP Server',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Call tool handler
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-  
+// MCP endpoint - handles JSON-RPC over HTTP
+app.post('/mcp', async (req, res) => {
   try {
-    let result;
+    console.log('📨 MCP HTTP Request:', JSON.stringify(req.body, null, 2));
     
-    switch (name) {
-      case 'list_projects':
-        result = await listProjects();
-        break;
-        
-      case 'get_project':
-        result = await getProject(args.project_id);
-        break;
-        
-      case 'create_project':
-        result = await createProject(args.name, args.description);
-        break;
-        
-      case 'list_test_suites':
-        result = await listTestSuites(args.project_id);
-        break;
-        
-      case 'create_test_suite':
-        result = await createTestSuite(args.project_id, args);
-        break;
-        
-      case 'list_test_cases':
-        result = await listTestCases(args.project_id, args.test_suite_id);
-        break;
-        
-      case 'create_test_case':
-        result = await createTestCase(args.project_id, args);
-        break;
-        
-      case 'import_from_testlink_xml':
-        result = await importFromTestLinkXML(args.project_id, args.xml_content);
-        break;
-        
-      case 'import_test_cases':
-        result = await importTestCases(args.project_id, args.test_cases);
-        break;
-        
-      default:
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+    const server = createMCPServer();
+    
+    // Handle different types of JSON-RPC requests
+    const request = req.body;
+    
+    if (request.method === 'tools/list') {
+      const handler = server.getRequestHandler(ListToolsRequestSchema);
+      const response = await handler(request);
+      res.json({
+        jsonrpc: '2.0',
+        id: request.id,
+        result: response
+      });
+    } else if (request.method === 'tools/call') {
+      const handler = server.getRequestHandler(CallToolRequestSchema);
+      const response = await handler(request);
+      res.json({
+        jsonrpc: '2.0',
+        id: request.id,
+        result: response
+      });
+    } else if (request.method === 'initialize') {
+      // Handle initialization
+      res.json({
+        jsonrpc: '2.0',
+        id: request.id,
+        result: {
+          protocolVersion: '2024-11-05',
+          capabilities: {
+            tools: {}
+          },
+          serverInfo: {
+            name: 'test-case-manager-http',
+            version: '1.0.0'
+          }
+        }
+      });
+    } else {
+      // Unknown method
+      res.status(400).json({
+        jsonrpc: '2.0',
+        id: request.id,
+        error: {
+          code: -32601,
+          message: `Method not found: ${request.method}`
+        }
+      });
     }
     
-    return { 
-      content: [{ 
-        type: 'text', 
-        text: JSON.stringify(result, null, 2) 
-      }] 
-    };
-    
   } catch (error) {
-    console.error(`Error in tool ${name}:`, error);
-    throw new McpError(ErrorCode.InternalError, `Tool execution failed: ${error.message}`);
+    console.error('❌ MCP HTTP Error:', error);
+    
+    if (!res.headersSent) {
+      res.status(500).json({
+        jsonrpc: '2.0',
+        id: req.body?.id || null,
+        error: {
+          code: -32603,
+          message: 'Internal server error',
+          data: error.message
+        }
+      });
+    }
   }
 });
 
-// Start server
-export async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error('✅ Test Case Manager MCP server started (Integrated)');
+// Start HTTP server
+export function startHTTPServer() {
+  const port = process.env.MCP_HTTP_PORT || 3001;
+  
+  app.listen(port, '0.0.0.0', () => {
+    console.error(`✅ MCP HTTP Server running on http://0.0.0.0:${port}`);
+    console.error(`🔗 MCP endpoint: http://0.0.0.0:${port}/mcp`);
+    console.error(`🏥 Health check: http://0.0.0.0:${port}/health`);
+  });
 }
 
 // If running directly (not imported)
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
-    console.error('❌ Server failed to start:', error);
-    process.exit(1);
-  });
+  startHTTPServer();
 }

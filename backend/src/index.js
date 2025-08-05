@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { pool, testConnection } = require('./services/database');
 const MigrationService = require('./services/MigrationService');
+const { createMCPMiddleware } = require('./middleware/mcpHandler');
 require('dotenv').config();
 
 const app = express();
@@ -32,6 +33,19 @@ app.use('/api/migrations', require('./routes/migrations'));
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// MCP HTTP transport endpoint
+app.post('/mcp', createMCPMiddleware(pool));
+
+// MCP health check endpoint
+app.get('/mcp/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    service: 'Test Case Manager MCP HTTP Server',
+    transport: 'HTTP',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // 404 handler

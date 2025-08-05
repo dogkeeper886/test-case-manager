@@ -2,7 +2,7 @@
   "mcpServers": {
     "test-case-manager": {
       "command": "node",
-      "args": ["src/mcp-server.js"],
+      "args": ["src/mcp-server.mjs"],
       "cwd": "/home/jack/Documents/test-case-manager/backend",
       "env": {
         "NODE_ENV": "development",
