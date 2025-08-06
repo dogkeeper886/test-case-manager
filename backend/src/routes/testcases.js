@@ -139,6 +139,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const {
+      project_id, // CRITICAL FIX: Accept project_id from request body
       test_suite_id,
       title,
       description,
@@ -159,15 +160,15 @@ router.post('/', async (req, res) => {
     
     const sql = `
       INSERT INTO test_cases (
-        test_suite_id, title, description, prerequisites, execution_type,
+        project_id, test_suite_id, title, description, prerequisites, execution_type,
         external_id, version, priority, is_open, active, status, estimated_duration,
         internal_id, importance, node_order
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *
     `;
     
     const params = [
-      test_suite_id, title, description, prerequisites, execution_type,
+      project_id, test_suite_id, title, description, prerequisites, execution_type,
       external_id, version, priority, is_open, active, status, estimated_duration,
       internal_id, importance, node_order
     ];

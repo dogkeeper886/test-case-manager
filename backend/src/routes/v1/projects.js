@@ -29,11 +29,11 @@ router.get('/', validatePagination, async (req, res, next) => {
     const dataSql = `
       SELECT 
         p.*,
-        COUNT(ts.id) as test_suite_count,
-        COUNT(tc.id) as test_case_count
+        COUNT(DISTINCT ts.id) as test_suite_count,
+        COUNT(DISTINCT tc.id) as test_case_count
       FROM projects p
       LEFT JOIN test_suites ts ON p.id = ts.project_id
-      LEFT JOIN test_cases tc ON ts.id = tc.test_suite_id
+      LEFT JOIN test_cases tc ON (tc.project_id = p.id OR tc.test_suite_id = ts.id)
       ${whereClause}
       GROUP BY p.id
       ORDER BY p.created_at DESC
@@ -111,7 +111,7 @@ router.get('/:id', async (req, res, next) => {
         COUNT(DISTINCT CASE WHEN tc.status = 4 THEN tc.id END) as blocked_count
       FROM projects p
       LEFT JOIN test_suites ts ON p.id = ts.project_id
-      LEFT JOIN test_cases tc ON ts.id = tc.test_suite_id
+      LEFT JOIN test_cases tc ON (tc.project_id = p.id OR tc.test_suite_id = ts.id)
       WHERE p.id = $1
       GROUP BY p.id
     `;
@@ -193,10 +193,10 @@ router.delete('/:id', async (req, res, next) => {
       SELECT 
         p.id, 
         p.name,
-        COUNT(tc.id) as test_case_count
+        COUNT(DISTINCT tc.id) as test_case_count
       FROM projects p
       LEFT JOIN test_suites ts ON p.id = ts.project_id
-      LEFT JOIN test_cases tc ON ts.id = tc.test_suite_id
+      LEFT JOIN test_cases tc ON (tc.project_id = p.id OR tc.test_suite_id = ts.id)
       WHERE p.id = $1
       GROUP BY p.id, p.name
     `;

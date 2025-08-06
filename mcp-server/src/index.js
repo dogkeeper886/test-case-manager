@@ -416,6 +416,7 @@ class TestCaseManagerMCPServer {
   async createTestCase(args) {
     // Prepare the test case data for non-versioned API (/api/testcases)
     const testCaseData = {
+      project_id: args.project_id, // CRITICAL FIX: Include project_id in API payload
       test_suite_id: args.test_suite_id,
       title: args.title,
       description: args.description || '',
@@ -451,8 +452,17 @@ class TestCaseManagerMCPServer {
       testCaseData.expected_result = 'Expected results to be defined';
     }
 
+    // DEFINITIVE TEST: Force error if project_id is missing
+    if (!args.project_id) {
+      throw new Error('🚨 CRITICAL: project_id missing from args! Args keys: ' + Object.keys(args).join(', '));
+    }
+    
+    if (!testCaseData.project_id) {
+      throw new Error('🚨 CRITICAL: project_id missing from testCaseData! Value: ' + testCaseData.project_id);
+    }
+    
     // Debug logging
-    console.log('Creating test case with data:', JSON.stringify(testCaseData, null, 2));
+    console.log('✅ project_id validation passed:', args.project_id);
     
     // Create the test case first using non-versioned API
     const response = await this.makeApiRequest(`/testcases`, 'POST', testCaseData);

@@ -96,7 +96,7 @@ class ProjectService {
       );
 
       const testCasesResult = await this.db.query(
-        'SELECT COUNT(*) as count FROM test_cases tc JOIN test_suites ts ON tc.test_suite_id = ts.id WHERE ts.project_id = $1',
+        'SELECT COUNT(*) as count FROM test_cases tc WHERE tc.project_id = $1 OR (tc.test_suite_id IS NOT NULL AND tc.test_suite_id IN (SELECT id FROM test_suites WHERE project_id = $1))',
         [projectId]
       );
 
@@ -180,7 +180,7 @@ class ProjectService {
         [projectId]
       );
       const testCasesResult = await client.query(
-        'SELECT COUNT(*) as count FROM test_cases tc JOIN test_suites ts ON tc.test_suite_id = ts.id WHERE ts.project_id = $1',
+        'SELECT COUNT(*) as count FROM test_cases tc WHERE tc.project_id = $1 OR (tc.test_suite_id IS NOT NULL AND tc.test_suite_id IN (SELECT id FROM test_suites WHERE project_id = $1))',
         [projectId]
       );
       const importLogsResult = await client.query(
