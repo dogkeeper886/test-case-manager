@@ -336,7 +336,104 @@ so that we can guarantee 100% TestLink system integration.
 ### Final Decision: READY FOR ARCHITECT
 The PRD comprehensively defines the separated MCP container architecture with clear technical requirements, logical epic sequencing, and detailed user stories ready for implementation.
 
+## Epic 5: Critical API-MCP Field Compatibility Fixes
+
+**Epic Goal:** Resolve critical field compatibility gaps between TestLink requirements, database schema, backend API, and MCP server that were discovered during test case creation validation. These gaps prevent successful test case creation and break TestLink workflow compatibility.
+
+**🚨 CRITICAL ISSUE IDENTIFIED:**
+During test case creation validation from `testplan-samples/Test_Plan_AP_Group_Level_Configurations.md`, analysis revealed significant field compatibility gaps causing API errors and preventing proper TestLink integration.
+
+### Story 5.1: Fix Backend API Field Coverage Gaps
+As a developer,
+I want the backend API to support all TestLink-compatible fields available in the database,
+So that the MCP server can create complete test cases without field mapping errors.
+
+#### Acceptance Criteria
+1. Add missing fields to backend API INSERT statement: `internal_id`, `importance`, `node_order`
+2. Fix version field type handling to accept VARCHAR string input (currently expects integer)
+3. Add support for keywords creation via junction table relationships
+4. Add support for requirements linking via junction table relationships  
+5. Add support for custom fields creation via dedicated table
+6. Ensure all database schema fields from migrations 001, 008, 009 are accessible via API
+
+#### Critical Findings
+- **Field Coverage Gap**: Database has full TestLink schema, API only exposes ~60%
+- **Type Mismatch**: `version` field expects integer in API but database stores VARCHAR(20)
+- **Missing Relationships**: Keywords, requirements, custom_fields tables exist but no API endpoints
+
+### Story 5.2: Enhance MCP Server TestLink Field Support  
+As an agent using the MCP server,
+I want access to all TestLink fields required for comprehensive test case creation,
+So that I can create test cases that match TestLink XML format requirements.
+
+#### Acceptance Criteria
+1. Add `node_order` parameter to MCP create_test_case schema
+2. Add keywords array support with proper MCP schema definition
+3. Add requirements array support for TestLink requirement linking
+4. Add custom_fields array support for TestLink custom field compatibility
+5. Remove or fix version field default value to prevent type conflicts
+6. Update MCP tool descriptions to reflect complete TestLink compatibility
+
+#### Current MCP Limitations
+- Missing `node_order` (required for TestLink hierarchy)
+- Missing keywords support (15% of TestLink compatibility gap)
+- Missing requirements linking (5% of TestLink compatibility gap)
+- Version field type mismatch causing creation failures
+
+### Story 5.3: Validate End-to-End Test Case Creation Workflow
+As a QA engineer,
+I want to validate complete test case creation from test plans through MCP to TestLink export,
+So that the full workflow functions without field compatibility errors.
+
+#### Acceptance Criteria
+1. Successfully create test case from AP Group test plan via MCP server
+2. Verify all TestLink-required fields are properly stored in database
+3. Validate exported TestLink XML contains all created field data
+4. Test round-trip compatibility: Create → Export → Import → Verify data integrity
+5. Performance test with complex test cases containing all field types
+
+#### Validation Requirements
+- Test with extracted test case: "AP Group CAC Basic Configuration" 
+- Include keywords, custom fields, requirements if specified
+- Validate against TestLink 1.9.x format requirements
+- Ensure no data loss in create → export → import cycle
+
+### Story 5.4: Update Documentation and Field Mapping
+As a developer,
+I want comprehensive documentation of field mappings between TestLink, database, API, and MCP,
+So that future development maintains compatibility and prevents field gaps.
+
+#### Acceptance Criteria
+1. Create comprehensive field mapping documentation (TestLink ↔ Database ↔ API ↔ MCP)
+2. Document all field types, constraints, and validation rules
+3. Update MCP server README with complete field reference
+4. Add inline code comments documenting TestLink compatibility requirements
+5. Create troubleshooting guide for common field compatibility issues
+
+#### Documentation Requirements
+- Field compatibility matrix (similar to analysis performed)
+- TestLink XML format examples with corresponding API calls
+- Error handling guide for field validation failures
+- Migration history showing field additions and compatibility improvements
+
+## MCP Server Development Instructions
+
+### Rebuild MCP Server
+When making changes to the MCP server code:
+```bash
+cd /home/jack/Documents/test-case-manager/mcp-server && docker build -t test-case-manager-mcp .
+```
+
+### Restart MCP Server
+After rebuilding, restart the MCP server in Claude Code:
+```bash
+claude mcp remove test-manager
+claude mcp add test-case-manager -- docker run --rm -i --name test-case-manager-mcp --network host test-case-manager-mcp
+```
+
+**Note**: The MCP server must be restarted in Claude Code after any code changes to ensure the latest version is running.
+
 ## Next Steps
 
 ### Architect Prompt
-Design the technical architecture for the separated MCP container system based on this PRD. Implement the four-epic roadmap starting with removal of current MCP integration, then separated container architecture, HTTP API layer, and TestLink integration. Prioritize resolving Docker/HTTP connectivity issues while maintaining deployment flexibility.
+Design the technical architecture for the separated MCP container system based on this PRD. Implement the five-epic roadmap starting with removal of current MCP integration, then separated container architecture, HTTP API layer, TestLink integration, and critical field compatibility fixes. Prioritize resolving Docker/HTTP connectivity issues and field compatibility gaps to enable full TestLink workflow support.

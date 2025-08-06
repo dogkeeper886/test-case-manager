@@ -198,6 +198,10 @@ class TestCaseManagerMCPServer {
                   type: 'boolean',
                   description: 'Whether the test case is active',
                 },
+                node_order: {
+                  type: 'number',
+                  description: 'Node order for TestLink hierarchy (default: 0)',
+                },
               },
               required: ['project_id', 'title'],
               additionalProperties: false,
@@ -418,12 +422,15 @@ class TestCaseManagerMCPServer {
       prerequisites: args.prerequisites || '',
       execution_type: args.execution_type || 1,
       external_id: args.external_id || '',
-      version: args.version || '1.0',
+      internal_id: args.internal_id || '',
+      version: args.version || '1.0', // Fixed: Keep as string
       priority: args.priority || 2,
+      importance: args.importance || 2,
       is_open: args.is_open !== false, // default to true
       active: args.active !== false,   // default to true
       status: args.status || 1,
       estimated_duration: args.estimated_duration,
+      node_order: args.node_order || 0,
     };
 
     // Handle legacy test_steps and expected_result (REQUIRED by validation)

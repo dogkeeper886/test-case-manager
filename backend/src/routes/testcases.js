@@ -145,33 +145,59 @@ router.post('/', async (req, res) => {
       prerequisites,
       execution_type = 1,
       external_id,
-      version = 1,
+      version = '1.0', // Fixed: Accept string version, default to '1.0'
       priority = 2,
       is_open = true,
       active = true,
       status = 1,
-      estimated_duration
+      estimated_duration,
+      // Added missing TestLink fields
+      internal_id,
+      importance = 2,
+      node_order = 0
     } = req.body;
     
     const sql = `
       INSERT INTO test_cases (
         test_suite_id, title, description, prerequisites, execution_type,
-        external_id, version, priority, is_open, active, status, estimated_duration
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        external_id, version, priority, is_open, active, status, estimated_duration,
+        internal_id, importance, node_order
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *
     `;
     
     const params = [
       test_suite_id, title, description, prerequisites, execution_type,
-      external_id, version, priority, is_open, active, status, estimated_duration
+      external_id, version, priority, is_open, active, status, estimated_duration,
+      internal_id, importance, node_order
     ];
     
     const result = await query(sql, params);
+    const testCaseId = result.rows[0].id;
+    
+    // Handle structured test steps if provided
+    const { steps } = req.body;
+    if (steps && Array.isArray(steps)) {
+      for (const step of steps) {
+        const stepSql = `
+          INSERT INTO test_steps (
+            test_case_id, step_number, action, expected_result, execution_type
+          ) VALUES ($1, $2, $3, $4, $5)
+        `;
+        await query(stepSql, [
+          testCaseId,
+          step.step_number,
+          step.action,
+          step.expected_result,
+          step.execution_type || 1
+        ]);
+      }
+    }
     
     // Log activity
     await ActivityService.logTestCaseActivity(
       'test_case_create',
-      result.rows[0].id,
+      testCaseId,
       result.rows[0].title,
       `Test case "${result.rows[0].title}" was created`
     );
