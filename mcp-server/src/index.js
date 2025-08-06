@@ -115,21 +115,91 @@ class TestCaseManagerMCPServer {
                   type: 'string',
                   description: 'Test case description',
                 },
+                prerequisites: {
+                  type: 'string',
+                  description: 'Prerequisites for executing the test case',
+                },
+                steps: {
+                  type: 'array',
+                  description: 'Array of test step objects with step_number, action, and expected_result',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      step_number: {
+                        type: 'number',
+                        description: 'Step number (1, 2, 3, etc.)',
+                      },
+                      action: {
+                        type: 'string',
+                        description: 'Action to perform in this step',
+                      },
+                      expected_result: {
+                        type: 'string',
+                        description: 'Expected result for this step',
+                      },
+                      execution_type: {
+                        type: 'number',
+                        enum: [1, 2],
+                        description: 'Execution type: 1=Manual, 2=Automated',
+                      },
+                    },
+                    required: ['step_number', 'action', 'expected_result'],
+                    additionalProperties: false,
+                  },
+                },
                 test_steps: {
                   type: 'string',
-                  description: 'Test execution steps',
+                  description: 'Legacy test steps field (use steps array instead)',
                 },
                 expected_result: {
                   type: 'string',
-                  description: 'Expected test result',
+                  description: 'Overall expected result of the test case',
                 },
                 priority: {
+                  type: 'number',
+                  enum: [1, 2, 3],
+                  description: 'Test case priority: 1=High, 2=Medium, 3=Low',
+                },
+                importance: {
+                  type: 'number',
+                  enum: [1, 2, 3],
+                  description: 'Test case importance: 1=Low, 2=Medium, 3=High',
+                },
+                execution_type: {
+                  type: 'number',
+                  enum: [1, 2],
+                  description: 'Execution type: 1=Manual, 2=Automated',
+                },
+                external_id: {
                   type: 'string',
-                  enum: ['low', 'medium', 'high'],
-                  description: 'Test case priority',
+                  description: 'External reference ID',
+                },
+                internal_id: {
+                  type: 'string',
+                  description: 'Internal reference ID',
+                },
+                version: {
+                  type: 'string',
+                  description: 'Test case version (e.g., 1.0, 2.1)',
+                },
+                estimated_duration: {
+                  type: 'number',
+                  description: 'Estimated execution duration in minutes',
+                },
+                status: {
+                  type: 'number',
+                  description: 'Test case status (1=Active, 0=Inactive)',
+                },
+                is_open: {
+                  type: 'boolean',
+                  description: 'Whether the test case is open for execution',
+                },
+                active: {
+                  type: 'boolean',
+                  description: 'Whether the test case is active',
                 },
               },
-              required: ['project_id', 'title', 'test_steps', 'expected_result'],
+              required: ['project_id', 'title'],
               additionalProperties: false,
             },
           },
@@ -170,6 +240,41 @@ class TestCaseManagerMCPServer {
               additionalProperties: false,
             },
           },
+          {
+            name: 'export_testlink_xml',
+            description: 'Export test cases in TestLink-compatible XML format',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                project_id: {
+                  type: 'number',
+                  description: 'Project ID (optional)',
+                },
+                test_suite_id: {
+                  type: 'number',
+                  description: 'Test suite ID (optional)',
+                },
+                test_case_ids: {
+                  type: 'array',
+                  items: { type: 'number' },
+                  description: 'Specific test case IDs (optional)',
+                },
+                include_keywords: {
+                  type: 'boolean',
+                  description: 'Include keywords in export (default: true)',
+                },
+                include_requirements: {
+                  type: 'boolean',
+                  description: 'Include requirements in export (default: true)',
+                },
+                include_custom_fields: {
+                  type: 'boolean',
+                  description: 'Include custom fields in export (default: true)',
+                },
+              },
+              additionalProperties: false,
+            },
+          },
         ],
       };
     });
@@ -197,6 +302,9 @@ class TestCaseManagerMCPServer {
           
           case 'create_test_suite':
             return await this.createTestSuite(args);
+          
+          case 'export_testlink_xml':
+            return await this.exportTestLinkXML(args);
           
           default:
             throw new McpError(
@@ -302,14 +410,87 @@ class TestCaseManagerMCPServer {
   }
 
   async createTestCase(args) {
-    const response = await this.makeApiRequest(`/${API_VERSION}/test-cases`, 'POST', args);
+    // Prepare the test case data for non-versioned API (/api/testcases)
+    const testCaseData = {
+      test_suite_id: args.test_suite_id,
+      title: args.title,
+      description: args.description || '',
+      prerequisites: args.prerequisites || '',
+      execution_type: args.execution_type || 1,
+      external_id: args.external_id || '',
+      version: args.version || '1.0',
+      priority: args.priority || 2,
+      is_open: args.is_open !== false, // default to true
+      active: args.active !== false,   // default to true
+      status: args.status || 1,
+      estimated_duration: args.estimated_duration,
+    };
+
+    // Handle legacy test_steps and expected_result (REQUIRED by validation)
+    if (args.test_steps && !args.steps) {
+      testCaseData.test_steps = args.test_steps;
+      testCaseData.expected_result = args.expected_result || '';
+    } else if (args.steps && Array.isArray(args.steps)) {
+      // Convert steps array to legacy format (required by backend validation)
+      testCaseData.test_steps = args.steps.map(step => 
+        `Step ${step.step_number}: ${step.action}`
+      ).join('\n\n');
+      testCaseData.expected_result = args.steps.map(step => 
+        `Step ${step.step_number}: ${step.expected_result}`
+      ).join('\n\n');
+    } else {
+      // Fallback - ensure required fields are present
+      testCaseData.test_steps = args.description || 'Test steps to be defined';
+      testCaseData.expected_result = 'Expected results to be defined';
+    }
+
+    // Debug logging
+    console.log('Creating test case with data:', JSON.stringify(testCaseData, null, 2));
+    
+    // Create the test case first using non-versioned API
+    const response = await this.makeApiRequest(`/testcases`, 'POST', testCaseData);
     const testCase = response.data || response;
+
+    // If we have structured steps, add them via PUT request
+    if (args.steps && Array.isArray(args.steps) && testCase.id) {
+      try {
+        const updateData = {
+          steps: args.steps
+        };
+        await this.makeApiRequest(`/testcases/${testCase.id}`, 'PUT', updateData);
+      } catch (stepError) {
+        console.warn('Warning: Failed to add structured steps:', stepError.message);
+        // Continue - the basic test case was created successfully
+      }
+    }
+    
+    // Build response with created fields info
+    let responseText = `Created test case "${testCase.title}" with ID ${testCase.id}`;
+    
+    if (args.steps && Array.isArray(args.steps)) {
+      responseText += `\n  ${args.steps.length} test steps added`;
+    }
+    
+    if (args.priority) {
+      const priorityText = args.priority === 1 ? 'High' : args.priority === 2 ? 'Medium' : 'Low';
+      responseText += `\n  Priority: ${priorityText}`;
+    }
+    
+    if (args.importance) {
+      const importanceText = args.importance === 1 ? 'Low' : args.importance === 2 ? 'Medium' : 'High';
+      responseText += `\n  Importance: ${importanceText}`;
+    }
+    
+    if (args.execution_type) {
+      const executionText = args.execution_type === 1 ? 'Manual' : 'Automated';
+      responseText += `\n  Execution: ${executionText}`;
+    }
     
     return {
       content: [
         {
           type: 'text',
-          text: `Created test case "${testCase.title}" with ID ${testCase.id}`,
+          text: responseText,
         },
       ],
     };
@@ -347,6 +528,79 @@ class TestCaseManagerMCPServer {
         },
       ],
     };
+  }
+
+  async exportTestLinkXML(args) {
+    const exportOptions = {
+      project_id: args.project_id,
+      test_suite_id: args.test_suite_id,
+      test_case_ids: args.test_case_ids,
+      include_keywords: args.include_keywords !== false,
+      include_requirements: args.include_requirements !== false,
+      include_custom_fields: args.include_custom_fields !== false
+    };
+
+    try {
+      const response = await this.makeApiRequest('/export/testlink', 'POST', exportOptions);
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Export failed');
+      }
+
+      // Count elements for summary
+      const xmlContent = response.xml_content;
+      const testCaseCount = (xmlContent.match(/<testcase/g) || []).length;
+      const testSuiteCount = (xmlContent.match(/<testsuite/g) || []).length;
+
+      let exportSummary = `Successfully exported ${testCaseCount} test cases`;
+      if (testSuiteCount > 0) {
+        exportSummary += ` in ${testSuiteCount} test suites`;
+      }
+
+      // Add export details
+      if (args.project_id) {
+        exportSummary += `\n  Project ID: ${args.project_id}`;
+      }
+      if (args.test_suite_id) {
+        exportSummary += `\n  Test Suite ID: ${args.test_suite_id}`;
+      }
+      if (args.test_case_ids && args.test_case_ids.length > 0) {
+        exportSummary += `\n  Specific Test Cases: ${args.test_case_ids.join(', ')}`;
+      }
+
+      exportSummary += `\n  Include Keywords: ${exportOptions.include_keywords}`;
+      exportSummary += `\n  Include Requirements: ${exportOptions.include_requirements}`;
+      exportSummary += `\n  Include Custom Fields: ${exportOptions.include_custom_fields}`;
+
+      // Add warnings if any
+      if (response.validation && response.validation.warnings.length > 0) {
+        exportSummary += `\n\nWarnings:`;
+        response.validation.warnings.forEach(warning => {
+          exportSummary += `\n  • ${warning}`;
+        });
+      }
+
+      exportSummary += `\n\nTestLink XML (${xmlContent.length} characters):\n\n${xmlContent}`;
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: exportSummary,
+          },
+        ],
+      };
+      
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Export failed: ${error.message}`,
+          },
+        ],
+      };
+    }
   }
 
   async run() {

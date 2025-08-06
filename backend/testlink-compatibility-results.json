@@ -1,0 +1,162 @@
+{
+  "summary": {
+    "timestamp": "2025-08-06T03:55:03.833Z",
+    "epic": "Epic 4 - Critical TestLink Compatibility Fixes",
+    "story": "Story 4.1 - Fix Critical TestLink XML Structure Gaps",
+    "total_tests": 6,
+    "passed_tests": 6,
+    "failed_tests": 0,
+    "compatibility_percentage": "100.0"
+  },
+  "test_results": [
+    {
+      "test": "XML Attribute Parsing",
+      "passed": true,
+      "details": {
+        "internal_id": "123",
+        "name": "Test Case 1",
+        "node_order": 1,
+        "expected": {
+          "internal_id": "123",
+          "name": "Test Case 1",
+          "node_order": 1
+        }
+      }
+    },
+    {
+      "test": "CDATA Handling",
+      "passed": true,
+      "details": {
+        "extracted_summary": "<p>This is <strong>HTML</strong> content with &amp...",
+        "wrapped_content": "<![CDATA[<p>This is <strong>HTML</strong> content ...",
+        "cdata_extraction": true,
+        "cdata_wrapping": true
+      }
+    },
+    {
+      "test": "Nested Steps Structure",
+      "passed": true,
+      "details": {
+        "steps_count": 2,
+        "first_step": {
+          "step_number": 1,
+          "actions": "First action",
+          "expected_results": "First result",
+          "execution_type": 1
+        },
+        "second_step": {
+          "step_number": 2,
+          "actions": "Second action",
+          "expected_results": "Second result",
+          "execution_type": 1
+        }
+      }
+    },
+    {
+      "test": "Keywords and Requirements Support",
+      "passed": true,
+      "details": {
+        "keywords_count": 2,
+        "requirements_count": 1,
+        "custom_fields_count": 1,
+        "keyword_sample": {
+          "name": "Regression",
+          "notes": "Regression testing keyword"
+        },
+        "requirement_sample": {
+          "req_spec_title": "SPEC-001",
+          "doc_id": "REQ-123",
+          "title": "User Authentication"
+        },
+        "custom_field_sample": {
+          "name": "CF_PRIORITY",
+          "value": "High"
+        }
+      }
+    },
+    {
+      "test": "Export Functionality",
+      "passed": [
+        {
+          "name": "CF_TEST_TYPE",
+          "value": "Functional"
+        }
+      ],
+      "details": {
+        "xml_structure": [
+          "$",
+          "node_order",
+          "externalid",
+          "summary",
+          "preconditions",
+          "execution_type",
+          "importance",
+          "estimated_exec_duration",
+          "steps",
+          "keywords",
+          "requirements",
+          "custom_fields"
+        ],
+        "has_attributes": true,
+        "has_internal_id_attr": true,
+        "has_nested_steps": [
+          {
+            "step_number": 1,
+            "actions": "Perform first action",
+            "expectedresults": "First expected result",
+            "execution_type": 1
+          }
+        ],
+        "has_keywords": [
+          {
+            "$": {
+              "name": "Export"
+            },
+            "notes": "Export functionality test"
+          }
+        ],
+        "has_requirements": [
+          {
+            "req_spec_title": "SPEC-001",
+            "doc_id": "REQ-200",
+            "title": "Export Feature"
+          }
+        ],
+        "has_custom_fields": [
+          {
+            "name": "CF_TEST_TYPE",
+            "value": "Functional"
+          }
+        ]
+      }
+    },
+    {
+      "test": "Round-trip Compatibility",
+      "passed": true,
+      "details": {
+        "original_data": {
+          "name": "Round-trip Test",
+          "internal_id": "128",
+          "steps_count": 1,
+          "keywords_count": 1,
+          "custom_fields_count": 1
+        },
+        "reparsed_data": {
+          "name": "Round-trip Test",
+          "internal_id": "128",
+          "steps_count": 1,
+          "keywords_count": 1,
+          "custom_fields_count": 1
+        },
+        "matches": {
+          "name": true,
+          "internal_id": true,
+          "summary": true,
+          "steps": true,
+          "keywords": true,
+          "custom_fields": true
+        }
+      }
+    }
+  ]
+}

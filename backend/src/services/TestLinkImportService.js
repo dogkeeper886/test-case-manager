@@ -679,8 +679,8 @@ class TestLinkImportService {
       const values = [
         testCaseId,
         step.step_number,
-        this.parser.cleanHTMLContent(step.actions),
-        this.parser.cleanHTMLContent(step.expected_results),
+        this.parser.extractCDATAContent(step.actions),
+        this.parser.extractCDATAContent(step.expected_results),
         step.execution_type || 1
       ];
 

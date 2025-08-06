@@ -60,6 +60,7 @@ app.use('/api/testsuites', require('./routes/testsuites'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/import', require('./routes/import'));
+app.use('/api/export', require('./routes/export'));
 app.use('/api/activities', require('./routes/activities'));
 app.use('/api/migrations', require('./routes/migrations'));
 

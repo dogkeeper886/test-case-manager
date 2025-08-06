@@ -5,10 +5,11 @@ class TestLinkXMLParser {
   constructor() {
     this.parser = new xml2js.Parser({
       explicitArray: false,
-      mergeAttrs: true,
+      mergeAttrs: true, // Critical: This merges XML attributes with elements for TestLink compatibility
       normalize: true,
       normalizeTags: true,
-      trim: true
+      trim: true,
+      explicitRoot: true
     });
   }
 
@@ -41,11 +42,17 @@ class TestLinkXMLParser {
     try {
       const result = await this.parser.parseStringPromise(xmlContent);
       
-      if (!result.testsuite) {
-        throw new Error('Invalid TestLink XML: No testsuite root element found');
+      // Handle different TestLink XML formats
+      if (result.testsuite) {
+        // Full test suite format
+        return this.parseTestSuite(result.testsuite);
+      } else if (result.testcases) {
+        // Test cases only format
+        return this.parseTestCasesOnly(result.testcases);
+      } else {
+        throw new Error('Invalid TestLink XML: No testsuite or testcases root element found');
       }
 
-      return this.parseTestSuite(result.testsuite);
     } catch (error) {
       throw new Error(`Failed to parse TestLink XML content: ${error.message}`);
     }
@@ -57,11 +64,12 @@ class TestLinkXMLParser {
    * @returns {Object} Parsed test suite data
    */
   parseTestSuite(suiteElement) {
+    // Handle both attribute and element formats for TestLink compatibility
     const suite = {
       id: suiteElement.id,
-      name: suiteElement.name,
+      name: suiteElement.name || suiteElement.$.name || '',
       node_order: parseInt(suiteElement.node_order) || 0,
-      details: suiteElement.details || '',
+      details: this.extractCDATAContent(suiteElement.details) || '',
       test_suites: [],
       test_cases: []
     };
@@ -88,36 +96,65 @@ class TestLinkXMLParser {
   }
 
   /**
+   * Parse test cases only format (no test suite wrapper)
+   * @param {Object} testCasesElement - Test cases XML element
+   * @returns {Object} Parsed test cases data
+   */
+  parseTestCasesOnly(testCasesElement) {
+    const testCases = Array.isArray(testCasesElement.testcase) 
+      ? testCasesElement.testcase 
+      : [testCasesElement.testcase];
+    
+    return {
+      name: 'Imported Test Cases',
+      node_order: 0,
+      details: 'Test cases imported from TestLink XML',
+      test_suites: [],
+      test_cases: testCases.map(testCase => this.parseTestCase(testCase))
+    };
+  }
+
+  /**
    * Parse a test case element
    * @param {Object} testCaseElement - Test case XML element
    * @returns {Object} Parsed test case data
    */
   parseTestCase(testCaseElement) {
+    // CRITICAL: TestLink uses 'internalid' as XML attribute AND 'name' as attribute
+    // The mergeAttrs option should handle this, but we need fallback logic
     const testCase = {
-      internal_id: testCaseElement.internalid,
-      name: testCaseElement.name,
+      internal_id: testCaseElement.internalid || testCaseElement.internal_id,
+      name: testCaseElement.name || testCaseElement.$.name || '',
       node_order: parseInt(testCaseElement.node_order) || 0,
-      external_id: testCaseElement.externalid || '',
+      external_id: testCaseElement.externalid || testCaseElement.external_id || '',
       version: testCaseElement.version || '1',
-      summary: testCaseElement.summary || '',
-      preconditions: testCaseElement.preconditions || '',
+      summary: this.extractCDATAContent(testCaseElement.summary) || '',
+      preconditions: this.extractCDATAContent(testCaseElement.preconditions) || '',
       execution_type: parseInt(testCaseElement.execution_type) || 1,
       importance: parseInt(testCaseElement.importance) || 2,
       status: parseInt(testCaseElement.status) || 1,
       is_open: parseInt(testCaseElement.is_open) || 1,
       active: parseInt(testCaseElement.active) || 1,
-      estimated_exec_duration: testCaseElement.estimated_exec_duration || '',
+      estimated_exec_duration: parseFloat(testCaseElement.estimated_exec_duration) || null,
       steps: [],
-      custom_fields: []
+      custom_fields: [],
+      keywords: [],
+      requirements: []
     };
 
-    // Parse test steps
-    if (testCaseElement.steps && testCaseElement.steps.step) {
-      const steps = Array.isArray(testCaseElement.steps.step) 
-        ? testCaseElement.steps.step 
-        : [testCaseElement.steps.step];
-      
-      testCase.steps = steps.map(step => this.parseTestStep(step));
+    // Parse test steps - handle both nested structure and legacy flat text
+    if (testCaseElement.steps) {
+      if (testCaseElement.steps.step) {
+        // New nested format: <steps><step><actions><expectedresults>
+        const steps = Array.isArray(testCaseElement.steps.step) 
+          ? testCaseElement.steps.step 
+          : [testCaseElement.steps.step];
+        
+        testCase.steps = steps.map(step => this.parseTestStep(step));
+      } else if (typeof testCaseElement.steps === 'string') {
+        // Legacy flat text format - convert to structured format
+        testCase.steps = this.parseLegacySteps(testCaseElement.steps, testCaseElement.expectedresults);
+      }
     }
 
     // Parse custom fields
@@ -127,6 +164,24 @@ class TestLinkXMLParser {
         : [testCaseElement.custom_fields.custom_field];
       
       testCase.custom_fields = fields.map(field => this.parseCustomField(field));
+    }
+
+    // Parse keywords
+    if (testCaseElement.keywords && testCaseElement.keywords.keyword) {
+      const keywords = Array.isArray(testCaseElement.keywords.keyword) 
+        ? testCaseElement.keywords.keyword 
+        : [testCaseElement.keywords.keyword];
+      
+      testCase.keywords = keywords.map(keyword => this.parseKeyword(keyword));
+    }
+
+    // Parse requirements
+    if (testCaseElement.requirements && testCaseElement.requirements.requirement) {
+      const requirements = Array.isArray(testCaseElement.requirements.requirement) 
+        ? testCaseElement.requirements.requirement 
+        : [testCaseElement.requirements.requirement];
+      
+      testCase.requirements = requirements.map(req => this.parseRequirement(req));
     }
 
     return testCase;
@@ -140,9 +195,54 @@ class TestLinkXMLParser {
   parseTestStep(stepElement) {
     return {
       step_number: parseInt(stepElement.step_number) || 1,
-      actions: stepElement.actions || '',
-      expected_results: stepElement.expectedresults || '',
+      actions: this.extractCDATAContent(stepElement.actions) || '',
+      expected_results: this.extractCDATAContent(stepElement.expectedresults) || '',
       execution_type: parseInt(stepElement.execution_type) || 1
+    };
+  }
+
+  /**
+   * Parse legacy flat text steps into structured format
+   * @param {string} stepsText - Legacy steps text
+   * @param {string} expectedText - Legacy expected results text
+   * @returns {Array} Array of structured step objects
+   */
+  parseLegacySteps(stepsText, expectedText = '') {
+    const cleanSteps = this.extractCDATAContent(stepsText);
+    const cleanExpected = this.extractCDATAContent(expectedText);
+    
+    if (!cleanSteps) return [];
+    
+    return [{
+      step_number: 1,
+      actions: cleanSteps,
+      expected_results: cleanExpected,
+      execution_type: 1
+    }];
+  }
+
+  /**
+   * Parse a keyword element
+   * @param {Object} keywordElement - Keyword XML element
+   * @returns {Object} Parsed keyword data
+   */
+  parseKeyword(keywordElement) {
+    return {
+      name: keywordElement.name || '',
+      notes: this.extractCDATAContent(keywordElement.notes) || ''
+    };
+  }
+
+  /**
+   * Parse a requirement element
+   * @param {Object} reqElement - Requirement XML element
+   * @returns {Object} Parsed requirement data
+   */
+  parseRequirement(reqElement) {
+    return {
+      req_spec_title: this.extractCDATAContent(reqElement.req_spec_title) || '',
+      doc_id: this.extractCDATAContent(reqElement.doc_id) || '',
+      title: this.extractCDATAContent(reqElement.title) || ''
     };
   }
 

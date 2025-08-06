@@ -21,8 +21,8 @@ const validateTestCase = (req, res, next) => {
   }
 
   // Optional field validations
-  if (priority && !['low', 'medium', 'high'].includes(priority)) {
-    errors.priority = 'Priority must be low, medium, or high';
+  if (priority && ![1, 2, 3].includes(priority)) {
+    errors.priority = 'Priority must be 1 (High), 2 (Medium), or 3 (Low)';
   }
 
   if (execution_type && ![1, 2].includes(execution_type)) {
